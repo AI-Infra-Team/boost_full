@@ -20,9 +20,9 @@ class file
     long size_ = 0;
 
     void
-    fail(boost::system::error_code& ec)
+    fail(boost::json::error_code& ec)
     {
-        ec.assign( errno, boost::system::generic_category() );
+        ec.assign( errno, boost::json::generic_category() );
     }
 
 public:
@@ -69,17 +69,10 @@ public:
     open(
         char const* path,
         char const* mode,
-        boost::system::error_code& ec)
+        boost::json::error_code& ec)
     {
         close();
-#if defined(_MSC_VER)
-# pragma warning( push )
-# pragma warning( disable : 4996 )
-#endif
         f_ = std::fopen( path, mode );
-#if defined(_MSC_VER)
-# pragma warning( pop )
-#endif
         if( ! f_ )
             return fail(ec);
         if( std::fseek( f_, 0, SEEK_END ) != 0)
@@ -99,10 +92,10 @@ public:
         char const* path,
         char const* mode)
     {
-        boost::system::error_code ec;
+        boost::json::error_code ec;
         open(path, mode, ec);
         if(ec)
-            throw boost::system::system_error(ec);
+            throw boost::json::system_error(ec);
     }
 
     long
@@ -118,28 +111,28 @@ public:
     }
 
     std::size_t
-    read( char* data, std::size_t size, boost::system::error_code& ec)
+    read( char* data, std::size_t size, boost::json::error_code& ec)
     {
         auto const nread = std::fread( data, 1, size, f_ );
         if( std::ferror(f_) )
-            ec.assign( errno, boost::system::generic_category() );
+            ec.assign( errno, boost::json::generic_category() );
         return nread;
     }
 
     std::size_t
     read( char* data, std::size_t size )
     {
-        boost::system::error_code ec;
+        boost::json::error_code ec;
         auto const nread = read( data, size, ec );
         if(ec)
-            throw boost::system::system_error(ec);
+            throw boost::json::system_error(ec);
         return nread;
     }
 };
 
 inline
 std::string
-read_file( char const* path, boost::system::error_code& ec )
+read_file( char const* path, boost::json::error_code& ec )
 {
     file f;
     f.open( path, "r", ec );
@@ -157,10 +150,10 @@ inline
 std::string
 read_file( char const* path )
 {
-    boost::system::error_code ec;
+    boost::json::error_code ec;
     auto s = read_file( path, ec);
     if(ec)
-        throw boost::system::system_error(ec);
+        throw boost::json::system_error(ec);
     return s;
 }
 

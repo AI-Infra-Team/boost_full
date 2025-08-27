@@ -8,9 +8,11 @@
 
 // See library home page at http://www.boost.org/libs/system
 
+// Avoid spurious VC++ warnings
+# define _CRT_SECURE_NO_WARNINGS
+
 #include <boost/system/error_code.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/core/snprintf.hpp>
 #include <cstring>
 #include <cstdio>
 
@@ -63,7 +65,7 @@ std::string sys_strerror( int ev )
     {
         char buffer[ 38 ];
 
-        boost::core::snprintf( buffer, sizeof( buffer ), "Unknown error (%d)", ev );
+        std::sprintf( buffer, "Unknown error (%d)", ev );
         return buffer;
     }
 

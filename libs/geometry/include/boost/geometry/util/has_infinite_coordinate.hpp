@@ -20,7 +20,7 @@
 
 namespace boost { namespace geometry
 {
-
+    
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail
 {
@@ -46,7 +46,7 @@ bool has_infinite_coordinate(Point const& point)
             detail::isinf,
             std::is_floating_point
                 <
-                    coordinate_type_t<Point>
+                    typename coordinate_type<Point>::type
                 >::value
         >::apply(point);
 }

@@ -1,11 +1,9 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
 // Copyright (c) 2008-2012 Barend Gehrels, Amsterdam, the Netherlands.
-// Copyright (c) 2023 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2017-2022.
-// Modifications copyright (c) 2017-2022, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2017-2021.
+// Modifications copyright (c) 2017-2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -16,8 +14,9 @@
 #define BOOST_GEOMETRY_PROJECTIONS_FACTORY_HPP
 
 #include <map>
-#include <memory>
 #include <string>
+
+#include <boost/shared_ptr.hpp>
 
 #include <boost/geometry/core/static_assert.hpp>
 
@@ -37,7 +36,6 @@
 #include <boost/geometry/srs/projections/proj/cc.hpp>
 #include <boost/geometry/srs/projections/proj/cea.hpp>
 #include <boost/geometry/srs/projections/proj/chamb.hpp>
-#include <boost/geometry/srs/projections/proj/col_urban.hpp>
 #include <boost/geometry/srs/projections/proj/collg.hpp>
 #include <boost/geometry/srs/projections/proj/crast.hpp>
 #include <boost/geometry/srs/projections/proj/denoy.hpp>
@@ -182,7 +180,7 @@ private:
 
     typedef factory_key<Params> key;
     typedef typename key::type key_type;
-    typedef std::shared_ptr<entry_base> entry_ptr;
+    typedef boost::shared_ptr<entry_base> entry_ptr;
 
     typedef std::map<key_type, entry_ptr> entries_map;
 
@@ -205,7 +203,6 @@ public:
         detail::cc_init(*this);
         detail::cea_init(*this);
         detail::chamb_init(*this);
-        detail::col_urban_init(*this);
         detail::collg_init(*this);
         detail::crast_init(*this);
         detail::denoy_init(*this);

@@ -1,5 +1,3 @@
-*.zip
-*.tar.*
-fop-*/
-docbook-xsl-*/
-docbook-dtd-*/
+/doc/html/
+/test/doxygen/autodoc.xml
+/test/doxygen/html/

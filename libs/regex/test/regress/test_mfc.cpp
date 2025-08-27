@@ -19,7 +19,7 @@
 //
 // We can only build this if we have ATL support:
 //
-#include <boost/regex/config.hpp>
+#include <boost/config.hpp>
 
 #ifdef TEST_MFC
 

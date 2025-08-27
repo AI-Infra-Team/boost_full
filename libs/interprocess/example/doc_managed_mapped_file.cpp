@@ -11,7 +11,7 @@
 
 #if defined(BOOST_INTERPROCESS_MAPPED_FILES)
 
-#include <boost/container/list.hpp>
+#include <boost/interprocess/containers/list.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <cstddef>
@@ -22,7 +22,7 @@
 //->
 
 using namespace boost::interprocess;
-typedef boost::container::list<int, allocator<int, managed_mapped_file::segment_manager> >
+typedef list<int, allocator<int, managed_mapped_file::segment_manager> >
    MyList;
 
 int main ()
@@ -43,7 +43,7 @@ int main ()
    const std::size_t FileSize = 1000;
    file_mapping::remove(FileName);
 
-   BOOST_INTERPROCESS_TRY{
+   BOOST_TRY{
       MyList::size_type old_size = 0;
       managed_mapped_file::handle_t list_handle;
       {
@@ -55,14 +55,14 @@ int main ()
          list_handle = mfile_memory.get_handle_from_address(mylist);
 
          //Fill list until there is no more room in the file
-         BOOST_INTERPROCESS_TRY{
+         BOOST_TRY{
             while(1) {
                mylist->insert(mylist->begin(), 0);
             }
          }
-         BOOST_INTERPROCESS_CATCH(const bad_alloc &){
+         BOOST_CATCH(const bad_alloc &){
             //mapped file is full
-         } BOOST_INTERPROCESS_CATCH_END
+         } BOOST_CATCH_END
          //Let's obtain the size of the list
          old_size = mylist->size();
       }
@@ -80,28 +80,28 @@ int main ()
                            (mfile_memory.get_address_from_handle(list_handle));
 
          //Fill list until there is no more room in the file
-         BOOST_INTERPROCESS_TRY{
+         BOOST_TRY{
             while(1) {
                mylist->insert(mylist->begin(), 0);
             }
          }
-         BOOST_INTERPROCESS_CATCH(const bad_alloc &){
+         BOOST_CATCH(const bad_alloc &){
             //mapped file is full
-         } BOOST_INTERPROCESS_CATCH_END
+         } BOOST_CATCH_END
 
          //Let's obtain the new size of the list
          MyList::size_type new_size = mylist->size();
 
+         assert(new_size > old_size);
+
          //Destroy list
          mfile_memory.destroy_ptr(mylist);
-
-         return (new_size > old_size) ? 0 : 1;
       }
    }
-   BOOST_INTERPROCESS_CATCH(...){
+   BOOST_CATCH(...){
       file_mapping::remove(FileName);
-      BOOST_INTERPROCESS_RETHROW
-   } BOOST_INTERPROCESS_CATCH_END
+      BOOST_RETHROW
+   } BOOST_CATCH_END
    file_mapping::remove(FileName);
    return 0;
 }

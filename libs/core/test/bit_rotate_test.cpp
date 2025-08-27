@@ -20,7 +20,7 @@ template<class T> void test_rotate( T x )
         BOOST_TEST_EQ( +boost::core::rotl( x, -i ), +boost::core::rotr( x, i ) );
 
         unsigned const width = std::numeric_limits<T>::digits;
-        unsigned r = static_cast<unsigned>( i ) & ( width - 1 );
+        unsigned r = i & ( width - 1 );
 
         if( r == 0 )
         {
@@ -103,28 +103,26 @@ int main()
         BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), 0x44444444 );
     }
 
-#define CONST64(x) ((boost::uint64_t(x) << 32) + (x))
-
     {
-        boost::uint64_t x = CONST64(0x11111111);
+        boost::uint64_t x = 0x1111111111111111;
 
-        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), CONST64(0x22222222) );
-        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), CONST64(0x88888888) );
+        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), 0x2222222222222222 );
+        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), 0x8888888888888888 );
 
-        x = CONST64(0x22222222);
+        x = 0x2222222222222222;
 
-        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), CONST64(0x44444444) );
-        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), CONST64(0x11111111) );
+        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), 0x4444444444444444 );
+        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), 0x1111111111111111 );
 
-        x = CONST64(0x44444444);
+        x = 0x4444444444444444;
 
-        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), CONST64(0x88888888) );
-        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), CONST64(0x22222222) );
+        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), 0x8888888888888888 );
+        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), 0x2222222222222222 );
 
-        x = CONST64(0x88888888);
+        x = 0x8888888888888888;
 
-        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), CONST64(0x11111111) );
-        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), CONST64(0x44444444) );
+        BOOST_TEST_EQ( +boost::core::rotl( x, 1 ), 0x1111111111111111 );
+        BOOST_TEST_EQ( +boost::core::rotr( x, 1 ), 0x4444444444444444 );
     }
 
     for( int i = -M; i <= M; ++i )
@@ -154,7 +152,7 @@ int main()
         }
 
         {
-            boost::ulong_long_type x = 0;
+            unsigned long long x = 0;
             BOOST_TEST_EQ( boost::core::rotl( x, i ), x );
             BOOST_TEST_EQ( boost::core::rotr( x, i ), x );
         }
@@ -170,7 +168,7 @@ int main()
         test_rotate( static_cast<unsigned short>( x ) );
         test_rotate( static_cast<unsigned int>( x ) );
         test_rotate( static_cast<unsigned long>( x ) );
-        test_rotate( static_cast<boost::ulong_long_type>( x ) );
+        test_rotate( static_cast<unsigned long long>( x ) );
     }
 
     return boost::report_errors();

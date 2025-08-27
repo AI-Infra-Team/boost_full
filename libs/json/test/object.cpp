@@ -25,30 +25,7 @@
 #include "test_suite.hpp"
 #include "checking_resource.hpp"
 
-namespace boost {
-namespace json {
-
-namespace {
-
-struct throws_on_convert
-{
-    // this member only exists due to MSVC code analysis bug that marks lines
-    // in callers of the type's operator key_value_pair() as unreachable (due
-    // to exception thrown), even if that caller is a function template, and
-    // the line is reachable in other instantiations
-    bool should_throw = true;
-
-    throws_on_convert() = default;
-
-    operator key_value_pair()
-    {
-        if( should_throw )
-            throw std::invalid_argument("");
-        return key_value_pair( "", nullptr);
-    }
-};
-
-} // namespace
+BOOST_JSON_NS_BEGIN
 
 BOOST_STATIC_ASSERT( std::is_nothrow_destructible<object>::value );
 BOOST_STATIC_ASSERT( std::is_nothrow_move_constructible<object>::value );
@@ -1227,62 +1204,6 @@ public:
             }
         }
 
-        // stable_erase(pos)
-        {
-            // small
-            {
-                object o(i0_);
-                auto it = o.stable_erase(o.find("10"));
-                BOOST_TEST(it->key() == "11");
-                BOOST_TEST(
-                    it->value().as_int64() == 11);
-                BOOST_TEST(serialize(o) ==
-                    R"({"0":0,"1":1,"2":2,"3":3,"4":4,)"
-                    R"("5":5,"6":6,"7":7,"8":8,"9":9,)"
-                    R"("11":11,"12":12,"13":13,"14":14,"15":15})");
-                BOOST_TEST(o.find("11") == it);
-                BOOST_TEST(o.find("14") == o.end() - 2);
-            }
-
-            // large
-            {
-                object o(i1_);
-                auto it = o.stable_erase(o.find("10"));
-                BOOST_TEST(it->key() == "11");
-                BOOST_TEST(
-                    it->value().as_int64() == 11);
-                BOOST_TEST(serialize(o) ==
-                    R"({"0":0,"1":1,"2":2,"3":3,"4":4,)"
-                    R"("5":5,"6":6,"7":7,"8":8,"9":9,)"
-                    R"("11":11,"12":12,"13":13,"14":14,"15":15,)"
-                    R"("16":16,"17":17,"18":18,"19":19})");
-                BOOST_TEST(o.find("11") == it);
-                BOOST_TEST(o.find("18") == o.end() - 2);
-            }
-        }
-
-        // stable_erase(key)
-        {
-            {
-                object o({
-                    {"a", 1},
-                    {"b", true},
-                    {"c", "hello"}});
-                BOOST_TEST(o.stable_erase("b2") == 0);
-                check(o, 3);
-            }
-
-            {
-                object o({
-                    {"a", 1},
-                    {"b", true},
-                    {"b2", 2},
-                    {"c", "hello"}});
-                BOOST_TEST(o.stable_erase("b2") == 1);
-                check(o, 4);
-            }
-        }
-
         // swap(object&)
         {
             {
@@ -1329,45 +1250,20 @@ public:
         auto const& co0 = o0;
         auto const& co1 = o1;
 
-        // at(key) &
+        // at(key)
         {
             BOOST_TEST(
                 o1.at("a").is_number());
-            BOOST_TEST_THROWS_WITH_LOCATION( (o1.at("d")) );
+            BOOST_TEST_THROWS((o1.at("d")),
+                std::out_of_range);
         }
 
-        // at(key) const&
+        // at(key) const
         {
             BOOST_TEST(
                 co1.at("a").is_number());
-            BOOST_TEST_THROWS_WITH_LOCATION( (co1.at("d")) );
-        }
-
-        // at(key) &&
-        {
-            BOOST_TEST(
-                std::move(o1).at("a").is_number());
-            BOOST_TEST_THROWS_WITH_LOCATION( (std::move(o1).at("d")) );
-            value&& rv = std::move(o1).at("a");
-            (void)rv;
-        }
-
-        // try_at(key) &
-        {
-            BOOST_TEST( o1.try_at("a")->is_number() );
-
-            system::error_code const ec = o1.try_at("d").error();
-            BOOST_TEST( ec == error::out_of_range );
-            BOOST_TEST( ec.has_location() );
-        }
-
-        // try_at(key) const&
-        {
-            BOOST_TEST( co1.try_at("a")->is_number() );
-
-            system::error_code const ec = o1.try_at("d").error();
-            BOOST_TEST( ec == error::out_of_range );
-            BOOST_TEST( ec.has_location() );
+            BOOST_TEST_THROWS((co1.at("d")),
+                std::out_of_range);
         }
 
         // operator[&](key)
@@ -1636,46 +1532,6 @@ public:
     }
 
     void
-    testStrongGurantee()
-    {
-        // We used to preemptively reserve storage even if we don't add a new
-        // element. That violated strong guarantee requirement. This test
-        // checks we don't do that any more.
-
-        object o;
-        o.reserve(100);
-        std::size_t const capacity = o.capacity();
-        for( std::size_t i = 0; i < o.capacity() ; ++i )
-            o.emplace( std::to_string(i), i );
-        BOOST_ASSERT( capacity == o.capacity() );
-
-        BOOST_TEST( !o.emplace("0", 0).second );
-        BOOST_TEST( capacity == o.capacity() );
-
-        BOOST_TEST( !o.insert_or_assign("0", 0).second );
-        BOOST_TEST( capacity == o.capacity() );
-
-        o["0"] = 0;
-        BOOST_TEST( capacity == o.capacity() );
-
-        o.insert( key_value_pair("0", nullptr) );
-        BOOST_TEST( capacity == o.capacity() );
-
-        // Check that insertion rolls back reserve when cannot insert all
-        // elements.
-        std::array<throws_on_convert, 10> input;
-        try
-        {
-            o.insert( input.begin(), input.end() );
-        }
-        catch( ... )
-        {
-            // ignore
-        }
-        BOOST_TEST( capacity == o.capacity() );
-    }
-
-    void
     run()
     {
         testDtor();
@@ -1690,11 +1546,9 @@ public:
         testEquality();
         testAllocation();
         testHash();
-        testStrongGurantee();
     }
 };
 
 TEST_SUITE(object_test, "boost.json.object");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

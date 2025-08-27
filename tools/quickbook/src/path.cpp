@@ -131,48 +131,34 @@ namespace quickbook
         std::string result;
         bool sep = false;
         std::string part;
-        if (x.has_root_name())
-        {
+        if (x.has_root_name()) {
+            // Handle network address (e.g. \\example.com)
             part = detail::path_to_generic(*it);
-
-            if( part.size() >= 2 && part[0] == '/' && part[1] == '/' )
-            {
-                // Handle network address (e.g. \\example.com)
-
-                result = "file:";
-
-                if( part.size() >= 5 && part[part.size() - 1] == ':' && part[part.size() - 3] == '/' )
-                {
-                    // Handle \\?\c:
-                    result += detail::escape_uri(part.substr(0, part.size() - 1));
-                    result += ':';
-                }
-                else
-                {
-                    result += detail::escape_uri(part);
-                }
-
+            if (part.size() >= 2 && part[0] == '/' && part[1] == '/') {
+                result = "file:" + detail::escape_uri(part);
                 sep = true;
+                ++it;
+                if (it != end && *it == "/") {
+                    result += "/";
+                    sep = false;
+                    ++it;
+                }
             }
-            else
-            {
-                // Handle windows root (e.g. c:)
+            else {
                 result = "file:///";
+            }
 
-                if( part.size() >= 2 && part[part.size() - 1] == ':' )
-                {
-                    result += detail::escape_uri(part.substr(0, part.size() - 1));
+            // Handle windows root (e.g. c:)
+            if (it != end) {
+                part = detail::path_to_generic(*it);
+                if (part.size() >= 2 && part[part.size() - 1] == ':') {
+                    result +=
+                        detail::escape_uri(part.substr(0, part.size() - 1));
                     result += ':';
                     sep = false;
-                }
-                else
-                {
-                    result += detail::escape_uri(part);
-                    sep = true;
+                    ++it;
                 }
             }
-
-            ++it;
         }
         else if (x.has_root_directory()) {
             result = "file://";

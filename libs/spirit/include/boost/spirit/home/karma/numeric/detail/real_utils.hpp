@@ -136,7 +136,7 @@ namespace boost { namespace spirit { namespace karma
             {
                 fractional_part = floor(fractional_part - precexp);
                 integer_part += 1;    // handle rounding overflow
-                if (integer_part >= 10. && 0 == (Policies::fmtflags::fixed & flags))
+                if (integer_part >= 10.)
                 {
                     integer_part /= 10.;
                     ++dim;

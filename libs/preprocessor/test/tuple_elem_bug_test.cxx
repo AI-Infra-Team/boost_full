@@ -12,7 +12,7 @@
 # include <boost/preprocessor/cat.hpp>
 # include <boost/preprocessor/control/if.hpp>
 # include <boost/preprocessor/tuple.hpp>
-# include "test.h"
+# include <libs/preprocessor/test/test.h>
 
 #define TN_GEN_ONE(p) (1)
 #define TN_GEN_ZERO(p) (0)

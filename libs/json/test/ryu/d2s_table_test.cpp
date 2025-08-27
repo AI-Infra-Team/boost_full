@@ -37,8 +37,7 @@
 #include <cmath>
 #include "gtest.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 namespace ryu {
@@ -104,5 +103,4 @@ TEST(D2sTableTest, compute_offsets_for_double_computeInvPow5) {
 } // ryu
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

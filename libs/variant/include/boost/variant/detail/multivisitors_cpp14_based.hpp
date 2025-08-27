@@ -17,6 +17,7 @@
 # pragma once
 #endif
 
+#include <boost/variant/detail/multivisitors_cpp14_based.hpp>
 #include <tuple>
 
 namespace boost {
@@ -120,7 +121,7 @@ namespace detail { namespace variant {
                     ),
                 std::tuple<>()
             ),
-            std::forward<T1>(v1)
+            ::boost::forward<T1>(v1)
         );
     }
 
@@ -142,7 +143,7 @@ namespace detail { namespace variant {
                     ),
                 std::tuple<>()
             ),
-            std::forward<T1>(v1)
+            ::boost::forward<T1>(v1)
         );
     }
 

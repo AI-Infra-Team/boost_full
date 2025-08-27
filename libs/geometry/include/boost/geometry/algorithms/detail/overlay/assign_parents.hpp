@@ -3,9 +3,8 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2017-2023.
-// Modifications copyright (c) 2017-2023 Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2017-2020.
+// Modifications copyright (c) 2017-2020 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -19,18 +18,14 @@
 #include <boost/range/end.hpp>
 
 #include <boost/geometry/core/coordinate_type.hpp>
-
-#include <boost/geometry/algorithms/area_result.hpp>
 #include <boost/geometry/algorithms/envelope.hpp>
 #include <boost/geometry/algorithms/expand.hpp>
-#include <boost/geometry/algorithms/detail/covered_by/implementation.hpp>
 #include <boost/geometry/algorithms/detail/partition.hpp>
 #include <boost/geometry/algorithms/detail/overlay/get_ring.hpp>
 #include <boost/geometry/algorithms/detail/overlay/range_in_geometry.hpp>
-#include <boost/geometry/views/enumerate_view.hpp>
+#include <boost/geometry/algorithms/covered_by.hpp>
 
 #include <boost/geometry/geometries/box.hpp>
-
 
 namespace boost { namespace geometry
 {
@@ -50,15 +45,15 @@ template
     typename RingCollection,
     typename Strategy
 >
-inline bool within_selected_input(Item const& item2,
+static inline bool within_selected_input(Item const& item2,
         InnerGeometry const& inner_geometry,
         ring_identifier const& outer_id,
         Geometry1 const& geometry1, Geometry2 const& geometry2,
         RingCollection const& collection,
         Strategy const& strategy)
 {
-    using tag1 = geometry::tag_t<Geometry1>;
-    using tag2 = geometry::tag_t<Geometry2>;
+    typedef typename geometry::tag<Geometry1>::type tag1;
+    typedef typename geometry::tag<Geometry2>::type tag2;
 
     // NOTE: range_in_geometry first checks the item2.point and then
     // if this point is on boundary it checks points of inner_geometry
@@ -86,14 +81,14 @@ template
     typename RingCollection,
     typename Strategy
 >
-inline bool within_selected_input(Item const& item2,
+static inline bool within_selected_input(Item const& item2,
         ring_identifier const& inner_id, ring_identifier const& outer_id,
         Geometry1 const& geometry1, Geometry2 const& geometry2,
         RingCollection const& collection,
         Strategy const& strategy)
 {
-    using tag1 = geometry::tag_t<Geometry1>;
-    using tag2 = geometry::tag_t<Geometry2>;
+    typedef typename geometry::tag<Geometry1>::type tag1;
+    typedef typename geometry::tag<Geometry2>::type tag2;
 
     switch (inner_id.source_index)
     {
@@ -178,7 +173,7 @@ template
 >
 struct assign_visitor
 {
-    using ring_info_type = typename RingMap::mapped_type;
+    typedef typename RingMap::mapped_type ring_info_type;
 
     Geometry1 const& m_geometry1;
     Geometry2 const& m_geometry2;
@@ -254,45 +249,49 @@ inline void assign_parents(Geometry1 const& geometry1,
     static bool const is_dissolve = OverlayType == overlay_dissolve;
     static bool const check_for_orientation = is_buffer || is_dissolve;
 
-    using tag1 = geometry::tag_t<Geometry1>;
-    using tag2 = geometry::tag_t<Geometry2>;
+    typedef typename geometry::tag<Geometry1>::type tag1;
+    typedef typename geometry::tag<Geometry2>::type tag2;
 
-    using ring_info_type = typename RingMap::mapped_type;
-    using point_type = typename ring_info_type::point_type;
-    using box_type = model::box<point_type>;
-    using area_result_type = typename geometry::area_result
+    typedef typename RingMap::mapped_type ring_info_type;
+    typedef typename ring_info_type::point_type point_type;
+    typedef model::box<point_type> box_type;
+    typedef typename geometry::area_result
         <
             point_type, Strategy // TODO: point_type is technically incorrect
-        >::type;
+        >::type area_result_type;
+
+    typedef typename RingMap::iterator map_iterator_type;
 
     {
+        typedef ring_info_helper<point_type, area_result_type> helper;
+        typedef std::vector<helper> vector_type;
+        typedef typename boost::range_iterator<vector_type const>::type vector_iterator_type;
+
         std::size_t count_total = ring_map.size();
         std::size_t count_positive = 0;
         std::size_t index_positive = 0; // only used if count_positive>0
+        std::size_t index = 0;
 
-        // Copy to vector (this might be obsolete, using the map directly)
-        // The index in the map is also the index in the vector.
-        using helper = ring_info_helper<point_type, area_result_type>;
-        std::vector<helper> vector(count_total);
+        // Copy to vector (with new approach this might be obsolete as well, using the map directly)
+        vector_type vector(count_total);
 
-        for (auto const& enumerated : util::enumerate(ring_map))
+        for (map_iterator_type it = boost::begin(ring_map);
+            it != boost::end(ring_map); ++it, ++index)
         {
-            auto const& ring_id = enumerated.value.first;
-            auto const& info = enumerated.value.second;
-            vector[enumerated.index] = helper(ring_id, info.get_area());
-            helper& item = vector[enumerated.index];
-            switch(ring_id.source_index)
+            vector[index] = helper(it->first, it->second.get_area());
+            helper& item = vector[index];
+            switch(it->first.source_index)
             {
                 case 0 :
-                    geometry::envelope(get_ring<tag1>::apply(ring_id, geometry1),
+                    geometry::envelope(get_ring<tag1>::apply(it->first, geometry1),
                                        item.envelope, strategy);
                     break;
                 case 1 :
-                    geometry::envelope(get_ring<tag2>::apply(ring_id, geometry2),
+                    geometry::envelope(get_ring<tag2>::apply(it->first, geometry2),
                                        item.envelope, strategy);
                     break;
                 case 2 :
-                    geometry::envelope(get_ring<void>::apply(ring_id, collection),
+                    geometry::envelope(get_ring<void>::apply(it->first, collection),
                                        item.envelope, strategy);
                     break;
             }
@@ -303,7 +302,7 @@ inline void assign_parents(Geometry1 const& geometry1,
             if (item.real_area > 0)
             {
                 count_positive++;
-                index_positive = enumerated.index;
+                index_positive = index;
             }
         }
 
@@ -326,14 +325,15 @@ inline void assign_parents(Geometry1 const& geometry1,
                 // located outside the outer ring, this cannot be done
                 ring_identifier id_of_positive = vector[index_positive].id;
                 ring_info_type& outer = ring_map[id_of_positive];
-                for (auto const& item : util::enumerate(vector))
+                index = 0;
+                for (vector_iterator_type it = boost::begin(vector);
+                    it != boost::end(vector); ++it, ++index)
                 {
-                    if (item.index != index_positive)
+                    if (index != index_positive)
                     {
-                        auto const id = item.value.id;
-                        ring_info_type& inner = ring_map[id];
+                        ring_info_type& inner = ring_map[it->id];
                         inner.parent = id_of_positive;
-                        outer.children.push_back(id);
+                        outer.children.push_back(it->id);
                     }
                 }
                 return;
@@ -357,16 +357,17 @@ inline void assign_parents(Geometry1 const& geometry1,
 
     if (check_for_orientation)
     {
-        for (auto& pair : ring_map)
+        for (map_iterator_type it = boost::begin(ring_map);
+            it != boost::end(ring_map); ++it)
         {
-            ring_info_type& info = pair.second;
+            ring_info_type& info = it->second;
             if (geometry::math::equals(info.get_area(), 0))
             {
                 info.discarded = true;
             }
             else if (info.parent.source_index >= 0)
             {
-                ring_info_type const& parent = ring_map[info.parent];
+                const ring_info_type& parent = ring_map[info.parent];
                 bool const pos = math::larger(info.get_area(), 0);
                 bool const parent_pos = math::larger(parent.area, 0);
 
@@ -396,11 +397,12 @@ inline void assign_parents(Geometry1 const& geometry1,
     }
 
     // Assign childlist
-    for (auto& pair : ring_map)
+    for (map_iterator_type it = boost::begin(ring_map);
+        it != boost::end(ring_map); ++it)
     {
-        if (pair.second.parent.source_index >= 0)
+        if (it->second.parent.source_index >= 0)
         {
-            ring_map[pair.second.parent].children.push_back(pair.first);
+            ring_map[it->second.parent].children.push_back(it->first);
         }
     }
 }

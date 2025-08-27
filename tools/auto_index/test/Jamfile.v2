@@ -1,6 +1,3 @@
-# Copyright 2018 John Maddock
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 import feature ;
 import generators ;
@@ -11,34 +8,55 @@ import testing ;
 import toolset ;
 import type ;
 
-path-constant ROOT : ../../.. ;
+alias line_compare_tool : ../../quickbook/test/src//line-compare-tool ;
 
-actions auto-index
+rule auto-index-test ( target-name : input-file : output-file ? : options * )
 {
-    "$(>[1])" "--prefix=$(ROOT)" "--in=$(>[2])" "--script=$(>[3])" "--out=$(<[1])"
-}
+    local project = [ project.current ] ;
 
-rule auto-index-test ( target-name : input-file : script-file : output-file ? : options * )
-{
-    make $(target-name)._out
-        :  ../build//auto_index/<variant>release
-            $(input-file)
-            $(script-file)
-        :   @auto-index
-        :   <location-prefix>$(target-name).test
-            <dependency>Jamfile.v2
+    local t =
+        [ targets.create-typed-target RUN
+            : $(project)
+            : $(target-name)
+            : [ alias autoindex : ../build//auto_index : release ]
+            : $(requirements)
+                <location-prefix>$(target-name).test
+                <testing.arg>--prefix=../../..
+                <testing.arg>$(options)
+                <testing.arg>--in=$(input-file)
+                <testing.arg>--out=$(target-name).out
+                <preserve-test-targets>on
+                <dependency>Jamfile.v2
+                <dependency>$(input-file)
+        ]
+        ;
+    
+    t += 
+        [ targets.create-typed-target RUN
+            : $(project)
+            : $(target-name)_check
+            : .//line_compare_tool
+            : $(requirements)
+                <location-prefix>$(target-name).test
+                <testing.arg>$(target-name).out
+                <testing.arg>$(target-name).gold
+                <preserve-test-targets>on
+                <dependency>$(target_name)
+                <implicit-dependency>$(target_name)
+                <dependency>Jamfile.v2
+                <dependency>$(input-file)
+        ]
         ;
 
-    testing.run text_diff.cpp
-        :
-        :   $(target-name)._out
-            $(target-name).gold
-        :   <preserve-test-targets>on
-            <dependency>Jamfile.v2
-        :   $(target-name)_check
-        ;
+    modules.poke testing : .all-tests : \$\(all-tests\) $(t) ;
+
+    return $(t) ;
 }
 
-auto-index-test test1 : type_traits.docbook : index.idx ;
-auto-index-test test2 : type_traits.docbook : index.idx : : --internal-index ;
-auto-index-test test3 : type_traits.docbook : index.idx : : --internal-index --index-type=index ;
+auto-index-test test1 : type_traits.docbook : : --script=index.idx ;
+auto-index-test test2 : type_traits.docbook : : --internal-index --script=index.idx ;
+auto-index-test test3 : type_traits.docbook : : --internal-index --index-type=index --script=index.idx ;
+
+
+
+

@@ -12,7 +12,7 @@
         "IO"
     ],
     "maintainers": [
-        "Dmitry Arkhipov <grisumbras@yandex.ru>"
+        "Vinnie Falco <vinnie.falco@gmail.com>"
     ],
     "cxxstd": "11"
 }

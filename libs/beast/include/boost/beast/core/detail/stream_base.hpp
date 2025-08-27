@@ -39,21 +39,16 @@ struct stream_base
         std::chrono::steady_clock::time_point;
     using tick_type = std::uint64_t;
 
-    template<typename Executor>
-    struct basic_op_state
+    struct op_state
     {
-        net::basic_waitable_timer<
-                std::chrono::steady_clock,
-                net::wait_traits<
-                        std::chrono::steady_clock>,
-                Executor> timer;    // for timing out
+        net::steady_timer timer;    // for timing out
         tick_type tick = 0;         // counts waits
         bool pending = false;       // if op is pending
         bool timeout = false;       // if timed out
 
         template<class... Args>
         explicit
-        basic_op_state(Args&&... args)
+        op_state(Args&&... args)
             : timer(std::forward<Args>(args)...)
         {
         }
@@ -130,11 +125,6 @@ struct stream_base
     static time_point never() noexcept
     {
         return (time_point::max)();
-    }
-
-    static time_point now() noexcept
-    {
-        return clock_type::now();
     }
 
     static std::size_t constexpr no_limit =

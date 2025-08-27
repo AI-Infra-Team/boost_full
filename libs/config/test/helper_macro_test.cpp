@@ -62,10 +62,6 @@ struct trait
    enum { value = b };
 };
 
-void* test_nullptr()
-{
-   return BOOST_NULLPTR;
-}
 
 int main()
 {
@@ -86,8 +82,6 @@ int main()
       {
          result += 2;
       }
-
-      test_nullptr();
    }
    catch(int)
    {

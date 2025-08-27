@@ -401,22 +401,17 @@ template<typename CharT>
 inline basic_cstring<CharT>&
 basic_cstring<CharT>::trim_right( basic_cstring exclusions )
 {
-    if(!size()) {
-        return *this;
-    }
-
     if( exclusions.is_empty() )
         exclusions = default_trim_ex();
 
-    iterator it = end();
+    iterator it;
 
-    do {
-        --it;
+    for( it = end()-1; it != begin()-1; --it ) {
         if( self_type::traits_type::find( exclusions.begin(),  exclusions.size(), *it ) == reinterpret_cast<pointer>(0) )
             break;
-    } while(it != begin());
+    }
 
-    return trim_right( it + 1 );
+    return trim_right( it+1 );
 }
 
 //____________________________________________________________________________//
@@ -548,16 +543,19 @@ inline typename basic_cstring<CharT>::size_type
 basic_cstring<CharT>::find( basic_cstring<CharT> str ) const
 {
     if( str.is_empty() || str.size() > size() )
-        return npos;
+        return static_cast<size_type>(npos);
 
+    const_iterator it   = begin();
     const_iterator last = end() - str.size() + 1;
 
-    for( const_iterator it = begin(); it != last; ++it ) {
+    while( it != last ) {
         if( traits_type::compare( it, str.begin(), str.size() ) == 0 )
-            return static_cast<size_type>(it - begin());
+            break;
+
+        ++it;
     }
 
-    return npos;
+    return it == last ? npos : static_cast<size_type>(it - begin());
 }
 
 //____________________________________________________________________________//
@@ -567,18 +565,19 @@ inline typename basic_cstring<CharT>::size_type
 basic_cstring<CharT>::rfind( basic_cstring<CharT> str ) const
 {
     if( str.is_empty() || str.size() > size() )
-        return npos;
+        return static_cast<size_type>(npos);
 
-    const_iterator first = begin();
+    const_iterator it   = end() - str.size();
+    const_iterator last = begin()-1;
 
-    for( const_iterator it = end() - str.size(); it != first; --it ) {
+    while( it != last ) {
         if( traits_type::compare( it, str.begin(), str.size() ) == 0 )
-            return static_cast<size_type>(it - begin());
+            break;
+
+        --it;
     }
-    if( traits_type::compare( first, str.begin(), str.size() ) == 0 )
-        return static_cast<size_type>(0);
-    else
-        return npos;
+
+    return it == last ? static_cast<size_type>(npos) : static_cast<size_type>(it - begin());
 }
 
 //____________________________________________________________________________//

@@ -3,9 +3,8 @@
 
 // Copyright (c) 2010-2019 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2016-2024.
-// Modifications copyright (c) 2016-2024, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2016-2021.
+// Modifications copyright (c) 2016-2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -15,6 +14,11 @@
 
 #ifndef BOOST_GEOMETRY_TEST_BUFFER_HPP
 #define BOOST_GEOMETRY_TEST_BUFFER_HPP
+
+#if defined(TEST_WITH_SVG)
+    // Define before including any buffer headerfile
+    #define BOOST_GEOMETRY_BUFFER_USE_HELPER_POINTS
+#endif
 
 #include <iostream>
 #include <fstream>
@@ -54,47 +58,26 @@ const double same_distance = -999;
 #  include "test_buffer_svg_per_turn.hpp"
 #endif
 
-#if defined(TEST_WITH_CSV)
-#  include "test_buffer_csv.hpp"
-#endif
-
 //-----------------------------------------------------------------------------
 template <typename JoinStrategy>
 struct JoinTestProperties
 {
-    static std::string name() { return "join_unknown"; }
-    static bool is_miter() { return false; }
+    static std::string name() { return "joinunknown"; }
 };
 
 template<> struct JoinTestProperties<boost::geometry::strategy::buffer::join_round>
-{
+{ 
     static std::string name() { return "round"; }
-    static bool is_miter() { return false; }
-};
-
-template<typename F, typename S, typename CT>
-struct JoinTestProperties<boost::geometry::strategy::buffer::geographic_join_round<F, S, CT> >
-{
-    static std::string name() { return "geo_round"; }
-    static bool is_miter() { return false; }
 };
 
 template<> struct JoinTestProperties<boost::geometry::strategy::buffer::join_miter>
-{
+{ 
     static std::string name() { return "miter"; }
-    static bool is_miter() { return true; }
 };
 
-template<typename F, typename S, typename CT>
-struct JoinTestProperties<boost::geometry::strategy::buffer::geographic_join_miter<F, S, CT> >
-{
-    static std::string name() { return "geo_miter"; }
-    static bool is_miter() { return true; }
-};
 template<> struct JoinTestProperties<boost::geometry::strategy::buffer::join_round_by_divide>
-{
+{ 
     static std::string name() { return "divide"; }
-    static bool is_miter() { return false; }
 };
 
 
@@ -103,30 +86,22 @@ template <typename EndStrategy>
 struct EndTestProperties { };
 
 template<> struct EndTestProperties<boost::geometry::strategy::buffer::end_round>
-{
+{ 
     static std::string name() { return "round"; }
-    static bool is_round() { return true; }
-};
-
-template<typename F, typename S, typename CT>
-struct EndTestProperties<boost::geometry::strategy::buffer::geographic_end_round<F, S, CT>>
-{
-    static std::string name() { return "geo_round"; }
-    static bool is_round() { return true; }
 };
 
 template<> struct EndTestProperties<boost::geometry::strategy::buffer::end_flat>
-{
+{ 
     static std::string name() { return "flat"; }
-    static bool is_round() { return false; }
 };
 
 struct ut_settings : public ut_base_settings
 {
-    static constexpr double default_tolerance = 0.01;
-    explicit ut_settings(double tol = default_tolerance, bool val = true, int points = 88)
+    explicit ut_settings(double tol = 0.01, bool val = true, int points = 88)
         : ut_base_settings(val)
         , tolerance(tol)
+        , test_area(true)
+        , use_ln_area(false)
         , points_per_circle(points)
     {}
 
@@ -148,15 +123,9 @@ struct ut_settings : public ut_base_settings
     static inline double ignore_area() { return 9999.9; }
 
     double tolerance;
-    bool test_area = true;
-    bool use_ln_area = false;
-
-    // Number of points in a circle. Not used for geo tests.
+    bool test_area;
+    bool use_ln_area;
     int points_per_circle;
-
-    double multiplier_min_area = 0.95;
-    double multiplier_max_area = 1.05;
-    double fraction_buffered_points_too_close = 0.10;
 };
 
 template
@@ -214,7 +183,7 @@ void test_buffer(std::string const& caseid,
     std::string end_name = EndTestProperties<EndStrategy>::name();
 
     if ( BOOST_GEOMETRY_CONDITION((
-            std::is_same<tag, bg::point_tag>::value
+            std::is_same<tag, bg::point_tag>::value 
          || std::is_same<tag, bg::multi_point_tag>::value )) )
     {
         join_name.clear();
@@ -229,15 +198,15 @@ void test_buffer(std::string const& caseid,
         << (end_name.empty() ? "" : "_") << end_name
         << (distance_strategy.negative() ? "_deflate" : "")
         << (bg::point_order<GeometryOut>::value == bg::counterclockwise ? "_ccw" : "")
+#if defined(BOOST_GEOMETRY_USE_RESCALING)
+        << "_rescaled"
+#endif
          // << "_" << point_buffer_count
         ;
 
     //std::cout << complete.str() << std::endl;
 
-#if defined(TEST_WITH_CSV)
-    detail::buffer_visitor_csv visitor("/tmp/csv/" + caseid + "_");
-
-#elif defined(TEST_WITH_SVG_PER_TURN)
+#if defined(TEST_WITH_SVG_PER_TURN)
     save_turns_visitor<point_type> visitor;
 #elif defined(TEST_WITH_SVG)
 
@@ -251,28 +220,24 @@ void test_buffer(std::string const& caseid,
 
     svg_visitor<mapper_type, bg::model::box<point_type> > visitor(mapper);
 
-    // Set the SVG boundingbox, with a margin. The margin is necessary because
-    // drawing is already started before the buffer is finished. It is not
-    // possible to "add" the buffer (unless we buffer twice).
-    double margin = distance_strategy.negative()
+    buffer_mapper.prepare(mapper, visitor, envelope,
+            distance_strategy.negative()
             ? 1.0
-            : 1.1 * distance_strategy.max_distance(join_strategy, end_strategy);
-
-    if (std::is_same<typename bg::coordinate_system<point_type>::type, bg::cs::geographic<bg::degree> >::value)
-    {
-        // Divide to avoid a too zoomed out SVG.
-        // TODO: this can go if bg::buffer for box accepts geographic boxes.
-        margin *= 1.25e-5;
-    }
-
-    buffer_mapper.prepare(mapper, visitor, envelope, margin);
+            : 1.1 * distance_strategy.max_distance(join_strategy, end_strategy)
+        );
 #else
     bg::detail::buffer::visit_pieces_default_policy visitor;
 #endif
 
     typedef typename bg::point_type<Geometry>::type point_type;
-
+    typedef typename bg::rescale_policy_type<point_type>::type
+        rescale_policy_type;
+    
+    // Enlarge the box to get a proper rescale policy
     bg::buffer(envelope, envelope, distance_strategy.max_distance(join_strategy, end_strategy));
+
+    rescale_policy_type rescale_policy
+            = bg::get_rescale_policy<rescale_policy_type>(envelope, strategy);
 
     buffered.clear();
     bg::detail::buffer::buffer_inserter<GeometryOut>(geometry,
@@ -283,10 +248,10 @@ void test_buffer(std::string const& caseid,
                         end_strategy,
                         point_strategy,
                         strategy,
+                        rescale_policy,
                         visitor);
 
-#if defined(TEST_WITH_CSV)
-#elif defined(TEST_WITH_SVG)
+#if defined(TEST_WITH_SVG)
     buffer_mapper.map_input_output(mapper, geometry, buffered, distance_strategy.negative());
 #endif
 
@@ -358,9 +323,7 @@ void test_buffer(std::string const& caseid,
         BOOST_CHECK_MESSAGE(bg::is_valid(buffered), complete.str() <<  " is not valid");
     }
 
-#if defined(TEST_WITH_CSV)
-    visitor.write_input_output(geometry, buffered);
-#elif defined(TEST_WITH_SVG_PER_TURN)
+#if defined(TEST_WITH_SVG_PER_TURN)
     {
         // Create a per turn visitor to map per turn, and buffer again with it
         per_turn_visitor<point_type> ptv(complete.str(), visitor.get_points());
@@ -371,12 +334,15 @@ void test_buffer(std::string const& caseid,
                             join_strategy,
                             end_strategy,
                             point_strategy,
+                            rescale_policy,
                             ptv);
         ptv.map_input_output(geometry, buffered, distance_strategy.negative());
         // self_ips NYI here
     }
 #elif defined(TEST_WITH_SVG)
-    buffer_mapper.map_self_ips(mapper, buffered, strategy);
+    rescale_policy_type rescale_policy_output
+            = bg::get_rescale_policy<rescale_policy_type>(envelope_output);
+    buffer_mapper.map_self_ips(mapper, buffered, strategy, rescale_policy_output);
 #endif
 
 }

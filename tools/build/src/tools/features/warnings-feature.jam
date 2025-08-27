@@ -7,7 +7,7 @@ import feature ;
 
 #| tag::doc[]
 
-[[b2.builtin.features.warnings]]`warnings`::
+[[bbv2.builtin.features.warnings]]`warnings`::
 *Allowed values:* `on`, `all`, `extra`, `pedantic`, `off`.
 +
 Controls the warning level of compilers.
@@ -28,7 +28,7 @@ feature.feature warnings
 
 #| tag::doc[]
 
-[[b2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
+[[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
 *Allowed values:* `off`, `on`.
 +
 Makes it possible to treat warnings as errors and abort compilation on a

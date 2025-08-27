@@ -5,7 +5,7 @@
 
 #| tag::doc[]
 
-[[b2.reference.tools.compiler.hp_cxx]]
+[[bbv2.reference.tools.compiler.hp_cxx]]
 = HP C++ Compiler for Tru64 Unix
 
 The `hp_cxx` modules supports the
@@ -69,8 +69,6 @@ Specifies additional command line options that will be passed to the linker.
 #   optimization is needed.
 #
 
-import regex ;
-
 import feature generators common ;
 import toolset : flags ;
 
@@ -79,6 +77,10 @@ feature.extend c++abi : cxxarm ;
 
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  hp_cxx : unix ;
+
+generators.override hp_cxx.prebuilt : builtin.lib-generator ;
+generators.override hp_cxx.prebuilt : builtin.prebuilt ;
+generators.override hp_cxx.searched-lib-generator : searched-lib-generator ;
 
 
 rule init ( version ? : command * : options * )
@@ -184,12 +186,6 @@ actions link.dll bind LIBRARIES
 # Note: Relaxed ANSI mode (-std) is used for compilation because in strict ANSI
 # C89 mode (-std1) the compiler doesn't accept C++ comments in C files. As -std
 # is the default, no special flag is needed.
-
-rule compile.c ( targets * : sources * : properties * )
-{
-    COMMAND_DATABASE on $(targets) = "(cc [^\n]*)" ;
-}
-
 actions compile.c
 {
     $(.root:E=)cc -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
@@ -201,7 +197,7 @@ actions compile.c
 # Note: We deliberately don't suppress any warnings on the compiler command
 # line, the user can always do this in a customized toolset later on.
 
-rule compile.c++ ( targets * : sources * : properties * )
+rule compile.c++
 {
     # We preprocess the TEMPLATE_DEPTH command line option here because we found
     # no way to do it correctly in the actual action code. There we either get
@@ -210,10 +206,6 @@ rule compile.c++ ( targets * : sources * : properties * )
     # "-pending_instantiations ".
     local template-depth = [ on $(1) return $(TEMPLATE_DEPTH) ] ;
     TEMPLATE_DEPTH on $(1) = "-pending_instantiations "$(template-depth) ;
-    local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
-        : "()[]\\+.*^$\"" : "\\" ] ;
-    COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
 
 actions compile.c++

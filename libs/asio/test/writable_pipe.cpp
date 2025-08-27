@@ -2,7 +2,7 @@
 // writable_pipe.cpp
 // ~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -31,18 +31,22 @@ struct write_some_handler
 {
   write_some_handler() {}
   void operator()(const boost::system::error_code&, std::size_t) {}
+#if defined(BOOST_ASIO_HAS_MOVE)
   write_some_handler(write_some_handler&&) {}
 private:
   write_some_handler(const write_some_handler&);
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 };
 
 struct read_some_handler
 {
   read_some_handler() {}
   void operator()(const boost::system::error_code&, std::size_t) {}
+#if defined(BOOST_ASIO_HAS_MOVE)
   read_some_handler(read_some_handler&&) {}
 private:
   read_some_handler(const read_some_handler&);
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 };
 
 void test()
@@ -69,18 +73,18 @@ void test()
     writable_pipe::native_handle_type native_pipe2 = pipe1.native_handle();
     writable_pipe pipe4(ioc_ex, native_pipe2);
 
+#if defined(BOOST_ASIO_HAS_MOVE)
     writable_pipe pipe5(std::move(pipe4));
-
-    basic_writable_pipe<io_context::executor_type> pipe6(ioc);
-    writable_pipe pipe7(std::move(pipe6));
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 
     // basic_writable_pipe operators.
 
+#if defined(BOOST_ASIO_HAS_MOVE)
     pipe1 = writable_pipe(ioc);
     pipe1 = std::move(pipe2);
-    pipe1 = std::move(pipe6);
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 
-    // I/O object functions.
+    // basic_io_object functions.
 
     writable_pipe::executor_type ex = pipe1.get_executor();
     (void)ex;
@@ -98,13 +102,8 @@ void test()
     pipe1.close();
     pipe1.close(ec);
 
-    writable_pipe::native_handle_type native_pipe5 = pipe1.release();
+    writable_pipe::native_handle_type native_pipe5 = pipe1.native_handle();
     (void)native_pipe5;
-    writable_pipe::native_handle_type native_pipe6 = pipe1.release(ec);
-    (void)native_pipe6;
-
-    writable_pipe::native_handle_type native_pipe7 = pipe1.native_handle();
-    (void)native_pipe7;
 
     pipe1.cancel();
     pipe1.cancel(ec);
@@ -132,5 +131,5 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "writable_pipe",
-  BOOST_ASIO_COMPILE_TEST_CASE(writable_pipe_compile::test)
+  BOOST_ASIO_TEST_CASE(writable_pipe_compile::test)
 )

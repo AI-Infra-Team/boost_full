@@ -162,7 +162,6 @@ math_toolkit/z_test.html
 math_toolkit/runs_test.html
 math_toolkit/ljung_box.html
 math_toolkit/linear_regression.html
-math_toolkit/chatterjee_correlation.html
 vector_functionals.html
 math_toolkit/norms.html
 special.html
@@ -275,7 +274,6 @@ math_toolkit/powers/powm1.html
 math_toolkit/powers/hypot.html
 math_toolkit/powers/ct_pow.html
 math_toolkit/powers/rsqrt.html
-math_toolkit/powers/logaddexp.html
 math_toolkit/sinc.html
 math_toolkit/sinc/sinc_overview.html
 math_toolkit/sinc/sinc_pi.html
@@ -302,7 +300,6 @@ math_toolkit/roots_noderiv/root_termination.html
 math_toolkit/roots_noderiv/implementation.html
 math_toolkit/roots_deriv.html
 math_toolkit/cubic_roots.html
-math_toolkit/quartic_roots.html
 math_toolkit/root_finding_examples.html
 math_toolkit/root_finding_examples/cbrt_eg.html
 math_toolkit/root_finding_examples/lambda.html
@@ -317,14 +314,8 @@ math_toolkit/root_comparison.html
 math_toolkit/root_comparison/cbrt_comparison.html
 math_toolkit/root_comparison/root_n_comparison.html
 math_toolkit/root_comparison/elliptic_comparison.html
-optimization.html
-math_toolkit/differential_evolution.html
-math_toolkit/jso.html
-math_toolkit/random_search.html
-math_toolkit/cma_es.html
 poly.html
 math_toolkit/polynomials.html
-math_toolkit/estrin.html
 math_toolkit/rational.html
 interpolation.html
 math_toolkit/cardinal_cubic_b.html
@@ -423,7 +414,6 @@ math_toolkit/internals/tuples.html
 math_toolkit/internals/minimax.html
 math_toolkit/internals/error_test.html
 math_toolkit/internals/test_data.html
-math_toolkit/internals/color_maps.html
 using_udt.html
 math_toolkit/high_precision.html
 math_toolkit/high_precision/why_high_precision.html

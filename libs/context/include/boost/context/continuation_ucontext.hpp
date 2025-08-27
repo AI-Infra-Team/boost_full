@@ -7,7 +7,7 @@
 #ifndef BOOST_CONTEXT_CONTINUATION_H
 #define BOOST_CONTEXT_CONTINUATION_H
 
-#include <boost/predef/os.h>
+#include <boost/predef.h>
 #if BOOST_OS_MACOS
 #define _XOPEN_SOURCE 600
 #endif
@@ -16,7 +16,6 @@ extern "C" {
 #include <ucontext.h>
 }
 
-#include <boost/predef.h>
 #include <boost/context/detail/config.hpp>
 
 #include <algorithm>
@@ -61,19 +60,12 @@ namespace detail {
 // tampoline function
 // entered if the execution context
 // is resumed for the first time
-template <typename Record>
-#if BOOST_OS_MACOS
-static void entry_func(std::uint32_t data_high,
-                       std::uint32_t data_low) noexcept {
-  auto data =
-      reinterpret_cast<void *>(std::uint64_t(data_high) << 32 | data_low);
-#else
-static void entry_func(void *data) noexcept {
-#endif
-  Record *record = static_cast<Record *>(data);
-  BOOST_ASSERT(nullptr != record);
-  // start execution of toplevel context-function
-  record->run();
+template< typename Record >
+static void entry_func( void * data) noexcept {
+    Record * record = static_cast< Record * >( data);
+    BOOST_ASSERT( nullptr != record);
+    // start execution of toplevel context-function
+    record->run();
 }
 
 struct BOOST_CONTEXT_DECL activation_record {
@@ -105,7 +97,7 @@ struct BOOST_CONTEXT_DECL activation_record {
     activation_record( stack_context sctx_) noexcept :
         sctx( sctx_ ),
         main_ctx( false ) {
-    }
+    } 
 
     virtual ~activation_record() {
 	}
@@ -264,7 +256,7 @@ public:
             c = boost::context::detail::invoke( fn_, std::move( c) );
 #else
             c = std::invoke( fn_, std::move( c) );
-#endif
+#endif  
         } catch ( forced_unwind const& ex) {
             c = Ctx{ ex.from };
         }
@@ -287,7 +279,7 @@ static activation_record * create_context1( StackAlloc && salloc, Fn && fn) {
     void * storage = reinterpret_cast< void * >(
             ( reinterpret_cast< uintptr_t >( sctx.sp) - static_cast< uintptr_t >( sizeof( capture_t) ) )
             & ~ static_cast< uintptr_t >( 0xff) );
-    // placement new for control structure on context stack
+    // placment new for control structure on context stack
     capture_t * record = new ( storage) capture_t{
             sctx, std::forward< StackAlloc >( salloc), std::forward< Fn >( fn) };
     // stack bottom
@@ -306,15 +298,7 @@ static activation_record * create_context1( StackAlloc && salloc, Fn && fn) {
     record->uctx.uc_stack.ss_size = reinterpret_cast< uintptr_t >( storage) -
             reinterpret_cast< uintptr_t >( stack_bottom) - static_cast< uintptr_t >( 64);
     record->uctx.uc_link = nullptr;
-#if BOOST_OS_MACOS
-    const auto integer = std::uint64_t(record);
-    ::makecontext(&record->uctx, (void (*)()) & entry_func<capture_t>, 2,
-                  std::uint32_t((integer >> 32) & 0xFFFFFFFF),
-                  std::uint32_t(integer));
-#else
-    ::makecontext(&record->uctx, (void (*)()) & entry_func<capture_t>, 1,
-                  record);
-#endif
+    ::makecontext( & record->uctx, ( void (*)() ) & entry_func< capture_t >, 1, record);
 #if defined(BOOST_USE_ASAN)
     record->stack_bottom = record->uctx.uc_stack.ss_sp;
     record->stack_size = record->uctx.uc_stack.ss_size;
@@ -324,13 +308,13 @@ static activation_record * create_context1( StackAlloc && salloc, Fn && fn) {
 
 template< typename Ctx, typename StackAlloc, typename Fn >
 static activation_record * create_context2( preallocated palloc, StackAlloc && salloc, Fn && fn) {
-    typedef capture_record< Ctx, StackAlloc, Fn >  capture_t;
+    typedef capture_record< Ctx, StackAlloc, Fn >  capture_t; 
 
     // reserve space for control structure
     void * storage = reinterpret_cast< void * >(
             ( reinterpret_cast< uintptr_t >( palloc.sp) - static_cast< uintptr_t >( sizeof( capture_t) ) )
             & ~ static_cast< uintptr_t >( 0xff) );
-    // placement new for control structure on context stack
+    // placment new for control structure on context stack
     capture_t * record = new ( storage) capture_t{
             palloc.sctx, std::forward< StackAlloc >( salloc), std::forward< Fn >( fn) };
     // stack bottom
@@ -349,15 +333,7 @@ static activation_record * create_context2( preallocated palloc, StackAlloc && s
     record->uctx.uc_stack.ss_size = reinterpret_cast< uintptr_t >( storage) -
             reinterpret_cast< uintptr_t >( stack_bottom) - static_cast< uintptr_t >( 64);
     record->uctx.uc_link = nullptr;
-#if BOOST_OS_MACOS
-    const auto integer = std::uint64_t(record);
-    ::makecontext(&record->uctx, (void (*)()) & entry_func<capture_t>, 2,
-                  std::uint32_t((integer >> 32) & 0xFFFFFFFF),
-                  std::uint32_t(integer));
-#else
-    ::makecontext(&record->uctx, (void (*)()) & entry_func<capture_t>, 1,
-                  record);
-#endif
+    ::makecontext( & record->uctx,  ( void (*)() ) & entry_func< capture_t >, 1, record);
 #if defined(BOOST_USE_ASAN)
     record->stack_bottom = record->uctx.uc_stack.ss_sp;
     record->stack_size = record->uctx.uc_stack.ss_size;
@@ -478,7 +454,7 @@ public:
     }
 
     #if !defined(BOOST_EMBTC)
-
+    
     template< typename charT, class traitsT >
     friend std::basic_ostream< charT, traitsT > &
     operator<<( std::basic_ostream< charT, traitsT > & os, continuation const& other) {
@@ -490,7 +466,7 @@ public:
     }
 
     #else
-
+    
     template< typename charT, class traitsT >
     friend std::basic_ostream< charT, traitsT > &
     operator<<( std::basic_ostream< charT, traitsT > & os, continuation const& other);
@@ -515,7 +491,7 @@ public:
     }
 
 #endif
-
+    
 template<
     typename Fn,
     typename = detail::disable_overload< continuation, Fn >

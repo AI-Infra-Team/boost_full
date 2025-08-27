@@ -13,7 +13,6 @@
 #include <cmath>
 #include <cstdint>
 #include <boost/math/tools/series.hpp>
-#include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/math/policies/error_handling.hpp>
 
@@ -210,7 +209,7 @@
   }
 
   template <class T, class Policy>
-  inline T log_pochhammer(T z, unsigned n, const Policy pol, int* s = nullptr)
+  inline T log_pochhammer(T z, unsigned n, const Policy pol, int* s = 0)
   {
      BOOST_MATH_STD_USING
 #if 0
@@ -239,7 +238,7 @@
            return r;
         }
         int s1, s2;
-        auto r = static_cast<T>(boost::math::lgamma(T(z + n), &s1, pol) - boost::math::lgamma(z, &s2, pol));
+        T r = boost::math::lgamma(T(z + n), &s1, pol) - boost::math::lgamma(z, &s2, pol);
         if(s)
            *s = s1 * s2;
         return r;
@@ -340,7 +339,7 @@
         n = summit_location;
         term *= (b + (n - 1)) * n / ((a + (n - 1)) * z);
         --n;
-
+        
         do
         {
            sum += term;

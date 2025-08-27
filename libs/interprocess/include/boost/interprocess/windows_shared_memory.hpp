@@ -162,7 +162,7 @@ class windows_shared_memory
 #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
 inline windows_shared_memory::windows_shared_memory() BOOST_NOEXCEPT
-   :  m_handle(0), m_mode(), m_name()
+   :  m_handle(0)
 {}
 
 inline windows_shared_memory::~windows_shared_memory()
@@ -194,13 +194,6 @@ template <class CharT>
 inline bool windows_shared_memory::priv_open_or_create
    (ipcdetail::create_enum_t type, const CharT *filename, mode_t mode, std::size_t size, const permissions& perm)
 {
-   if (filename){
-      m_name = filename;
-   }
-   else{
-      m_name = "";
-   }
-
    unsigned long protection = 0;
    unsigned long map_access = 0;
 

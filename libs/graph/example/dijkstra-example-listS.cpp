@@ -44,11 +44,13 @@ int main(int, char*[])
     graph_traits< graph_t >::vertex_iterator i, iend;
 
     graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-    auto weightmap = get(edge_weight, g);
+    property_map< graph_t, edge_weight_t >::type weightmap
+        = get(edge_weight, g);
 
     // Manually intialize the vertex index and name maps
-    auto indexmap = get(vertex_index, g);
-    auto name = get(vertex_name, g);
+    property_map< graph_t, vertex_index_t >::type indexmap
+        = get(vertex_index, g);
+    property_map< graph_t, vertex_name_t >::type name = get(vertex_name, g);
     int c = 0;
     for (boost::tie(i, iend) = vertices(g); i != iend; ++i, ++c)
     {
@@ -56,10 +58,12 @@ int main(int, char*[])
         name[*i] = 'A' + c;
     }
 
-    auto s = vertex(A, g);
+    vertex_descriptor s = vertex(A, g);
 
-    auto d = get(vertex_distance, g);
-    auto p = get(vertex_predecessor, g);
+    property_map< graph_t, vertex_distance_t >::type d
+        = get(vertex_distance, g);
+    property_map< graph_t, vertex_predecessor_t >::type p
+        = get(vertex_predecessor, g);
     dijkstra_shortest_paths(g, s, predecessor_map(p).distance_map(d));
 
     std::cout << "distances and parents:" << std::endl;
@@ -83,8 +87,9 @@ int main(int, char*[])
     graph_traits< graph_t >::edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei)
     {
-        auto e = *ei;
-        auto u = source(e, g), v = target(e, g);
+        graph_traits< graph_t >::edge_descriptor e = *ei;
+        graph_traits< graph_t >::vertex_descriptor u = source(e, g),
+                                                   v = target(e, g);
         dot_file << name[u] << " -> " << name[v] << "[label=\""
                  << get(weightmap, e) << "\"";
         if (p[v] == u)

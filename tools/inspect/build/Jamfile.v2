@@ -6,8 +6,10 @@
 # See http://www.boost.org/LICENSE_1_0.txt
 
 project
-    : source-location ../src
-    : default-build release
+    :
+    requirements
+    :
+    source-location .. 
     ;
 
 exe inspect
@@ -26,10 +28,29 @@ exe inspect
     path_name_check.cpp
     tab_check.cpp
     unnamed_namespace_check.cpp
-    /boost/filesystem//boost_filesystem/<link>static
-    /boost/regex//boost_regex/<link>static
+    /boost//filesystem/<link>static
+    /boost//regex/<link>static
+    :
+    :
+    release
     ;
 
-# For backwards compatibility with processes that haven't changed to use
-# the top-level install targets.
-explicit [ alias dist-bin : /boost/inspect//dist-bin ] ;
+install dist-bin
+    :
+    inspect
+    :
+    <install-type>EXE
+    <location>../../../dist/bin
+    :
+    release
+    ;
+
+install dist-lib
+    :
+    inspect
+    :
+    <install-type>LIB
+    <location>../../../dist/lib
+    :
+    release
+    ;

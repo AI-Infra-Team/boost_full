@@ -8,9 +8,28 @@
 
 // See library home page at http://www.boost.org/libs/system
 
+// Avoid spurious VC++ warnings
+# define _CRT_SECURE_NO_WARNINGS
+
 #include <boost/system/error_code.hpp>
+#include <boost/config.hpp>
+#include <boost/config/pragma_message.hpp>
+#include <iostream>
+
+#if !defined(BOOST_SYSTEM_HAS_SYSTEM_ERROR)
+
+BOOST_PRAGMA_MESSAGE( "BOOST_SYSTEM_HAS_SYSTEM_ERROR not defined, test will be skipped" )
+
+int main()
+{
+  std::cout
+    << "The version of the C++ standard library being used does not"
+    " support header <system_error> so interoperation will not be tested.\n";
+}
+
+#else
+
 #include <boost/core/lightweight_test.hpp>
-#include <boost/core/snprintf.hpp>
 #include <system_error>
 #include <cerrno>
 #include <string>
@@ -100,7 +119,7 @@ class user_category_impl: public boost::system::error_category
 {
 public:
 
-    virtual const char * name() const noexcept
+    virtual const char * name() const BOOST_NOEXCEPT
     {
         return "user";
     }
@@ -108,12 +127,12 @@ public:
     virtual std::string message( int ev ) const
     {
         char buffer[ 256 ];
-        boost::core::snprintf( buffer, sizeof( buffer ), "user message %d", ev );
+        std::sprintf( buffer, "user message %d", ev );
 
         return buffer;
     }
 
-    virtual boost::system::error_condition default_error_condition( int ev ) const noexcept
+    virtual boost::system::error_condition default_error_condition( int ev ) const BOOST_NOEXCEPT
     {
         if( ev == 4 )
         {
@@ -129,7 +148,7 @@ public:
         }
     }
 
-    virtual bool equivalent( int code, const boost::system::error_condition & condition ) const noexcept
+    virtual bool equivalent( int code, const boost::system::error_condition & condition ) const BOOST_NOEXCEPT
     {
         if( code == 4 && condition == make_error_condition( boost::system::errc::too_many_files_open_in_system ) )
         {
@@ -144,7 +163,7 @@ public:
         return default_error_condition( code ) == condition;
     }
 
-    // virtual bool equivalent( const error_code & code, int condition ) const noexcept;
+    // virtual bool equivalent( const error_code & code, int condition ) const BOOST_NOEXCEPT;
 };
 
 boost::system::error_category const & user_category()
@@ -240,7 +259,7 @@ class user2_category_impl: public boost::system::error_category
 {
 public:
 
-    virtual const char * name() const noexcept
+    virtual const char * name() const BOOST_NOEXCEPT
     {
         return "user2";
     }
@@ -248,22 +267,22 @@ public:
     virtual std::string message( int ev ) const
     {
         char buffer[ 256 ];
-        boost::core::snprintf( buffer, sizeof( buffer ), "user2 message %d", ev );
+        std::sprintf( buffer, "user2 message %d", ev );
 
         return buffer;
     }
 
-    virtual boost::system::error_condition default_error_condition( int ev ) const noexcept
+    virtual boost::system::error_condition default_error_condition( int ev ) const BOOST_NOEXCEPT
     {
         return boost::system::error_condition( ev, *this );
     }
 
-    virtual bool equivalent( int code, const boost::system::error_condition & condition ) const noexcept
+    virtual bool equivalent( int code, const boost::system::error_condition & condition ) const BOOST_NOEXCEPT
     {
         return default_error_condition( code ) == condition;
     }
 
-    virtual bool equivalent( const boost::system::error_code & code, int condition ) const noexcept
+    virtual bool equivalent( const boost::system::error_code & code, int condition ) const BOOST_NOEXCEPT
     {
         if( code.category() == *this )
         {
@@ -320,6 +339,9 @@ static void test_user2_category()
 
 int main()
 {
+    std::cout
+      << "The version of the C++ standard library being used"
+      " supports header <system_error> so interoperation will be tested.\n";
     test_generic_category();
     test_system_category();
     test_user_category();
@@ -327,3 +349,5 @@ int main()
 
     return boost::report_errors();
 }
+
+#endif

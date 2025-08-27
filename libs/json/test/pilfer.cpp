@@ -16,9 +16,11 @@
 namespace boost {
 namespace json {
 
+inline namespace standalone {
 namespace detail {
 struct V{};
 } // detail
+} // standalone
 
 namespace detail {
 struct T{};

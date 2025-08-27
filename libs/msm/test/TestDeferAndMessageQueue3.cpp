@@ -8,6 +8,7 @@
 // file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#include <iostream>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
 //front-end
@@ -41,7 +42,7 @@ namespace
         // The list of FSM states
         struct State11 : public msm::front::state<>
         {
-            typedef boost::fusion::vector<eventd> deferred_events;
+            typedef mpl::vector<eventd> deferred_events;
 
             template <class Event,class FSM>
             void on_entry(Event const&,FSM& ) {++entry_counter;}

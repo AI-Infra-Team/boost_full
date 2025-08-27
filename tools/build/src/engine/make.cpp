@@ -5,7 +5,6 @@
  */
 
 /*  This file is ALSO:
- *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -54,7 +53,7 @@
 # define max(a,b) ((a)>(b)?(a):(b))
 #endif
 
-static targets_uptr make0sort( targets_uptr c );
+static TARGETS * make0sort( TARGETS * c );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
     static void dependGraphOutput( TARGET * t, int32_t depth );
@@ -92,7 +91,7 @@ static char const * target_bind[] =
  * make() - make a target, given its name.
  */
 
-int32_t make( LIST * targets, bool anyhow )
+int32_t make( LIST * targets, int32_t anyhow )
 {
     COUNTS counts[ 1 ];
     int32_t status = 0;  /* 1 if anything fails */
@@ -125,7 +124,7 @@ int32_t make( LIST * targets, bool anyhow )
     }
 
 #ifdef OPT_GRAPH_DEBUG_EXT
-    if ( is_debug_graph() )
+    if ( DEBUG_GRAPH )
     {
         LISTITER iter, end;
         for ( iter = list_begin( targets ), end = list_end( targets ); iter != end; iter = list_next( iter ) )
@@ -133,7 +132,7 @@ int32_t make( LIST * targets, bool anyhow )
     }
 #endif
 
-    if ( is_debug_make() )
+    if ( DEBUG_MAKE )
     {
         if ( counts->targets )
             out_printf( "...found %d target%s...\n", counts->targets,
@@ -172,9 +171,9 @@ static void force_rebuilds( TARGET * t );
 
 static void update_dependants( TARGET * t )
 {
-    targets_ptr q;
+    TARGETS * q;
 
-    for ( q = t->dependants.get(); q; q = q->next.get() )
+    for ( q = t->dependants; q; q = q->next )
     {
         TARGET * p = q->target;
         char fate0 = p->fate;
@@ -186,7 +185,7 @@ static void update_dependants( TARGET * t )
         {
             p->fate = T_FATE_UPDATE;
 
-            if ( is_debug_fate() )
+            if ( DEBUG_FATE )
             {
                 out_printf( "fate change  %s from %s to %s (as dependent of %s)\n",
                         object_str( p->name ), target_fate[ (int32_t) fate0 ], target_fate[ (int32_t) p->fate ], object_str( t->name ) );
@@ -210,15 +209,15 @@ static void update_dependants( TARGET * t )
 
 static void force_rebuilds( TARGET * t )
 {
-    targets_ptr d;
-    for ( d = t->rebuilds.get(); d; d = d->next.get() )
+    TARGETS * d;
+    for ( d = t->rebuilds; d; d = d->next )
     {
         TARGET * r = d->target;
 
         /* If it is not already being rebuilt for other reasons. */
         if ( r->fate < T_FATE_BUILD )
         {
-            if ( is_debug_fate() )
+            if ( DEBUG_FATE )
                 out_printf( "fate change  %s from %s to %s (by rebuild)\n",
                         object_str( r->name ), target_fate[ (int32_t) r->fate ], target_fate[ T_FATE_REBUILD ] );
 
@@ -235,7 +234,7 @@ static void force_rebuilds( TARGET * t )
 int32_t make0rescan( TARGET * t, TARGET * rescanning )
 {
     int32_t result = 0;
-    targets_ptr c;
+    TARGETS * c;
 
     /* Check whether we have already found a cycle. */
     if ( target_scc( t ) == rescanning )
@@ -250,7 +249,7 @@ int32_t make0rescan( TARGET * t, TARGET * rescanning )
         return 0;
 
     t->rescanning = rescanning;
-    for ( c = t->depends.get(); c; c = c->next.get() )
+    for ( c = t->depends; c; c = c->next )
     {
         TARGET * dependency = c->target;
         /* Always start at the root of each new strongly connected component. */
@@ -265,7 +264,7 @@ int32_t make0rescan( TARGET * t, TARGET * rescanning )
     if ( result && t->scc_root == NULL )
     {
         t->scc_root = rescanning;
-        targetentry( rescanning->depends, t );
+        rescanning->depends = targetentry( rescanning->depends, t );
     }
     return result;
 }
@@ -284,11 +283,11 @@ void make0
     TARGET * p,       /* parent */
     int32_t      depth,   /* for display purposes */
     COUNTS * counts,  /* for reporting */
-    bool      anyhow,
+    int32_t      anyhow,
     TARGET * rescanning
 )  /* forcibly touch all (real) targets */
 {
-    targets_ptr c;
+    TARGETS    * c;
     TARGET     * ptime = t;
     TARGET     * located_target = 0;
     timestamp    last;
@@ -303,14 +302,14 @@ void make0
     int32_t oldTimeStamp;
 #endif
 
-    if ( is_debug_makeprog() )
+    if ( DEBUG_MAKEPROG )
         out_printf( "make\t--\t%s%s\n", spaces( depth ), object_str( t->name ) );
 
     /*
      * Step 1: Initialize.
      */
 
-    if ( is_debug_makeprog() )
+    if ( DEBUG_MAKEPROG )
         out_printf( "make\t--\t%s%s\n", spaces( depth ), object_str( t->name ) );
 
     t->fate = T_FATE_MAKING;
@@ -381,7 +380,7 @@ void make0
      * Pause for a little progress reporting.
      */
 
-    if ( is_debug_bind() )
+    if ( DEBUG_BIND )
     {
         if ( !object_equal( t->name, t->boundname ) )
             out_printf( "bind\t--\t%s%s: %s\n", spaces( depth ),
@@ -408,7 +407,7 @@ void make0
      */
 
     /* Step 3a: Recursively make0() dependencies. */
-    for ( c = t->depends.get(); c; c = c->next.get() )
+    for ( c = t->depends; c; c = c->next )
     {
         int32_t const internal = t->flags & T_FLAG_INTERNAL;
 
@@ -442,20 +441,20 @@ void make0
 
     /* Step 3c: Add dependencies' includes to our direct dependencies. */
     {
-        targets_uptr incs;
-        for ( c = t->depends.get(); c; c = c->next.get() )
+        TARGETS * incs = 0;
+        for ( c = t->depends; c; c = c->next )
             if ( c->target->includes )
-                targetentry( incs, c->target->includes );
-        t->depends = targetchain( std::move(t->depends), std::move(incs) );
+                incs = targetentry( incs, c->target->includes );
+        t->depends = targetchain( t->depends, incs );
     }
 
     if ( located_target )
-        targetentry( t->depends, located_target );
+        t->depends = targetentry( t->depends, located_target );
 
     /* Step 3d: Detect cycles. */
     {
         int32_t cycle_depth = depth;
-        for ( c = t->depends.get(); c; c = c->next.get() )
+        for ( c = t->depends; c; c = c->next )
         {
             TARGET * scc_root = target_scc( c->target );
             if ( scc_root->fate == T_FATE_MAKING &&
@@ -479,7 +478,7 @@ void make0
     timestamp_clear( &last );
     timestamp_clear( &leaf );
     fate = T_FATE_STABLE;
-    for ( c = t->depends.get(); c; c = c->next.get() )
+    for ( c = t->depends; c; c = c->next )
     {
         /* If we are in a different strongly connected component, pull
          * timestamps from the root.
@@ -510,7 +509,7 @@ void make0
         fate = max( fate, c->target->fate );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
-        if ( is_debug_fate() )
+        if ( DEBUG_FATE )
             if ( fate < c->target->fate )
                 out_printf( "fate change %s from %s to %s by dependency %s\n",
                     object_str( t->name ), target_fate[ (int32_t)fate ],
@@ -539,7 +538,7 @@ void make0
     if ( t->flags & T_FLAG_NOUPDATE )
     {
 #ifdef OPT_GRAPH_DEBUG_EXT
-        if ( is_debug_fate() )
+        if ( DEBUG_FATE )
             if ( fate != T_FATE_STABLE )
                 out_printf( "fate change  %s back to stable, NOUPDATE.\n",
                     object_str( t->name ) );
@@ -636,7 +635,7 @@ void make0
         fate = T_FATE_STABLE;
     }
 #ifdef OPT_GRAPH_DEBUG_EXT
-    if ( is_debug_fate() && ( fate != savedFate ) )
+    if ( DEBUG_FATE && ( fate != savedFate ) )
 	{
         if ( savedFate == T_FATE_STABLE )
             out_printf( "fate change  %s set to %s%s\n", object_str( t->name ),
@@ -659,7 +658,7 @@ void make0
         if ( t->flags & T_FLAG_NOCARE )
         {
 #ifdef OPT_GRAPH_DEBUG_EXT
-            if ( is_debug_fate() )
+            if ( DEBUG_FATE )
                 out_printf( "fate change %s to STABLE from %s, "
                     "no actions, no dependencies and do not care\n",
                     object_str( t->name ), target_fate[ fate ] );
@@ -697,10 +696,10 @@ void make0
     if ( ( fate >= T_FATE_BUILD ) && ( fate < T_FATE_BROKEN ) )
     {
         ACTIONS * a;
-        targets_ptr c;
+        TARGETS * c;
         for ( a = t->actions; a; a = a->next )
         {
-            for ( c = a->action->targets.get(); c; c = c->next.get() )
+            for ( c = a->action->targets; c; c = c->next )
             {
                 if ( c->target->fate == T_FATE_INIT )
                 {
@@ -721,7 +720,7 @@ void make0
      */
 
     if ( globs.newestfirst )
-        t->depends = make0sort( std::move(t->depends) );
+        t->depends = make0sort( t->depends );
 
     /*
      * Step 6: A little harmless tabulating for tracing purposes.
@@ -736,7 +735,7 @@ void make0
 #ifdef OPT_IMPROVED_PATIENCE_EXT
         ++counts->targets;
 #else
-        if ( !( ++counts->targets % 1000 ) && is_debug_make() )
+        if ( !( ++counts->targets % 1000 ) && DEBUG_MAKE )
         {
             out_printf( "...patience...\n" );
             out_flush();
@@ -760,7 +759,7 @@ void make0
         &p->time ) > 0 )
         flag = "*";
 
-    if ( is_debug_makeprog() )
+    if ( DEBUG_MAKEPROG )
         out_printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int32_t)t->fate ],
             spaces( depth ), object_str( t->name ) );
 }
@@ -770,9 +769,11 @@ void make0
 
 static char const * target_name( TARGET * t )
 {
+    static char buf[ 1000 ];
     if ( t->flags & T_FLAG_INTERNAL )
     {
-        return b2::value::format( "%s (internal node)", t->name->str() )->str();
+        sprintf( buf, "%s (internal node)", object_str( t->name ) );
+        return buf;
     }
     return object_str( t->name );
 }
@@ -784,7 +785,7 @@ static char const * target_name( TARGET * t )
 
 static void dependGraphOutput( TARGET * t, int32_t depth )
 {
-    targets_ptr c;
+    TARGETS * c;
 
     if ( ( t->flags & T_FLAG_VISITED ) || !t->name || !t->boundname )
         return;
@@ -860,7 +861,7 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
         out_printf( "\n" );
     }
 
-    for ( c = t->depends.get(); c; c = c->next.get() )
+    for ( c = t->depends; c; c = c->next )
     {
         out_printf( "  %s       : Depends on %s (%s)", spaces( depth ),
            target_name( c->target ), target_fate[ (int32_t)c->target->fate ] );
@@ -869,7 +870,7 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
         out_printf( "\n" );
     }
 
-    for ( c = t->depends.get(); c; c = c->next.get() )
+    for ( c = t->depends; c; c = c->next )
         dependGraphOutput( c->target, depth + 1 );
 }
 #endif
@@ -878,31 +879,42 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
 /*
  * make0sort() - reorder TARGETS chain by their time (newest to oldest).
  *
- * This sorts in-place by swapping the target pointers in the chain in a
- * rather terrible n-square/2 algorithm.
+ * We walk chain, taking each item and inserting it on the sorted result, with
+ * newest items at the front. This involves updating each of the TARGETS'
+ * c->next and c->tail. Note that we make c->tail a valid prev pointer for every
+ * entry. Normally, it is only valid at the head, where prev == tail. Note also
+ * that while tail is a loop, next ends at the end of the chain.
  */
 
-static targets_uptr make0sort( targets_uptr chain )
+static TARGETS * make0sort( TARGETS * chain )
 {
     PROFILE_ENTER( MAKE_MAKE0SORT );
 
-    // The current tail we put the next newest item.
-    for ( targets_ptr front = chain.get(); front ; front = front->next.get() )
+    TARGETS * result = 0;
+
+    /* Walk the current target list. */
+    while ( chain )
     {
-        // Find the maximum time, i.e. most recent in the rest of the chain.
-        targets_ptr newest = front->next.get();
-        for ( targets_ptr rest = newest; rest ; rest = rest->next.get())
-        {
-            if ( timestamp_cmp( &newest->target->time, &rest->target->time ) > 0 )
-                newest = rest;
-        }
-        // Sort it to the front if needed.
-        if ( front != newest )
-            std::swap( front->target, newest->target );
+        TARGETS * c = chain;
+        TARGETS * s = result;
+
+        chain = chain->next;
+
+        /* Find point s in result for c. */
+        while ( s && timestamp_cmp( &s->target->time, &c->target->time ) > 0 )
+            s = s->next;
+
+        /* Insert c in front of s (might be 0). */
+        c->next = s;                           /* good even if s = 0       */
+        if ( result == s ) result = c;         /* new head of chain?       */
+        if ( !s ) s = result;                  /* wrap to ensure a next    */
+        if ( result != c ) s->tail->next = c;  /* not head? be prev's next */
+        c->tail = s->tail;                     /* take on next's prev      */
+        s->tail = c;                           /* make next's prev us      */
     }
 
     PROFILE_EXIT( MAKE_MAKE0SORT );
-    return chain;
+    return result;
 }
 
 

@@ -385,10 +385,6 @@ namespace boost { namespace spirit { namespace karma
         }
 
         ///////////////////////////////////////////////////////////////////////
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4512) // assignment operator could not be generated.
-#endif
         struct adder
         {
             template <typename, typename = unused_type>
@@ -416,6 +412,9 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
+
+            // silence MSVC warning C4512: assignment operator could not be generated
+            BOOST_DELETED_FUNCTION(adder& operator= (adder const&))
         };
 
         struct remover
@@ -445,10 +444,10 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
+
+            // silence MSVC warning C4512: assignment operator could not be generated
+            BOOST_DELETED_FUNCTION(remover& operator= (remover const&))
         };
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
 
         adder add;
         remover remove;
@@ -643,10 +642,6 @@ namespace boost { namespace spirit { namespace karma
         }
 
         ///////////////////////////////////////////////////////////////////////
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4512) // assignment operator could not be generated.
-#endif
         struct adder
         {
             template <typename, typename = unused_type>
@@ -674,6 +669,9 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
+
+            // silence MSVC warning C4512: assignment operator could not be generated
+            BOOST_DELETED_FUNCTION(adder& operator= (adder const&))
         };
 
         struct remover
@@ -703,10 +701,10 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
+
+            // silence MSVC warning C4512: assignment operator could not be generated
+            BOOST_DELETED_FUNCTION(remover& operator= (remover const&))
         };
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
 
         adder add;
         remover remove;

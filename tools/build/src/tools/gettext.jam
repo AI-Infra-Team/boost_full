@@ -62,17 +62,11 @@ rule init ( path ? # Path where all tools are located. If not specified,
                    # they should be in PATH.
           )
 {
-    if $(.initialized) && ! $(path)
-    {
-        return ;
-    }
-
-    .initialized = true ;
-    if $(.path) != $(path)
+    if $(.initialized) && $(.path) != $(path)
     {
         errors.error "Attempt to reconfigure with different path" ;
     }
-
+    .initialized = true ;
     if $(path)
     {
         .path = $(path)/ ;

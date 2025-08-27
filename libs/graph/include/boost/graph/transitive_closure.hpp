@@ -82,7 +82,7 @@ void transitive_closure(const Graph& g, GraphTC& tc,
     iterator_property_map< cg_vertex*, VertexIndexMap, cg_vertex, cg_vertex& >
         component_number(&component_number_vec[0], index_map);
 
-    const cg_vertex num_scc
+    int num_scc
         = strong_components(g, component_number, vertex_index_map(index_map));
 
     std::vector< std::vector< vertex > > components;
@@ -107,11 +107,12 @@ void transitive_closure(const Graph& g, GraphTC& tc,
             }
         }
         std::sort(adj.begin(), adj.end());
-        const typename std::vector< cg_vertex >::iterator di
+        typename std::vector< cg_vertex >::iterator di
             = std::unique(adj.begin(), adj.end());
-
+        if (di != adj.end())
+            adj.erase(di, adj.end());
         for (typename std::vector< cg_vertex >::const_iterator i = adj.begin();
-             i != di; ++i)
+             i != adj.end(); ++i)
         {
             add_edge(s, *i, CG);
         }
@@ -151,7 +152,7 @@ void transitive_closure(const Graph& g, GraphTC& tc,
             cg_vertex v = *i;
             if (!in_a_chain[v])
             {
-                chains.emplace_back();
+                chains.resize(chains.size() + 1);
                 std::vector< cg_vertex >& chain = chains.back();
                 for (;;)
                 {

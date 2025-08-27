@@ -3,11 +3,10 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
-// Copyright (c) 2017-2024 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2017-2023.
-// Modifications copyright (c) 2017-2023 Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2017-2021.
+// Modifications copyright (c) 2017-2021 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
@@ -54,6 +53,8 @@
 #include <boost/geometry/strategies/concepts/area_concept.hpp>
 #include <boost/geometry/strategies/default_strategy.hpp>
 
+#include <boost/geometry/util/math.hpp>
+
 #include <boost/geometry/views/detail/closed_clockwise_view.hpp>
 
 
@@ -68,7 +69,7 @@ namespace detail { namespace area
 struct box_area
 {
     template <typename Box, typename Strategies>
-    static inline auto
+    static inline typename coordinate_type<Box>::type
     apply(Box const& box, Strategies const& strategies)
     {
         // Currently only works for 2D Cartesian boxes
@@ -106,7 +107,7 @@ struct ring_area
         auto const end = boost::end(view);
 
         strategy_type const strategy = strategies.area(ring);
-        typename strategy_type::template state<Ring> state;
+        typename strategy_type::template state<Ring> state;        
 
         for (auto previous = it++; it != end; ++previous, ++it)
         {
@@ -131,12 +132,13 @@ namespace dispatch
 template
 <
     typename Geometry,
-    typename Tag = tag_t<Geometry>
+    typename Tag = typename tag<Geometry>::type
 >
 struct area : detail::calculate_null
 {
     template <typename Strategy>
-    static inline auto apply(Geometry const& geometry, Strategy const& strategy)
+    static inline typename area_result<Geometry, Strategy>::type
+        apply(Geometry const& geometry, Strategy const& strategy)
     {
         return calculate_null::apply
             <
@@ -161,7 +163,8 @@ template <typename Polygon>
 struct area<Polygon, polygon_tag> : detail::calculate_polygon_sum
 {
     template <typename Strategy>
-    static inline auto apply(Polygon const& polygon, Strategy const& strategy)
+    static inline typename area_result<Polygon, Strategy>::type
+        apply(Polygon const& polygon, Strategy const& strategy)
     {
         return calculate_polygon_sum::apply
             <
@@ -176,7 +179,8 @@ template <typename MultiGeometry>
 struct area<MultiGeometry, multi_polygon_tag> : detail::multi_sum
 {
     template <typename Strategy>
-    static inline auto apply(MultiGeometry const& multi, Strategy const& strategy)
+    static inline typename area_result<MultiGeometry, Strategy>::type
+    apply(MultiGeometry const& multi, Strategy const& strategy)
     {
         return multi_sum::apply
                <
@@ -202,7 +206,8 @@ template
 struct area
 {
     template <typename Geometry>
-    static inline auto apply(Geometry const& geometry, Strategy const& strategy)
+    static inline typename area_result<Geometry, Strategy>::type
+    apply(Geometry const& geometry, Strategy const& strategy)
     {
         return dispatch::area<Geometry>::apply(geometry, strategy);
     }
@@ -226,7 +231,8 @@ template <>
 struct area<default_strategy, false>
 {
     template <typename Geometry>
-    static inline auto apply(Geometry const& geometry, default_strategy)
+    static inline typename area_result<Geometry>::type
+    apply(Geometry const& geometry, default_strategy)
     {
         typedef typename strategies::area::services::default_strategy
             <
@@ -244,11 +250,12 @@ struct area<default_strategy, false>
 namespace resolve_dynamic
 {
 
-template <typename Geometry, typename Tag = geometry::tag_t<Geometry>>
+template <typename Geometry, typename Tag = typename geometry::tag<Geometry>::type>
 struct area
 {
     template <typename Strategy>
-    static inline auto apply(Geometry const& geometry, Strategy const& strategy)
+    static inline typename area_result<Geometry, Strategy>::type
+        apply(Geometry const& geometry, Strategy const& strategy)
     {
         return resolve_strategy::area<Strategy>::apply(geometry, strategy);
     }
@@ -258,7 +265,8 @@ template <typename Geometry>
 struct area<Geometry, dynamic_geometry_tag>
 {
     template <typename Strategy>
-    static inline auto apply(Geometry const& geometry, Strategy const& strategy)
+    static inline typename area_result<Geometry, Strategy>::type
+        apply(Geometry const& geometry, Strategy const& strategy)
     {
         typename area_result<Geometry, Strategy>::type result = 0;
         traits::visit<Geometry>::apply([&](auto const& g)
@@ -273,7 +281,8 @@ template <typename Geometry>
 struct area<Geometry, geometry_collection_tag>
 {
     template <typename Strategy>
-    static inline auto apply(Geometry const& geometry, Strategy const& strategy)
+    static inline typename area_result<Geometry, Strategy>::type
+        apply(Geometry const& geometry, Strategy const& strategy)
     {
         typename area_result<Geometry, Strategy>::type result = 0;
         detail::visit_breadth_first([&](auto const& g)
@@ -310,7 +319,8 @@ and Geographic as well.
 \qbk{[area] [area_output]}
 */
 template <typename Geometry>
-inline auto area(Geometry const& geometry)
+inline typename area_result<Geometry>::type
+area(Geometry const& geometry)
 {
     concepts::check<Geometry const>();
 
@@ -345,7 +355,8 @@ inline auto area(Geometry const& geometry)
 }
  */
 template <typename Geometry, typename Strategy>
-inline auto area(Geometry const& geometry, Strategy const& strategy)
+inline typename area_result<Geometry, Strategy>::type
+area(Geometry const& geometry, Strategy const& strategy)
 {
     concepts::check<Geometry const>();
 

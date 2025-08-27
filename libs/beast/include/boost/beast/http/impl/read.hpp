@@ -19,10 +19,9 @@
 #include <boost/beast/core/stream_traits.hpp>
 #include <boost/beast/core/detail/buffer.hpp>
 #include <boost/beast/core/detail/read.hpp>
-#include <boost/asio/append.hpp>
+#include <boost/asio/error.hpp>
 #include <boost/asio/compose.hpp>
 #include <boost/asio/coroutine.hpp>
-#include <boost/asio/error.hpp>
 
 namespace boost {
 namespace beast {
@@ -116,26 +115,17 @@ public:
     }
 };
 
-template <typename AsyncReadStream>
 struct run_read_msg_op
 {
-    AsyncReadStream* stream;
-
-    using executor_type = typename AsyncReadStream::executor_type;
-
-    executor_type
-    get_executor() const noexcept
-    {
-        return stream->get_executor();
-    }
-
     template<
         class ReadHandler,
+        class AsyncReadStream,
         class DynamicBuffer,
         bool isRequest, class Body, class Allocator>
     void
     operator()(
         ReadHandler&& h,
+        AsyncReadStream* s,
         DynamicBuffer* b,
         message<isRequest, Body,
             basic_fields<Allocator>>* m)
@@ -154,7 +144,7 @@ struct run_read_msg_op
             DynamicBuffer,
             isRequest, Body, Allocator,
             typename std::decay<ReadHandler>::type>(
-                std::forward<ReadHandler>(h), *stream, *b, *m);
+                std::forward<ReadHandler>(h), *s, *b, *m);
     }
 };
 
@@ -209,7 +199,7 @@ public:
                     auto const size = read_size(b_, 65536);
                     if(size == 0)
                     {
-                        BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
+                        ec = error::buffer_overflow;
                         goto upcall;
                     }
                     auto const mb =
@@ -238,7 +228,7 @@ public:
                         BOOST_ASSERT(p_.is_done());
                         goto upcall;
                     }
-                    BOOST_BEAST_ASSIGN_EC(ec, error::end_of_stream);
+                    ec = error::end_of_stream;
                     break;
                 }
                 if(ec)
@@ -254,12 +244,8 @@ public:
                         __FILE__, __LINE__,
                         "http::async_read_some"));
 
-
-                    const auto ex =
-                        asio::get_associated_immediate_executor(
-                            self, s_.get_executor());
-
-                    net::dispatch(ex, net::append(std::move(self), ec));
+                    net::post(
+                        beast::bind_front_handler(std::move(self), ec));
                 }
             }
             self.complete(ec, bytes_transferred_);
@@ -298,11 +284,7 @@ public:
                         __FILE__, __LINE__,
                         "http::async_read"));
 
-                    const auto ex =
-                        asio::get_associated_immediate_executor(
-                            self, s_.get_executor());
-
-                    net::dispatch(ex, std::move(self));
+                    net::post(std::move(self));
                 }
             }
             else
@@ -355,7 +337,7 @@ read_some(SyncReadStream& s, DynamicBuffer& b, basic_parser<isRequest>& p, error
         auto const size = read_size(b, 65536);
         if(size == 0)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
+            ec = error::buffer_overflow;
             return total;
         }
         auto const mb =
@@ -380,7 +362,7 @@ read_some(SyncReadStream& s, DynamicBuffer& b, basic_parser<isRequest>& p, error
                 BOOST_ASSERT(p.is_done());
                 return total;
             }
-            BOOST_BEAST_ASSIGN_EC(ec, error::end_of_stream);
+            ec = error::end_of_stream;
             break;
         }
         if(ec)
@@ -719,8 +701,8 @@ async_read(
     return net::async_initiate<
         ReadHandler,
         void(error_code, std::size_t)>(
-            detail::run_read_msg_op<AsyncReadStream>{&stream},
-                handler, &buffer, &msg);
+            detail::run_read_msg_op{},
+                handler, &stream, &buffer, &msg);
 }
 
 } // http

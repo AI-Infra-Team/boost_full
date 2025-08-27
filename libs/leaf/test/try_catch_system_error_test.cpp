@@ -1,10 +1,10 @@
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/config.hpp>
-
-#if defined(BOOST_LEAF_NO_EXCEPTIONS) || !BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#include <boost/leaf/detail/config.hpp>
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 #include <iostream>
 
@@ -21,7 +21,6 @@ int main()
 #else
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/exception.hpp>
-#   include <boost/leaf/on_error.hpp>
 #   include <boost/leaf/pred.hpp>
 #endif
 
@@ -38,7 +37,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( std::system_error const & se, leaf::match_value<info, 42> )
             {
@@ -74,7 +73,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, leaf::match_value<info, 42> )
             {
@@ -112,7 +111,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( std::error_code const & ec, leaf::match_value<info, 42> )
             {

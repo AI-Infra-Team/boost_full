@@ -1,4 +1,4 @@
-/* Copyright 2003-2023 Joaquin M Lopez Munoz.
+/* Copyright 2003-2021 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -45,8 +45,8 @@
 #include <boost/call_traits.hpp>
 #include <boost/core/addressof.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/core/ref.hpp>
 #include <boost/detail/workaround.hpp>
+#include <boost/foreach_fwd.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility_core.hpp>
@@ -70,6 +70,7 @@
 #include <boost/multi_index/detail/value_compare.hpp>
 #include <boost/multi_index/detail/vartempl_support.hpp>
 #include <boost/multi_index/detail/ord_index_impl_fwd.hpp>
+#include <boost/ref.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <utility>
@@ -79,8 +80,8 @@
 #endif
 
 #if !defined(BOOST_MULTI_INDEX_DISABLE_SERIALIZATION)
+#include <boost/archive/archive_exception.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/multi_index/detail/bad_archive_exception.hpp>
 #include <boost/multi_index/detail/duplicates_iterator.hpp>
 #include <boost/throw_exception.hpp> 
 #endif
@@ -341,7 +342,12 @@ public:
   void insert(InputIterator first,InputIterator last)
   {
     BOOST_MULTI_INDEX_ORD_INDEX_CHECK_INVARIANT;
-    for(;first!=last;++first)this->final_insert_ref_(*first);
+    index_node_type* hint=header(); /* end() */
+    for(;first!=last;++first){
+      hint=this->final_insert_ref_(
+        *first,static_cast<final_node_type*>(hint)).first;
+      index_node_type::increment(hint);
+    }
   }
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -1507,7 +1513,9 @@ private:
     }
     else if(comp_(key(x->value()),key(position->value()))){
       /* inconsistent rearrangement */
-      throw_exception(bad_archive_exception());
+      throw_exception(
+        archive::archive_exception(
+          archive::archive_exception::other_exception));
     }
     else index_node_type::increment(position);
 
@@ -1719,22 +1727,16 @@ void swap(
 
 /* Boost.Foreach compatibility */
 
-namespace boost{
-namespace foreach{
-
-template<typename>
-struct is_noncopyable;
-
 template<
   typename KeyFromValue,typename Compare,
   typename SuperMeta,typename TagList,typename Category,typename AugmentPolicy
 >
-struct is_noncopyable<
+inline boost::mpl::true_* boost_foreach_is_noncopyable(
   boost::multi_index::detail::ordered_index<
-    KeyFromValue,Compare,SuperMeta,TagList,Category,AugmentPolicy>
->:boost::mpl::true_{};
-
-}
+    KeyFromValue,Compare,SuperMeta,TagList,Category,AugmentPolicy>*&,
+  boost_foreach_argument_dependent_lookup_hack)
+{
+  return 0;
 }
 
 #undef BOOST_MULTI_INDEX_ORD_INDEX_CHECK_INVARIANT

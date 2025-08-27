@@ -1,6 +1,6 @@
-# Copyright 2019 - 2025 Alexander Grund
+# Copyright 2019 - 2021 Alexander Grund
 # Distributed under the Boost Software License, Version 1.0.
-# https://www.boost.org/LICENSE_1_0.txt
+# (See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt)
 
 name: CI Tests
 
@@ -10,15 +10,7 @@ on:
     branches:
       - master
       - develop
-      - bugfix/**
       - feature/**
-      - fix/**
-      - github/**
-      - pr/**
-    paths-ignore:
-      - LICENSE
-      - meta/**
-      - README.md
 
 concurrency:
   group: ${{format('ci_tests{0}:{1}', github.repository, github.ref)}}
@@ -36,27 +28,27 @@ jobs:
         shell: bash
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2022]
-        standalone: [Boost, Standalone]
+        os: [ubuntu-18.04, windows-latest]
         buildType: [Debug, Release]
+        standalone: [Boost, Standalone]
         shared_lib: [ON, OFF]
-        generator: ['Visual Studio 17 2022', 'MinGW Makefiles', 'Unix Makefiles']
+        generator: ['Visual Studio 16 2019', 'MinGW Makefiles', 'Unix Makefiles']
         exclude:
-          - os: ubuntu-22.04
+          - os: ubuntu-18.04
             generator: MinGW Makefiles
-          - os: ubuntu-22.04
-            generator: Visual Studio 17 2022
-          - os: ubuntu-22.04
+          - os: ubuntu-18.04
+            generator: Visual Studio 16 2019
+          - os: ubuntu-18.04
             buildType: Debug
     runs-on: ${{matrix.os}}
     env:
       DEP_DIR: ${{github.workspace}}/dependencies
       BOOST_VERSION: 1.56.0
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
     - name: Sanity check version
       run: grep -E 'set\(_version [0-9]' CMakeLists.txt
-    - uses: actions/cache@v4
+    - uses: actions/cache@v1
       id: cache-boost
       with:
         path: ${{env.DEP_DIR}}
@@ -69,14 +61,14 @@ jobs:
       if: matrix.standalone == 'Boost'
       run: echo "BOOST_ROOT=${DEP_DIR//\\/\/}/boost_${BOOST_VERSION//./_}" >> $GITHUB_ENV
     # Install Boost
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
       if: matrix.standalone == 'Boost' && steps.cache-boost.outputs.cache-hit != 'true'
       with:
         repository: boostorg/boost
         ref: boost-${{env.BOOST_VERSION}}
         path: __buildBoost
         fetch-depth: 1
-    - name: Bootstrap Boost
+    - name: Build Boost
       if: matrix.standalone == 'Boost' && steps.cache-boost.outputs.cache-hit != 'true'
       run: |
         cd __buildBoost
@@ -86,24 +78,9 @@ jobs:
         [[ "${{matrix.os}}" =~ "windows" ]] && toolset=mingw || toolset=gcc
         ./bootstrap.sh --with-toolset="$toolset" --with-libraries=system,filesystem threading=multi || (cat bootstrap.log && false)
         sed -i 's/mingw/gcc/' project-config.jam
-        [[ "${{matrix.generator}}" =~ "Visual Studio" ]] && toolset=msvc-14.3 || toolset=gcc
-        echo "B2_TOOLSET=$toolset" >> $GITHUB_ENV
+        [[ "${{matrix.generator}}" =~ "Visual Studio" ]] && toolset=msvc-14.0 || toolset=gcc
         ./b2 headers
-    - name: Build Boost (Linux)
-      if: matrix.standalone == 'Boost' && steps.cache-boost.outputs.cache-hit != 'true' && startsWith(matrix.os, 'ubuntu')
-      shell: bash
-      run: |
-        cd __buildBoost
-        ./b2 link=static toolset=$B2_TOOLSET address-model=64 -j$(nproc) --prefix="$BOOST_ROOT" install
-        cd ..
-        rm -r __buildBoost || true
-    # Requires cmd shell as on windows-2022 with msvc-14.3 'cl' won't be found with bash
-    - name: Build Boost (Windows)
-      if: matrix.standalone == 'Boost' && steps.cache-boost.outputs.cache-hit != 'true' && startsWith(matrix.os, 'windows')
-      shell: cmd
-      run: |
-        cd __buildBoost
-        b2 link=static toolset=$B2_TOOLSET address-model=64 -j$(nproc) --prefix="$BOOST_ROOT" install
+        ./b2 link=static toolset=$toolset address-model=64 -j$(nproc) --prefix="$BOOST_ROOT" install
         cd ..
         rm -r __buildBoost || true
     - name: Create standalone
@@ -115,43 +92,31 @@ jobs:
         mkdir build
     - name: Configure
       working-directory: build
-      run: |
-        extraFlags="-DBoost_DEBUG=ON -DBoost_NO_BOOST_CMAKE=ON -DCMAKE_INSTALL_PREFIX=$HOME/local"
-        if ! [[ "${{matrix.generator}}" =~ "Visual Studio" ]]; then
-          # Enable warning to find missing defines, especially important for the standalone version
-          extraFlags="$extraFlags -DCMAKE_CXX_FLAGS=-Wundef"
-        fi
-        cmake -DCMAKE_BUILD_TYPE=${{matrix.buildType}} -DBUILD_SHARED_LIBS=${{matrix.shared_lib}} -G "${{matrix.generator}}" $extraFlags ..
-    - name: Build
-      run: cmake --build build --config ${{matrix.buildType}} --target tests
+      run: cmake -DBoost_DEBUG=ON -DCMAKE_BUILD_TYPE=${{matrix.buildType}} -DBUILD_SHARED_LIBS=${{matrix.shared_lib}} -DCMAKE_INSTALL_PREFIX=~/.local -G "${{matrix.generator}}" -DBoost_NO_BOOST_CMAKE=ON ..
+    - name: Build & Install
+      run: cmake --build build --config ${{matrix.buildType}} --target install
 
     # Run test with both bash and powershell and watch for "Using std::cin" on bash but not on powershell
     - name: Test
       working-directory: build
-      run: |
-        # The bash shell adds an incompatible PATH for MinGW: https://github.com/actions/runner-images/issues/11102
-        [[ "${{runner.os}}" != 'Windows' ]] || export PATH="/c/mingw64/bin:$PATH"
-        ctest --output-on-failure -C ${{matrix.buildType}} --verbose
+      run: ctest --output-on-failure -C ${{matrix.buildType}} --verbose
     - name: Test on PowerShell
       working-directory: build
       shell: powershell
       if: runner.os == 'Windows'
       run: ctest --output-on-failure -C ${{matrix.buildType}} --verbose
-
-    - name: Install
-      run: cmake --build build --config ${{matrix.buildType}} --target install
     - name: Test consumption
       working-directory: build
       run: |
         rm -r *
-        cmake -DBOOST_NOWIDE_INSTALL_TEST=ON -DBoost_ARCHITECTURE=-x64 -DCMAKE_PREFIX_PATH=$HOME/local -G "${{matrix.generator}}" ../test/cmake_test
+        cmake -DBOOST_NOWIDE_INSTALL_TEST=ON -DBoost_ARCHITECTURE=-x64 -DCMAKE_PREFIX_PATH=~/.local -G "${{matrix.generator}}" ../test/cmake_test
         cmake --build . --config ${{matrix.buildType}}
         ctest --output-on-failure -C ${{matrix.buildType}}
 
   CreateDocuTest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v1
       - name: Create documentation
         run: |
             sudo apt-get install -y doxygen
@@ -160,9 +125,9 @@ jobs:
   CreateBoostDocuTest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
       - name: Fetch Boost.CI
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           repository: boostorg/boost-ci
           ref: master
@@ -179,8 +144,8 @@ jobs:
   CheckFormatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: DoozyX/clang-format-lint-action@v0.18
+      - uses: actions/checkout@v2
+      - uses: DoozyX/clang-format-lint-action@v0.11
         with:
           exclude: './doc'
           clangFormatVersion: 10

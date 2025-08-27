@@ -32,7 +32,7 @@ namespace boost { namespace geometry { namespace traits
 template <typename CoordinateType, typename CoordinateSystem>
 struct tag<rw_lon_lat_point<CoordinateType, CoordinateSystem> >
 {
-    using type = point_tag;
+    typedef point_tag type;
 };
 
 template <typename CoordinateType, typename CoordinateSystem>
@@ -90,7 +90,7 @@ namespace boost { namespace geometry { namespace traits
 template <typename CoordinateType, typename CoordinateSystem>
 struct tag<ro_lon_lat_point<CoordinateType, CoordinateSystem> >
 {
-    using type = point_tag;
+    typedef point_tag type;
 };
 
 template <typename CoordinateType, typename CoordinateSystem>

@@ -23,7 +23,6 @@ import indirect ;
 import os ;
 import property ;
 import property-set ;
-import args ;
 
 header = openssl.h ;
 ssl_names = ssl ssleay32 ;
@@ -31,7 +30,10 @@ crypto_names = crypto libeay32 ;
 
 library-id = 0 ;
 
-.debug =  [ args.get-arg debug-configuration ] ;
+if --debug-configuration in [ modules.peek : ARGV ]
+{
+    .debug =  true ;
+}
 
 # Initializes the openssl library.
 #
@@ -41,15 +43,10 @@ library-id = 0 ;
 #
 #   <search>
 #       The directory containing the openssl binaries.
-#   <ssl-name>
-#       Overrides the default name of ssl library.
-#   <crypto-name>
-#       Overrides the default name of crypto library.
+#   <name>
+#       Overrides the default library name.
 #   <include>
 #       The directory containing the openssl headers.
-#   <dll-path>
-#       Extra directories to add to library search paths of consumers during
-#       runtime (multiple instances are allowed).
 #
 # If none of these options is specified, then the environmental
 # variables OPENSSL_LIBRARY_PATH, OPENSSL_NAME, and OPENSSL_INCLUDE will
@@ -89,11 +86,9 @@ rule init (
 
     local library-path = [ feature.get-values <search> : $(options) ] ;
     local include-path = [ feature.get-values <include> : $(options) ] ;
-    local ssl-name = [ feature.get-values <ssl-name> : $(options) ] ;
-    local crypto-name = [ feature.get-values <crypto-name> : $(options) ] ;
-    local dll-paths = [ property.select <dll-path> : $(options) ] ;
+    local library-name = [ feature.get-values <name> : $(options) ] ;
 
-    if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(ssl-name) && ! $(crypto-name)
+    if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(library-name)
     {
         is-default = true ;
     }
@@ -127,20 +122,15 @@ rule init (
             }
         }
 
-        ssl-name ?= $(ssl_names) ;
-        crypto-name ?= $(crypto_names) ;
-
         local ssl_lib = [ new ac-library ssl : $(.project) : $(condition) :
-            $(include-path) : $(library-path) ] ;
+            $(include-path) : $(library-path) : ssl ] ;
         $(ssl_lib).set-header openssl/ssl.h ;
-        $(ssl_lib).set-default-names $(ssl-name) ;
-        $(ssl_lib).add-usage-requirements $(dll-paths) ;
+        $(ssl_lib).set-default-names $(ssl_names) ;
 
         local crypto_lib = [ new ac-library crypto : $(.project) : $(condition) :
-            $(include-path) : $(library-path) ] ;
+            $(include-path) : $(library-path) : crypto ] ;
         $(crypto_lib).set-header openssl/crypto.h ;
-        $(crypto_lib).set-default-names $(crypto-name) ;
-        $(crypto_lib).add-usage-requirements $(dll-paths) ;
+        $(crypto_lib).set-default-names $(crypto_names) ;
 
         targets.main-target-alternative $(ssl_lib) ;
         targets.main-target-alternative $(crypto_lib) ;

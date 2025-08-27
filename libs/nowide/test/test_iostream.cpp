@@ -1,8 +1,9 @@
-// Copyright (c) 2015 Artyom Beilis (Tonkikh)
-// Copyright (c) 2020 - 2021 Alexander Grund
+//  Copyright (c) 2015 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2020 - 2021 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef _SCL_SECURE_NO_WARNINGS
 // Call to 'std::copy_n' with parameters that may be unsafe
@@ -34,11 +35,6 @@ const std::string outputString =
 
 const bool usesNowideRdBufIn = nw::cin.rdbuf() != std::cin.rdbuf();
 const bool usesNowideRdBufOut = nw::cout.rdbuf() != std::cout.rdbuf();
-
-bool is_buffered(const std::ostream& os)
-{
-    return (os.flags() & std::ios_base::unitbuf) == 0;
-}
 
 #ifndef BOOST_NOWIDE_TEST_INTERACTIVE
 class mock_output_buffer final : public nw::detail::console_output_buffer_base
@@ -96,7 +92,7 @@ struct scoped_rdbuf_change
     }
 };
 
-// Macros to be used to avoid littering the code with #ifndef checks
+// Macros to be used to avoid litering the code with #ifndef checks
 /// Install a mock buffer into the given stream, when compiling as non-interactive
 #define INSTALL_MOCK_BUF(STREAM, BUF_TYPE) \
     BUF_TYPE mock_buf;                     \
@@ -139,14 +135,12 @@ void test_is_valid_UTF8()
     TEST(!is_valid_UTF8(invalid_utf8_tests[0].utf8));        // Detect invalid
 }
 
-void test_tie_and_buffered()
+void test_tie()
 {
     TEST(nw::cin.tie() == &nw::cout);
     TEST(nw::cerr.tie() == &nw::cout);
+    TEST((nw::cerr.flags() & std::ios_base::unitbuf) != 0);
     TEST(nw::clog.tie() == nullptr);
-    TEST(is_buffered(nw::cout));
-    TEST(!is_buffered(nw::cerr));
-    TEST(is_buffered(nw::clog));
 }
 
 void test_putback_and_get()
@@ -192,7 +186,7 @@ void test_putback_and_get()
             }
         }
 #ifndef BOOST_NOWIDE_TEST_INTERACTIVE
-        // Put back 1 char, then get the rest from "real" input
+        // Putback 1 char, then get the rest from "real" input
         nw::cin.putback('T');
         mock_buf.inputs.push(L"est\r\n");
         std::string test;
@@ -238,20 +232,6 @@ void test_cerr()
     TEST_MOCKED(mock_buf.output == nw::widen("a"));
     TEST_MOCKED(nw::cerr << "Hello World");
     TEST_MOCKED(mock_buf.output == nw::widen("aHello World"));
-}
-
-void test_clog()
-{
-    if(usesNowideRdBufOut) // Only executed when attached to a real terminal, i.e. not on CI
-    {
-        TEST(nw::clog.rdbuf() != std::clog.rdbuf()); // LCOV_EXCL_LINE
-        // for the std:: streams this is not true for all implementations, so only check when using custom buffers
-        TEST(nw::clog.rdbuf() != nw::cerr.rdbuf()); // LCOV_EXCL_LINE
-    }
-
-    TEST(nw::clog.rdbuf() != nw::cin.rdbuf());
-    TEST(nw::clog.rdbuf() != nw::cout.rdbuf());
-    TEST(nw::clog.rdbuf() != std::cout.rdbuf());
 }
 
 void test_cerr_single_char()
@@ -369,188 +349,19 @@ void test_ctrl_z_is_eof()
     TEST_MOCKED(value == "Reached after clear()");
 #ifndef BOOST_NOWIDE_TEST_INTERACTIVE
     // CTRL+Z anywhere else but at the start of a line does not matter
-    nw::cout << "CTRL+Z Test:";
     for(int i = 1; i <= 1100; i++)
     {
-        nw::cout << '.' << std::flush; // Progress indicator
         const std::string expected = create_random_one_line_string(i) + "\x1a";
         mock_buf.inputs.push(std::wstring(expected.begin(), expected.end()) + L"\r\n");
         TEST(std::getline(nw::cin, value));
         TEST_EQ(value, expected);
     }
-    nw::cout << std::endl;
 #endif
 }
 
-#ifndef BOOST_NOWIDE_TEST_INTERACTIVE
-#ifdef BOOST_WINDOWS
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-
-/// Test class swapping the original in/out handles for a buffer which
-/// can be filled (for stdin) or read (for stdout/stderr)
-class RedirectStdio
+void test_main(int argc, char** argv, char**) // coverity [root_function]
 {
-    DWORD handleType;
-    HANDLE h, oldHandle;
-
-public:
-    RedirectStdio(DWORD handleType) : handleType(handleType), oldHandle(GetStdHandle(handleType))
-    {
-        if(handleType == STD_INPUT_HANDLE)
-        {
-            h = CreateFile("CONIN$",
-                           GENERIC_READ | GENERIC_WRITE,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           nullptr,
-                           OPEN_EXISTING,
-                           0,
-                           0);
-        } else
-        {
-            h = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
-                                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                          nullptr,
-                                          CONSOLE_TEXTMODE_BUFFER,
-                                          nullptr);
-        }
-        TEST(h != INVALID_HANDLE_VALUE);
-        TEST(SetStdHandle(handleType, h));
-        if(handleType == STD_INPUT_HANDLE)
-            TEST(SetConsoleMode(h, ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_EXTENDED_FLAGS));
-        else
-            TEST(SetConsoleActiveScreenBuffer(h));
-    }
-    ~RedirectStdio()
-    {
-        SetStdHandle(handleType, oldHandle);
-        if(handleType != STD_INPUT_HANDLE)
-            SetConsoleActiveScreenBuffer(oldHandle);
-        CloseHandle(h);
-    }
-
-    std::wstring getBufferData()
-    {
-        CONSOLE_SCREEN_BUFFER_INFO info;
-        TEST(GetConsoleScreenBufferInfo(h, &info));
-        TEST(info.dwSize.X > 0 && info.dwSize.Y > 0);
-        std::cout << "Mock console buffer size: " << info.dwSize.X << "x" << info.dwSize.Y << "\n";
-
-        std::wstring result;
-        std::vector<wchar_t> buffer(info.dwSize.X);
-        const auto isSpace = [](const wchar_t c) { return c != L' '; };
-        for(COORD readPos{}; readPos.Y < info.dwSize.Y; ++readPos.Y)
-        {
-            DWORD dwRead, bufferSize = static_cast<DWORD>(buffer.size());
-            TEST(ReadConsoleOutputCharacterW(h, buffer.data(), bufferSize, readPos, &dwRead));
-            const auto itEnd = std::find_if(buffer.rbegin() + (buffer.size() - dwRead), buffer.rend(), isSpace);
-            if(itEnd == buffer.rend())
-                break;
-            result.append(buffer.begin(), itEnd.base());
-            result.push_back('\n');
-        }
-        return result;
-    }
-
-    void setBufferData(const std::wstring& data)
-    {
-        std::vector<INPUT_RECORD> buffer;
-        buffer.reserve(data.size() * 2 + 2);
-        for(const auto c : data)
-        {
-            INPUT_RECORD ev;
-            ev.EventType = KEY_EVENT;
-            ev.Event.KeyEvent.bKeyDown = TRUE;
-            ev.Event.KeyEvent.dwControlKeyState = 0;
-            ev.Event.KeyEvent.wRepeatCount = 1;
-            if(c == '\n')
-            {
-                ev.Event.KeyEvent.uChar.UnicodeChar = '\r';
-                ev.Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
-            } else
-            {
-                ev.Event.KeyEvent.uChar.UnicodeChar = c;
-                ev.Event.KeyEvent.wVirtualKeyCode = VkKeyScanW(c);
-            }
-            ev.Event.KeyEvent.wVirtualScanCode =
-              static_cast<WORD>(MapVirtualKeyW(ev.Event.KeyEvent.wVirtualKeyCode, MAPVK_VK_TO_VSC));
-            buffer.push_back(ev);
-            ev.Event.KeyEvent.bKeyDown = FALSE;
-            buffer.push_back(ev);
-        }
-        DWORD dwWritten;
-        TEST(WriteConsoleInputW(h, buffer.data(), static_cast<DWORD>(buffer.size()), &dwWritten));
-        TEST_EQ(dwWritten, static_cast<DWORD>(buffer.size()));
-    }
-};
-
-void test_console()
-{
-#ifndef BOOST_NOWIDE_DISABLE_CIN_TEST
-    std::cout << "Test cin console: " << std::flush;
-    {
-        RedirectStdio stdinHandle(STD_INPUT_HANDLE);
-        std::cout << "stdin redirected, " << std::flush;
-        // Recreate to react on redirected streams
-        decltype(nw::cin) cin(nullptr);
-        std::cout << "cin recreated " << std::flush;
-        TEST(cin.rdbuf() != std::cin.rdbuf());
-        std::cout << "and validated" << std::endl;
-        const std::string testStringIn1 = "Hello std in ";
-        const std::string testStringIn2 = "\xc3\xa4 - \xc3\xb6 - \xc3\xbc - \xd0\xbc - \xce\xbd";
-        std::cout << "Setting mock buffer data" << std::endl;
-        stdinHandle.setBufferData(nw::widen(testStringIn1 + "\n" + testStringIn2 + "\n"));
-        std::cout << "Done" << std::endl;
-        std::string line;
-        TEST(std::getline(cin, line));
-        std::cout << "ASCII line read" << std::endl;
-        TEST_EQ(line, testStringIn1);
-        TEST(std::getline(cin, line));
-        std::cout << "UTF-8 line read" << std::endl;
-        TEST_EQ(line, testStringIn2);
-    }
-#endif
-    std::cout << "Test cout console" << std::endl;
-    {
-        RedirectStdio stdoutHandle(STD_OUTPUT_HANDLE);
-        using cout_t = decltype(nw::cout);
-        cout_t cout(cout_t::target_stream::output, true, nullptr);
-        TEST(cout.rdbuf() != std::cout.rdbuf());
-
-        const std::string testString = "Hello std out\n\xc3\xa4-\xc3\xb6-\xc3\xbc\n";
-        cout << testString << std::flush;
-
-        const auto data = stdoutHandle.getBufferData();
-        TEST_EQ(data, nw::widen(testString));
-    }
-    std::cout << "Test cerr console" << std::endl;
-    {
-        RedirectStdio stderrHandle(STD_ERROR_HANDLE);
-
-        using cerr_t = decltype(nw::cerr);
-        cerr_t cerr(cerr_t::target_stream::error, false, nullptr);
-        TEST(cerr.rdbuf() != std::cerr.rdbuf());
-
-        const std::string testString = "Hello std err\n\xc3\xa4-\xc3\xb6-\xc3\xbc\n";
-        cerr << testString << std::flush;
-
-        const auto data = stderrHandle.getBufferData();
-        TEST_EQ(data, nw::widen(testString));
-    }
-    std::cout << "Console tests done" << std::endl;
-}
-
-#else
-void test_console()
-{}
-#endif
-#endif
-
-// coverity[root_function]
-void test_main(int argc, char** argv, char**)
-{
+    // LCOV_EXCL_START
     if(usesNowideRdBufIn)
         nw::cout << "Using Nowide input buffer\n";
     else
@@ -559,6 +370,7 @@ void test_main(int argc, char** argv, char**)
         nw::cout << "Using Nowide output buffer\n"; // LCOV_EXCL_LINE
     else
         nw::cout << "NOT using Nowide output buffer\n";
+    // LCOV_EXCL_STOP
 
     const std::string arg = (argc == 1) ? "" : argv[1];
     if(arg == "passthrough") // Read string from cin and write to cout
@@ -573,37 +385,36 @@ void test_main(int argc, char** argv, char**)
     }
 
 #ifdef BOOST_NOWIDE_TEST_INTERACTIVE
-    nw::cout << "Output different chars:" << std::endl; // LCOV_EXCL_LINE
-    test_cout();                                        // LCOV_EXCL_LINE
-    nw::cout << "Same again:" << std::endl;             // LCOV_EXCL_LINE
-    test_cout_single_char();                            // LCOV_EXCL_LINE
+    // LCOV_EXCL_START
+    nw::cout << "Output different chars:" << std::endl;
+    test_cout();
+    nw::cout << "Same again:" << std::endl;
+    test_cout_single_char();
 
-    nw::cout << "Same 2 outputs but to stderr:" << std::endl; // LCOV_EXCL_LINE
-    test_cerr();                                              // LCOV_EXCL_LINE
-    test_cerr_single_char();                                  // LCOV_EXCL_LINE
+    nw::cout << "Same 2 outputs but to stderr:" << std::endl;
+    test_cerr();
+    test_cerr_single_char();
 
-    nw::cout << "Basic cin tests:" << std::endl; // LCOV_EXCL_LINE
-    test_cin();                                  // LCOV_EXCL_LINE
+    nw::cout << "Basic cin tests:" << std::endl;
+    test_cin();
 
-    nw::cout << "getline test:" << std::endl; // LCOV_EXCL_LINE
-    // Clear newline from last test
-    nw::cin.ignore(std::numeric_limits<int>::max(), '\n'); // LCOV_EXCL_LINE
-    test_cin_getline();                                    // LCOV_EXCL_LINE
+    nw::cout << "getline test:" << std::endl;
+    nw::cin.ignore(std::numeric_limits<int>::max(), '\n'); // Clear newline from last test
+    test_cin_getline();
 
-    nw::cout << "CTRL+Z test:" << std::endl; // LCOV_EXCL_LINE
-    test_ctrl_z_is_eof();                    // LCOV_EXCL_LINE
+    nw::cout << "CTRL+Z test:" << std::endl;
+    test_ctrl_z_is_eof();
+    // LCOV_EXCL_STOP
 #else
     test_is_valid_UTF8();
-    test_tie_and_buffered();
+    test_tie();
     test_putback_and_get();
     test_cout();
     test_cout_single_char();
     test_cerr();
     test_cerr_single_char();
-    test_clog();
     test_cin();
     test_cin_getline();
     test_ctrl_z_is_eof();
-    test_console();
 #endif // BOOST_NOWIDE_TEST_INTERACTIVE
 }

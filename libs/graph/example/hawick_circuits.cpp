@@ -28,7 +28,10 @@ template < typename OutputStream > struct cycle_printer
 
         // Get the property map containing the vertex indices
         // so we can print them.
-        auto indices = get(boost::vertex_index, g);
+        typedef typename boost::property_map< Graph,
+            boost::vertex_index_t >::const_type IndexMap;
+
+        IndexMap indices = get(boost::vertex_index, g);
 
         // Iterate over path printing each vertex that forms the cycle.
         typename Path::const_iterator i, before_end = boost::prior(p.end());
@@ -75,8 +78,7 @@ int main(int argc, char const* argv[])
 {
     if (argc < 2)
     {
-        std::cout << "usage: " << argv[0] << " <num_vertices>";
-        std::cout << " <max_length (optional)>\n";
+        std::cout << "usage: " << argv[0] << " num_vertices < input\n";
         return EXIT_FAILURE;
     }
 
@@ -86,12 +88,7 @@ int main(int argc, char const* argv[])
     build_graph(graph, num_vertices, first_vertex, last_vertex);
 
     cycle_printer< std::ostream > visitor(std::cout);
-    if (argc == 2) {
-        boost::hawick_circuits(graph, visitor);
-    } else {
-        unsigned int max_length = boost::lexical_cast< unsigned int >(argv[2]);
-        boost::hawick_circuits(graph, visitor, max_length);
-    }
+    boost::hawick_circuits(graph, visitor);
 
     return EXIT_SUCCESS;
 }

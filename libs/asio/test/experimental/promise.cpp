@@ -2,8 +2,8 @@
 // promise.cpp
 // ~~~~~~~~~~~
 //
-// Copyright (c) 2021-2023 Klemens D. Morgenstern
-//                         (klemens dot morgenstern at gmx dot net)
+// Copyright (c) 2021 Klemens D. Morgenstern
+//                    (klemens dot morgenstern at gmx dot net)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,11 +17,6 @@
 // Test that header file is self-contained.
 #include <boost/asio/experimental/promise.hpp>
 
-#include <boost/asio/append.hpp>
-#include <boost/asio/bind_cancellation_slot.hpp>
-#include <boost/asio/compose.hpp>
-#include <boost/asio/deferred.hpp>
-#include <boost/asio/experimental/use_promise.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include "../unit_test.hpp"
 
@@ -30,6 +25,7 @@ namespace promise {
 void promise_tester()
 {
   using namespace boost::asio;
+  using boost::system::error_code;
   using namespace std::chrono;
 
   io_context ctx;
@@ -37,15 +33,16 @@ void promise_tester()
   steady_timer timer1{ctx}, timer2{ctx};
 
   const auto started_when = steady_clock::now();
-  timer1.expires_at(started_when + milliseconds(5000));
+  timer1.expires_at(started_when + milliseconds(2000));
   timer2.expires_at(started_when + milliseconds(1000));
-  auto p1 = timer1.async_wait(experimental::use_promise);
+  auto p = timer1.async_wait(experimental::use_promise);
 
   steady_clock::time_point completed_when;
-  boost::system::error_code ec;
+  error_code ec;
   bool called = false;
 
-  p1([&](boost::system::error_code ec_)
+  p.async_wait(
+      [&](auto ec_)
       {
         ec = ec_;
         called = true;
@@ -53,55 +50,22 @@ void promise_tester()
       });
 
   steady_clock::time_point timer2_done;
-  timer2.async_wait(
-      [&](boost::system::error_code)
-      {
-        timer2_done = steady_clock::now();
-        p1.cancel();
-      });
+  timer2.async_wait([&](auto) {
+    timer2_done = steady_clock::now();;
+    p.cancel();
+  });
 
   ctx.run();
 
-  static_assert(
-      boost::asio::is_async_operation<decltype(p1)>::value,
-      "promise is async_op");
-
-  BOOST_ASIO_CHECK(timer2_done + milliseconds(1) > started_when);
-  BOOST_ASIO_CHECK(completed_when > timer2_done);
+  BOOST_ASIO_CHECK(timer2_done + milliseconds(1) > completed_when);
   BOOST_ASIO_CHECK(called);
   BOOST_ASIO_CHECK(ec == error::operation_aborted);
-
-  timer1.expires_after(milliseconds(0));
-  auto p2 = timer1.async_wait(
-      boost::asio::append(experimental::use_promise, 123));
-
-  ec = boost::asio::error::would_block;
-  called = false;
-
-  p2([&](boost::system::error_code ec_, int i)
-      {
-        BOOST_ASIO_CHECK(i == 123);
-        ec = ec_;
-        called = true;
-      });
-
-  BOOST_ASIO_CHECK(ec == boost::asio::error::would_block);
-  BOOST_ASIO_CHECK(!called);
-
-  ctx.restart();
-  ctx.run();
-
-  static_assert(
-      boost::asio::is_async_operation<decltype(p2)>::value,
-      "promise is async_op");
-
-  BOOST_ASIO_CHECK(!ec);
-  BOOST_ASIO_CHECK(called);
 }
 
-void promise_slot_tester()
+void promise_race_tester()
 {
   using namespace boost::asio;
+  using boost::system::error_code;
   using namespace std::chrono;
 
   io_context ctx;
@@ -109,118 +73,248 @@ void promise_slot_tester()
   steady_timer timer1{ctx}, timer2{ctx};
 
   const auto started_when = steady_clock::now();
-  timer1.expires_at(started_when + milliseconds(2500));
+  timer1.expires_at(started_when + milliseconds(2000));
   timer2.expires_at(started_when + milliseconds(1000));
-  auto p = timer1.async_wait(experimental::use_promise);
 
+  experimental::promise<void(std::variant<error_code, error_code>)> p =
+    experimental::promise<>::race(
+        timer1.async_wait(experimental::use_promise),
+        timer2.async_wait(experimental::use_promise));
+
+  auto called = false;
+  error_code ec;
   steady_clock::time_point completed_when;
-  boost::system::error_code ec;
-  bool called = false;
-
-  boost::asio::cancellation_signal sig;
-
-  p(boost::asio::bind_cancellation_slot(
-        sig.slot(),
-        [&](boost::system::error_code ec_)
-        {
-          ec = ec_;
-          called = true;
-          completed_when = steady_clock::now();
-        }));
-
-  steady_clock::time_point timer2_done;
-  timer2.async_wait(
-      [&](boost::system::error_code)
+  p.async_wait(
+      [&](auto v)
       {
-        timer2_done = steady_clock::now();
-        sig.emit(boost::asio::cancellation_type::all);
+        BOOST_ASIO_CHECK(v.index() == 1);
+        ec = get<1>(v);
+        called = true;
+        completed_when = steady_clock::now();
       });
 
   ctx.run();
 
-  static_assert(
-      boost::asio::is_async_operation<decltype(p)>::value,
-      "promise is async_op");
-
-  BOOST_ASIO_CHECK(timer2_done + milliseconds(1) > started_when);
-  BOOST_ASIO_CHECK(completed_when > timer2_done);
+  BOOST_ASIO_CHECK(started_when + milliseconds(1000) <= completed_when);
+  BOOST_ASIO_CHECK(started_when + milliseconds(1500) > completed_when);
   BOOST_ASIO_CHECK(called);
-  BOOST_ASIO_CHECK(ec == error::operation_aborted);
+  BOOST_ASIO_CHECK(!ec);
 }
 
-void early_completion()
+void promise_all_tester()
 {
   using namespace boost::asio;
+  using boost::system::error_code;
   using namespace std::chrono;
 
   io_context ctx;
-  auto p = boost::asio::post(ctx, boost::asio::experimental::use_promise);
+
+  steady_timer timer1{ctx},
+         timer2{ctx};
+
+  const auto started_when = steady_clock::now();
+  timer1.expires_at(started_when + milliseconds(2000));
+  timer2.expires_at(started_when + milliseconds(1000));
+
+  experimental::promise<void(error_code, error_code)> p =
+    experimental::promise<>::all(
+        timer1.async_wait(experimental::use_promise),
+        timer2.async_wait(experimental::use_promise));
+
+  bool called = false;
+  steady_clock::time_point completed_when;
+
+  p.async_wait(
+      [&](auto ec1, auto ec2)
+      {
+        BOOST_ASIO_CHECK(!ec1);
+        BOOST_ASIO_CHECK(!ec2);
+        called = true;
+        completed_when = steady_clock::now();
+      });
+
   ctx.run();
 
-  BOOST_ASIO_CHECK(p.completed());
-
-  bool completed = false;
-  p([&]{completed = true;});
-  BOOST_ASIO_CHECK(!completed);
-  ctx.restart();
-  ctx.run();
-  BOOST_ASIO_CHECK(completed);
+  BOOST_ASIO_CHECK(started_when + milliseconds(2000) <= completed_when);
+  BOOST_ASIO_CHECK(started_when + milliseconds(2500) > completed_when);
+  BOOST_ASIO_CHECK(called);
 }
 
-struct test_cancel_impl_op
+void promise_race_ranged_tester()
 {
-  boost::asio::steady_timer & tim;
-  boost::system::error_code &ec;
-  template<typename Self>
-  void operator()(Self& self)
-  {
-    tim.async_wait(std::forward<Self>(self));
-  }
+  using namespace boost::asio;
+  using boost::system::error_code;
+  using namespace std::chrono;
 
-  template<typename Self>
-  void operator()(Self& self, boost::system::error_code ec_)
-  {
-    ec = ec_;
-    self.complete(ec_);
-  }
-};
+  io_context ctx;
 
-template <typename CompletionToken>
-BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(
-    CompletionToken, void(boost::system::error_code))
-test_cancel_impl(boost::asio::steady_timer & tim,
-                 boost::system::error_code &ec,
-                 CompletionToken&& token)
-{
-  return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
-      test_cancel_impl_op{tim, ec}, token, tim);
-}
+  steady_timer timer1{ctx}, timer2{ctx};
 
-void test_cancel()
-{
-  boost::asio::io_context ctx;
-  boost::asio::steady_timer tim{ctx, std::chrono::seconds(10)};
-  boost::system::error_code ec;
+  const auto started_when = steady_clock::now();
+  timer1.expires_at(started_when + milliseconds(2000));
+  timer2.expires_at(started_when + milliseconds(1000));
 
-  {
-    auto p = test_cancel_impl(
-        tim, ec, boost::asio::experimental::use_promise);
-  }
+  // promise<
+  //   std::variant<
+  //     tuple<error_code, std::size_t>,
+  //     tuple<error_code, std::size_t>>>
+  experimental::promise<void(std::size_t, error_code)> p =
+    experimental::promise<>::race(
+        std::array{
+          timer1.async_wait(experimental::use_promise),
+          timer2.async_wait(experimental::use_promise)
+        });
+
+  auto called = false;
+  auto completed_when = steady_clock::time_point();
+
+  p.async_wait([&](auto idx, auto ec )
+      {
+        BOOST_ASIO_CHECK(idx == 1);
+        called = true;
+        completed_when = steady_clock::now();
+        BOOST_ASIO_CHECK(!ec);
+      });
+
+  std::array<experimental::promise<void()>, 0u> arr;
+
+  experimental::promise<>::race(
+      ctx.get_executor(), std::move(arr)
+    ).async_wait(
+      [](std::size_t idx) {BOOST_ASIO_CHECK(idx == std::size_t(-1));}
+    );
 
   ctx.run();
 
-  BOOST_ASIO_CHECK_MESSAGE(
-      ec == boost::asio::error::operation_aborted,
-      ec.message());
+  BOOST_ASIO_CHECK(started_when + milliseconds(1000) <= completed_when);
+  BOOST_ASIO_CHECK(started_when + milliseconds(1500) > completed_when);
+  BOOST_ASIO_CHECK(called);
+
+  std::exception_ptr ex;
+
+  try
+  {
+    experimental::promise<>::race(std::move(arr));
+  }
+  catch (...)
+  {
+    ex = std::current_exception();
+  }
+
+  BOOST_ASIO_CHECK(ex);
+}
+
+void promise_all_ranged_tester()
+{
+  using namespace boost::asio;
+  using boost::system::error_code;
+  using namespace std::chrono;
+
+  io_context ctx;
+
+  steady_timer timer1{ctx}, timer2{ctx};
+
+  const auto started_when = steady_clock::now();
+  timer1.expires_at(started_when + milliseconds(2000));
+  timer2.expires_at(started_when + milliseconds(1000));
+
+  // promise<
+  //   std::variant<
+  //     tuple<error_code, std::size_t>,
+  //     tuple<error_code, std::size_t>>>
+  experimental::promise<void(std::vector<error_code>)> p =
+    experimental::promise<>::all(
+      std::array{
+        timer1.async_wait(experimental::use_promise),
+        timer2.async_wait(experimental::use_promise)
+      });
+
+  auto called = false;
+  auto completed_when = steady_clock::time_point();
+
+  p.async_wait(
+      [&](auto v){
+        BOOST_ASIO_CHECK(v.size() == 2u);
+        completed_when = steady_clock::now();
+        BOOST_ASIO_CHECK(!v[0]);
+        BOOST_ASIO_CHECK(!v[1]);
+        called = true;
+      });
+
+  std::array<experimental::promise<void()>, 0u> arr;
+  experimental::promise<>::all(
+      ctx.get_executor(), std::move(arr)
+    ).async_wait(
+      [](auto v) {BOOST_ASIO_CHECK(v.size() == 0);}
+    );
+
+  ctx.run();
+
+  BOOST_ASIO_CHECK(started_when + milliseconds(2000) <= completed_when);
+  BOOST_ASIO_CHECK(started_when + milliseconds(2500) > completed_when);
+  BOOST_ASIO_CHECK(called == true);
+
+  std::exception_ptr ex;
+  try
+  {
+    experimental::promise<>::all(std::move(arr));
+  }
+  catch (...)
+  {
+    ex = std::current_exception();
+  }
+
+  BOOST_ASIO_CHECK(ex);
+}
+
+void promise_cancel_tester()
+{
+  using namespace boost::asio;
+  using boost::system::error_code;
+  using namespace std::chrono;
+
+  io_context ctx;
+
+  steady_timer timer1{ctx}, timer2{ctx};
+
+  const auto started_when = steady_clock::now();
+  timer1.expires_at(started_when + milliseconds(2000));
+  timer2.expires_at(started_when + milliseconds(1000));
+
+  // promise<
+  //   std::variant<
+  //     tuple<error_code, std::size_t>,
+  //     tuple<error_code, std::size_t>>>
+  experimental::promise<void(error_code, error_code)> p =
+      experimental::promise<>::all(
+          timer1.async_wait(experimental::use_promise),
+          timer2.async_wait(experimental::use_promise));
+
+  bool called = false;
+  p.async_wait(
+      [&](auto ec1, auto ec2)
+      {
+        called = true;
+        BOOST_ASIO_CHECK(ec1 == error::operation_aborted);
+        BOOST_ASIO_CHECK(ec2 == error::operation_aborted);
+      });
+
+  post(ctx, [&]{p.cancel();});
+
+  ctx.run();
+
+  BOOST_ASIO_CHECK(called);
 }
 
 } // namespace promise
 
 BOOST_ASIO_TEST_SUITE
 (
-  "promise",
-  BOOST_ASIO_TEST_CASE(promise::promise_tester)
-  BOOST_ASIO_TEST_CASE(promise::promise_slot_tester)
-  BOOST_ASIO_TEST_CASE(promise::early_completion)
-  BOOST_ASIO_TEST_CASE(promise::test_cancel)
+    "promise",
+    BOOST_ASIO_TEST_CASE(promise::promise_tester)
+    BOOST_ASIO_TEST_CASE(promise::promise_race_tester)
+    BOOST_ASIO_TEST_CASE(promise::promise_all_tester)
+    BOOST_ASIO_TEST_CASE(promise::promise_race_ranged_tester)
+    BOOST_ASIO_TEST_CASE(promise::promise_all_ranged_tester)
+    BOOST_ASIO_TEST_CASE(promise::promise_cancel_tester)
 )

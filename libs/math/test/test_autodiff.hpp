@@ -31,29 +31,21 @@
 #include <cstdlib>
 #include <random>
 
-#if __has_include(<stdfloat>)
-#  include <stdfloat>
-#endif
-
 namespace mp11 = boost::mp11;
 namespace bmp = boost::multiprecision;
 namespace diff = boost::math::differentiation::autodiff_v1::detail;
 
-
 #if defined(BOOST_USE_VALGRIND) || defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 using bin_float_types = mp11::mp_list<float>;
-#elif defined(__STDCPP_FLOAT32_T__) && defined(__STDCPP_FLOAT64_T__)
-using bin_float_types = mp11::mp_list<std::float32_t, std::float64_t>;
 #else
 using bin_float_types = mp11::mp_list<float, double, long double>;
 #endif
-
 
 // cpp_dec_float_50 cannot be used with close_at_tolerance
 /*using multiprecision_float_types =
     mp_list<bmp::cpp_dec_float_50, bmp::cpp_bin_float_50>;*/
 
-#if !defined(BOOST_VERSION) || BOOST_VERSION < 107000 || defined(BOOST_USE_VALGRIND) || defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS) || defined(BOOST_NO_STRESS_TEST) || defined(BOOST_MATH_STANDALONE)
+#if !defined(BOOST_VERSION) || BOOST_VERSION < 107000 || defined(BOOST_USE_VALGRIND) || defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS) || defined(BOOST_NO_STRESS_TEST)
 using multiprecision_float_types = mp11::mp_list<>;
 #else
 #define BOOST_AUTODIFF_TESTING_INCLUDE_MULTIPRECISION

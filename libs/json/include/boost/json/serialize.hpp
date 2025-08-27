@@ -11,59 +11,94 @@
 #define BOOST_JSON_SERIALIZE_HPP
 
 #include <boost/json/detail/config.hpp>
-#include <boost/json/serialize_options.hpp>
 #include <boost/json/value.hpp>
+#include <iosfwd>
 #include <string>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 /** Return a string representing a serialized element.
 
-    This function serializes `t` as JSON and returns it as a `std::string`.
+    This function serializes `t` as JSON and returns
+    it as a `std::string`.
 
     @par Complexity
-    Linear in the size of `t`.
+    Constant or linear in the size of `t`.
 
     @par Exception Safety
-    Strong guarantee. Calls to allocate may throw.
+    Strong guarantee.
+    Calls to allocate may throw.
 
-    @return The serialized string.
+    @return The serialized string
 
     @param t The value to serialize
-    @param opts The options for the serializer. If this parameter is omitted,
-           the serializer will output only standard JSON.
-
-    @{
 */
+/** @{ */
 BOOST_JSON_DECL
 std::string
-serialize(value const& t, serialize_options const& opts = {});
-
-BOOST_JSON_DECL
-std::string
-serialize(array const& t, serialize_options const& opts = {});
+serialize(value const& t);
 
 BOOST_JSON_DECL
 std::string
-serialize(object const& t, serialize_options const& opts = {});
+serialize(array const& t);
 
 BOOST_JSON_DECL
 std::string
-serialize(string const& t, serialize_options const& opts = {});
-
-template<class T>
-std::string
-serialize(T const& t, serialize_options const& opts = {});
+serialize(object const& t);
 
 BOOST_JSON_DECL
 std::string
-serialize(string_view t, serialize_options const& opts = {});
-/// @}
+serialize(string const& t);
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_DECL
+std::string
+serialize(string_view t);
+/** @} */
 
-#include <boost/json/impl/serialize.hpp>
+/** Serialize an element to an output stream.
+
+    This function serializes the specified element
+    as JSON into the output stream.
+
+    @return `os`.
+
+    @par Complexity
+    Constant or linear in the size of `t`.
+
+    @par Exception Safety
+    Strong guarantee.
+    Calls to `memory_resource::allocate` may throw.
+
+    @param os The output stream to serialize to.
+
+    @param t The value to serialize
+*/
+/** @{ */
+BOOST_JSON_DECL
+std::ostream&
+operator<<(
+    std::ostream& os,
+    value const& t);
+
+BOOST_JSON_DECL
+std::ostream&
+operator<<(
+    std::ostream& os,
+    array const& t);
+
+BOOST_JSON_DECL
+std::ostream&
+operator<<(
+    std::ostream& os,
+    object const& t);
+
+BOOST_JSON_DECL
+std::ostream&
+operator<<(
+    std::ostream& os,
+    string const& t);
+/** @} */
+
+BOOST_JSON_NS_END
 
 #endif

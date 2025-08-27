@@ -5,13 +5,10 @@
 #include <boost/describe.hpp>
 #include <boost/mp11.hpp>
 #include <boost/json.hpp>
-#include <boost/version.hpp>
 #include <type_traits>
 
 namespace app
 {
-
-#if BOOST_VERSION < 108100
 
 template<class T> void extract( boost::json::object const & obj, char const * name, T & value )
 {
@@ -22,7 +19,7 @@ template<class T,
     class D1 = boost::describe::describe_members<T,
         boost::describe::mod_public | boost::describe::mod_protected>,
     class D2 = boost::describe::describe_members<T, boost::describe::mod_private>,
-    class En = std::enable_if_t<boost::mp11::mp_empty<D2>::value && !std::is_union<T>::value> >
+    class En = std::enable_if_t<boost::mp11::mp_empty<D2>::value> >
 
     T tag_invoke( boost::json::value_to_tag<T> const&, boost::json::value const& v )
 {
@@ -38,8 +35,6 @@ template<class T,
 
     return t;
 }
-
-#endif
 
 struct A
 {

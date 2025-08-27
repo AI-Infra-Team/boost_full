@@ -5,9 +5,12 @@
         "authors": [
             "Dave Abrahams and others"
         ],
-        "description": "Various utilities, such as base-from-member idiom and binary literals in C++03.",
+        "description": "Class noncopyable plus checked_delete(), checked_array_delete(), next(), prior() function templates, plus base-from-member idiom.",
         "documentation": "utility.htm",
         "category": [
+            "Algorithms",
+            "Function-objects",
+            "Memory",
             "Miscellaneous",
             "Patterns"
         ],
@@ -32,7 +35,7 @@
         "authors": [
             "John Maddock, Howard Hinnant, et al"
         ],
-        "description": "A pair class with empty member optimization.",
+        "description": "Empty member optimization.",
         "documentation": "compressed_pair.htm",
         "category": [
             "Data",
@@ -76,7 +79,7 @@
             "Dave Abrahams",
             "Jeremy Siek"
         ],
-        "description": "Templates to simplify operator definition in arithmetic classes and iterators.",
+        "description": "Templates ease arithmetic classes and iterators.",
         "documentation": "operators.htm",
         "category": [
             "Generic",
@@ -92,7 +95,7 @@
         "key": "utility/result_of",
         "name": "Result Of",
         "description": "Determines the type of a function call expression.",
-        "documentation": "doc/html/utility/utilities/result_of.html",
+        "documentation": "utility.htm#result_of",
         "category": [
             "Function-objects"
         ],
@@ -103,13 +106,12 @@
         "cxxstd": "03"
     },
     {
-        "key": "utility/string_view",
-        "name": "String View",
+        "key": "utility/string_ref",
+        "name": "string_ref",
         "description": "String view templates.",
-        "documentation": "doc/html/utility/utilities/string_view.html",
+        "documentation": "doc/html/string_ref.html",
         "category": [
-            "Containers",
-            "String"
+            "Containers"
         ],
         "authors": "Marshall Clow",
         "maintainers": [

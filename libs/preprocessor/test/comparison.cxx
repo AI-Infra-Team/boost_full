@@ -11,7 +11,7 @@
 #
 # include <boost/preprocessor/config/limits.hpp>
 # include <boost/preprocessor/comparison.hpp>
-# include "test.h"
+# include <libs/preprocessor/test/test.h>
 
 /* equality */
 

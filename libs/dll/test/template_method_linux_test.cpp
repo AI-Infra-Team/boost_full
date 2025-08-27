@@ -1,11 +1,12 @@
 // Copyright 2019 Ramil Gauss.
-// Copyright Antony Polukhin, 2019-2025.
+// Copyright 2019-2021 Antony Polukhin.
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/config.hpp>
+#if (__cplusplus >= 201402L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
 
 #include <boost/dll/smart_library.hpp>
 #include <boost/dll/import_mangled.hpp>
@@ -59,3 +60,8 @@ int main(int argc, char** argv) {
 
   return boost::report_errors();
 }
+
+
+#else
+int main() {}
+#endif

@@ -28,8 +28,6 @@
 [import src/examples/algorithms/azimuth_strategy.cpp]
 [import src/examples/algorithms/buffer_with_strategies.cpp]
 [import src/examples/algorithms/clear.cpp]
-[import src/examples/algorithms/closest_points.cpp]
-[import src/examples/algorithms/closest_points_strategy.cpp]
 [import src/examples/algorithms/centroid.cpp]
 [import src/examples/algorithms/comparable_distance.cpp]
 [import src/examples/algorithms/convert.cpp]
@@ -120,7 +118,6 @@
 [import src/examples/geometries/point_xyz.cpp]
 [import src/examples/geometries/point.cpp]
 [import src/examples/geometries/polygon.cpp]
-[import src/examples/geometries/polyhedral_surface.cpp]
 [import src/examples/geometries/ring.cpp]
 [import src/examples/geometries/segment.cpp]
 

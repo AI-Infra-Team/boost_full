@@ -1,12 +1,4 @@
 #include <boost/config.hpp>
-#include <boost/config/pragma_message.hpp>
-
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ( defined(BOOST_GCC) && BOOST_GCC < 40600 )
-
-BOOST_PRAGMA_MESSAGE( "Skipping test for GCC 4.4 -std=c++0x" )
-int main() {}
-
-#else
 
 //
 //  bind_function2_test.cpp - regression test
@@ -126,5 +118,3 @@ int main()
     function_test();
     return boost::report_errors();
 }
-
-#endif

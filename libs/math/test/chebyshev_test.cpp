@@ -73,24 +73,17 @@ template<class Real>
 void test_clenshaw_recurrence()
 {
     using boost::math::chebyshev_clenshaw_recurrence;
-    std::array<Real, 5> c0 = { {2, 0, 0, 0, 0} };
+    boost::array<Real, 5> c0 = { {2, 0, 0, 0, 0} };
     // Check the size = 1 case:
-    std::array<Real, 1> c01 = { {2} };
+    boost::array<Real, 1> c01 = { {2} };
     // Check the size = 2 case:
-    std::array<Real, 2> c02 = { {2, 0} };
-    std::array<Real, 4> c1 = { {0, 1, 0, 0} };
-    std::array<Real, 4> c2 = { {0, 0, 1, 0} };
-    std::array<Real, 5> c3 = { {0, 0, 0, 1, 0} };
-    std::array<Real, 5> c4 = { {0, 0, 0, 0, 1} };
-    std::array<Real, 6> c5 = { {0, 0, 0, 0, 0, 1} };
-    std::array<Real, 7> c6 = { {0, 0, 0, 0, 0, 0, 1} };
-
-    //
-    // Error handling checks:
-    //
-    CHECK_THROW(chebyshev_clenshaw_recurrence(c0.data(), c0.size(), Real(-1), Real(1), Real(-2)), std::domain_error);
-    CHECK_THROW(chebyshev_clenshaw_recurrence(c0.data(), c0.size(), Real(-1), Real(1), Real(2)), std::domain_error);
-    CHECK_EQUAL(chebyshev_clenshaw_recurrence(c0.data(), 0, Real(-1), Real(1), Real(0.5)), Real(0));
+    boost::array<Real, 2> c02 = { {2, 0} };
+    boost::array<Real, 4> c1 = { {0, 1, 0, 0} };
+    boost::array<Real, 4> c2 = { {0, 0, 1, 0} };
+    boost::array<Real, 5> c3 = { {0, 0, 0, 1, 0} };
+    boost::array<Real, 5> c4 = { {0, 0, 0, 0, 1} };
+    boost::array<Real, 6> c5 = { {0, 0, 0, 0, 0, 1} };
+    boost::array<Real, 7> c6 = { {0, 0, 0, 0, 0, 0, 1} };
 
     Real x = -1;
     // It's not clear from this test which one is more accurate; higher precision cast testing is required, and is done elsewhere:
@@ -173,7 +166,7 @@ void test_translated_clenshaw_recurrence()
         // it shows they are doing roughly the same thing.
         Real computed = chebyshev_clenshaw_recurrence(c.data(), c.size(), Real(-1), Real(1), x);
         if (!CHECK_ULP_CLOSE(expected, computed, 1000)) {
-            std::cerr << "  Problem occurred at x = " << x << "\n";
+            std::cerr << "  Problem occured at x = " << x << "\n";
         }
     }
 }

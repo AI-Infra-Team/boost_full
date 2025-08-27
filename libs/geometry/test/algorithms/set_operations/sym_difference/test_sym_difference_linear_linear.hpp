@@ -18,9 +18,7 @@
 #include <boost/geometry/geometry.hpp>
 #include "../test_set_ops_linear_linear.hpp"
 #include <from_wkt.hpp>
-#ifdef TEST_WITH_SVG
 #include <to_svg.hpp>
-#endif
 
 
 //==================================================================
@@ -77,10 +75,6 @@ private:
                 Geometry1, Geometry2
             >::type strategy_type;
         bg::sym_difference(geometry1, geometry2, mls_output, strategy_type());
-
-#ifdef TEST_WITH_SVG
-        to_svg(geometry1, geometry2, mls_output, case_id);
-#endif
 
         check_result(geometry1, geometry2, mls_output, mls_sym_diff, case_id, tolerance);
 
@@ -167,6 +161,11 @@ public:
     {
 #ifdef BOOST_GEOMETRY_TEST_DEBUG
         std::cout << "test case: " << case_id << std::endl;
+        std::stringstream sstr;
+        sstr << "svgs/" << case_id << ".svg";
+#ifdef TEST_WITH_SVG
+        to_svg(geometry1, geometry2, sstr.str());
+#endif
 #endif
 
         Geometry1 rg1(geometry1);

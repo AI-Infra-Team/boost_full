@@ -7,7 +7,6 @@
 //[ guide_fill_histogram
 
 #include <boost/histogram.hpp>
-#include <boost/core/span.hpp>
 #include <cassert>
 #include <functional>
 #include <numeric>
@@ -30,16 +29,7 @@ int main() {
   h(xy);
 
   // chunk-wise filling is also supported and more efficient, make some data...
-  std::vector<double> x = {0, 2, 5};
-  std::vector<double> y = {0.8, 0.4, 0.7};
-
-  // fill accepts an iterable over iterables, to avoid copying data we use
-  // std::vector<boost::span<double>> and not std::vector<std::vector<double>>
-  std::vector<boost::span<double>> xy2 = {boost::make_span(x), boost::make_span(y)};
-
-  // alternatively, if the number of axes is known at compile-time,
-  // it is better to use an array of spans, which avoids the heap allocation
-  // std::array<boost::span<double>, 2> xy2 = {boost::make_span(x), boost::make_span(y)};
+  std::vector<double> xy2[2] = {{0, 2, 5}, {0.8, 0.4, 0.7}};
 
   // ... and call fill method
   h.fill(xy2);

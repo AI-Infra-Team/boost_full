@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <boost/core/lightweight_test.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #ifdef NO_MOVE
 # undef BOOST_COPY_ASSIGN_REF
@@ -147,7 +148,7 @@ X ternary( bool y )
 
 int main(int argc, char* argv[])
 {
-    ::boost::movelib::ignore(argv);
+    ::boost::ignore_unused(argv);
     // Double parens prevent "most vexing parse"
     CHECK_COPIES( X a(( lvalue() )), 1U, 1U, "Direct initialization from lvalue");
     CHECK_COPIES( X a(( rvalue() )), 0U, 1U, "Direct initialization from rvalue");

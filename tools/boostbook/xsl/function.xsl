@@ -24,10 +24,6 @@
        unless everything fits on a single line. -->
   <xsl:param name="boost.short.result.type">12</xsl:param>
 
-  <!-- When true, the stylesheet will sort parameters of functions and
-       templates alphabetically in detailed description. -->
-  <xsl:param name="boost.sort.params">0</xsl:param>
-
   <!-- Display a function declaration -->
   <xsl:template name="function">
     <xsl:param name="indentation"/>
@@ -826,7 +822,7 @@
                   list-presentation="table"
                 </xsl:processing-instruction>
                 <xsl:for-each select="parameter|signature/parameter">
-                  <xsl:sort select="attribute::name[$boost.sort.params!=0]"/>
+		              <xsl:sort select="attribute::name"/>
                   <xsl:if test="description">
                     <varlistentry>
                       <term>
@@ -857,7 +853,7 @@
                 </xsl:processing-instruction>
                 <xsl:for-each select="template/template-type-parameter|
                       template/template-nontype-parameter">
-                  <xsl:sort select="attribute::name[$boost.sort.params!=0]"/>
+                  <xsl:sort select="attribute::name"/>
                   <xsl:if test="purpose">
                     <varlistentry>
                       <term>
@@ -1133,7 +1129,7 @@
           </xsl:call-template>
         </xsl:with-param>
       </xsl:call-template>
-      <xsl:apply-templates select="constructor|copy-assignment|destructor|method|overloaded-method"
+      <xsl:apply-templates select="method|overloaded-method"
         mode="synopsis">
         <xsl:with-param name="indentation" select="$indentation"/>
       </xsl:apply-templates>
@@ -1161,7 +1157,7 @@
         </xsl:with-param>
         <xsl:with-param name="text">
           <orderedlist>
-            <xsl:apply-templates select="constructor|copy-assignment|destructor|method|overloaded-method"
+            <xsl:apply-templates select="method|overloaded-method"
               mode="reference"/>
           </orderedlist>
         </xsl:with-param>

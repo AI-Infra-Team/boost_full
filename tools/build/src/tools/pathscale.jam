@@ -11,10 +11,11 @@ import type ;
 import os ;
 import common ;
 import fortran ;
-import regex ;
 
 feature.extend toolset : pathscale ;
 toolset.inherit pathscale : unix ;
+generators.override pathscale.prebuilt : builtin.prebuilt ;
+generators.override pathscale.searched-lib-generator : searched-lib-generator ;
 
 # Documentation and toolchain description located
 # http://www.pathscale.com/docs.html
@@ -25,7 +26,7 @@ rule init ( version ? : command * : options * )
     : /opt/ekopath/bin ] ;
 
   # Determine the version
-  local command-string = [ common.make-command-string $(command) ] ;
+  local command-string = $(command:J=" ") ;
   if $(command)
   {
       version ?= [ MATCH "^([0-9.]+)"
@@ -100,22 +101,6 @@ flags pathscale.compile INCLUDES <include> ;
 
 flags pathscale.compile.fortran USER_OPTIONS <fflags> ;
 flags pathscale.compile.fortran90 USER_OPTIONS <fflags> ;
-
-rule compile.c ( targets * : sources * : properties * )
-{
-    local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_C_COMMAND:E="") ]
-        : "()[]\\+.*^$\"" : "\\" ] ;
-    COMMAND_DATABASE on $(targets) = "(\"$(config_command)\"[^\n]*)" ;
-}
-
-rule compile.c++ ( targets * : sources * : properties * )
-{
-    local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
-        : "()[]\\+.*^$\"" : "\\" ] ;
-    COMMAND_DATABASE on $(targets) = "(\"$(config_command)\"[^\n]*)" ;
-}
 
 actions compile.c
 {

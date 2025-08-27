@@ -19,6 +19,7 @@
 //[code_websocket_1a
 
 #include <boost/beast.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
@@ -77,7 +78,7 @@ snippets()
     //[code_websocket_5f
 
         // The WebSocket stream will use SSL and a new strand
-        stream<net::ssl::stream<tcp_stream>> wss(net::make_strand(ioc), ctx);
+        stream<ssl_stream<tcp_stream>> wss(net::make_strand(ioc), ctx);
 
     //]
 

@@ -18,9 +18,9 @@ struct A
    int a, b, c;
    static int count;
    A() : a (999), b(1000), c(1001) {++count;}
-   A(int x) : a (x), b(1000), c(1001) {++count;}
-   A(int x, int y) : a (x), b(y), c(1001) {++count;}
-   A(int x, int y, int z) : a (x), b(y), c(z) {++count;}
+   A(int a) : a (a), b(1000), c(1001) {++count;}
+   A(int a, int b) : a (a), b(b), c(1001) {++count;}
+   A(int a, int b, int c) : a (a), b(b), c(c) {++count;}
    A(const A&) {++count;}
    virtual ~A() {--count;}
 };
@@ -192,7 +192,7 @@ void test()
    reset_counters();
    {
       bml::unique_ptr<A[]> p(bml::make_unique<A[]>(10));
-      BOOST_TEST(A::count == 10);
+      BOOST_TEST(A::count == 10u);
       for(std::size_t i = 0; i != 10u; ++i){
          BOOST_TEST(p[i].a == 999);
          BOOST_TEST(p[i].b == 1000);
@@ -202,7 +202,7 @@ void test()
    BOOST_TEST(A::count == 0);
    {
       bml::unique_ptr<A[]> p(bml::make_unique_nothrow<A[]>(10));
-      BOOST_TEST(A::count == 10);
+      BOOST_TEST(A::count == 10u);
       for(std::size_t i = 0; i != 10u; ++i){
          BOOST_TEST(p[i].a == 999);
          BOOST_TEST(p[i].b == 1000);

@@ -47,9 +47,9 @@ public:
     using reference = typename std::iterator_traits<Iterator>::reference;
 
     step_iterator_adaptor() {}
-    step_iterator_adaptor(Iterator const& it, SFn step_fn=SFn()) : parent_t(it), _step_fn(step_fn) {}
+    step_iterator_adaptor(const Iterator& it, SFn step_fn=SFn()) : parent_t(it), _step_fn(step_fn) {}
 
-    auto step() const -> difference_type { return _step_fn.step(); }
+    difference_type step() const { return _step_fn.step(); }
 
 protected:
     SFn _step_fn;
@@ -59,11 +59,7 @@ private:
     void increment() { _step_fn.advance(this->base_reference(),1); }
     void decrement() { _step_fn.advance(this->base_reference(),-1); }
     void advance(base_difference_type d) { _step_fn.advance(this->base_reference(),d); }
-    
-    auto distance_to(step_iterator_adaptor const& it) const -> difference_type
-    {
-        return _step_fn.difference(this->base_reference(),it.base_reference());
-    }
+    difference_type distance_to(const step_iterator_adaptor& it) const { return _step_fn.difference(this->base_reference(),it.base_reference()); }
 };
 
 // although iterator_adaptor defines these, the default implementation computes distance and compares for zero.
@@ -128,15 +124,11 @@ struct memunit_step_fn {
 
     memunit_step_fn(difference_type step=memunit_step(Iterator())) : _step(step) {}
 
-    auto difference(Iterator const& it1, Iterator const& it2) const -> difference_type
-    {
-        return memunit_distance(it1,it2)/_step;
-    }
-    
-    void advance(Iterator& it, difference_type d) const { memunit_advance(it,d*_step); }
-    auto step() const -> difference_type { return _step; }
+    difference_type difference(const Iterator& it1, const Iterator& it2) const { return memunit_distance(it1,it2)/_step; }
+    void            advance(Iterator& it, difference_type d)             const { memunit_advance(it,d*_step); }
+    difference_type step()                                               const { return _step; }
 
-    void set_step(std::ptrdiff_t step) { _step=step; }
+    void            set_step(std::ptrdiff_t step) { _step=step; }
 private:
     BOOST_GIL_CLASS_REQUIRE(Iterator, boost::gil, MemoryBasedIteratorConcept)
     difference_type _step;
@@ -164,12 +156,12 @@ public:
 
     /// For some reason operator[] provided by iterator_adaptor returns a custom class that is convertible to reference
     /// We require our own reference because it is registered in iterator_traits
-    auto operator[](difference_type d) const -> reference { return *(*this+d); }
+    reference operator[](difference_type d) const { return *(*this+d); }
 
     void set_step(std::ptrdiff_t memunit_step) { this->_step_fn.set_step(memunit_step); }
 
-    auto base() -> x_iterator& { return parent_t::base_reference(); }
-    auto base() const -> x_iterator const& { return parent_t::base_reference(); }
+    x_iterator& base()              { return parent_t::base_reference(); }
+    x_iterator const& base() const  { return parent_t::base_reference(); }
 };
 
 template <typename Iterator>
@@ -223,12 +215,11 @@ template <typename Iterator>
 struct byte_to_memunit<memory_based_step_iterator<Iterator>> : public byte_to_memunit<Iterator> {};
 
 template <typename Iterator>
-inline auto memunit_step(memory_based_step_iterator<Iterator> const& p) -> std::ptrdiff_t { return p.step(); }
+inline std::ptrdiff_t memunit_step(const memory_based_step_iterator<Iterator>& p) { return p.step(); }
 
 template <typename Iterator>
-inline auto memunit_distance(memory_based_step_iterator<Iterator> const& p1, memory_based_step_iterator<Iterator> const& p2)
-    -> std::ptrdiff_t
-{
+inline std::ptrdiff_t memunit_distance(const memory_based_step_iterator<Iterator>& p1,
+                                    const memory_based_step_iterator<Iterator>& p2) {
     return memunit_distance(p1.base(),p2.base());
 }
 
@@ -239,16 +230,16 @@ inline void memunit_advance(memory_based_step_iterator<Iterator>& p,
 }
 
 template <typename Iterator>
-inline auto memunit_advanced(const memory_based_step_iterator<Iterator>& p, std::ptrdiff_t diff)
-    -> memory_based_step_iterator<Iterator>
-{
+inline memory_based_step_iterator<Iterator>
+memunit_advanced(const memory_based_step_iterator<Iterator>& p,
+              std::ptrdiff_t diff) {
     return memory_based_step_iterator<Iterator>(memunit_advanced(p.base(), diff),p.step());
 }
 
 template <typename Iterator>
-inline auto memunit_advanced_ref(const memory_based_step_iterator<Iterator>& p, std::ptrdiff_t diff)
-    -> typename std::iterator_traits<Iterator>::reference
-{
+inline typename std::iterator_traits<Iterator>::reference
+memunit_advanced_ref(const memory_based_step_iterator<Iterator>& p,
+                  std::ptrdiff_t diff) {
     return memunit_advanced_ref(p.base(), diff);
 }
 
@@ -268,10 +259,7 @@ struct iterator_add_deref<memory_based_step_iterator<Iterator>,Deref> {
 
     using type = memory_based_step_iterator<typename iterator_add_deref<Iterator, Deref>::type>;
 
-    static type make(const memory_based_step_iterator<Iterator>& it, const Deref& d)
-    {
-        return type(iterator_add_deref<Iterator, Deref>::make(it.base(),d),it.step());
-    }
+    static type make(const memory_based_step_iterator<Iterator>& it, const Deref& d) { return type(iterator_add_deref<Iterator, Deref>::make(it.base(),d),it.step()); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -325,9 +313,7 @@ auto make_step_iterator_impl(
 /// The step iterator can be wrapped inside another iterator. Also, it may not have the
 /// type memory_based_step_iterator, but it could be a user-provided type.
 template <typename I>  // Models MemoryBasedIteratorConcept, HasDynamicXStepTypeConcept
-inline auto make_step_iterator(I const& it, std::ptrdiff_t step)
-    -> typename dynamic_x_step_type<I>::type
-{
+typename dynamic_x_step_type<I>::type make_step_iterator(const I& it, std::ptrdiff_t step) {
     return detail::make_step_iterator_impl(it, step, typename is_iterator_adaptor<I>::type());
 }
 

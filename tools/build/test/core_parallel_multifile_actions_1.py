@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2007 Rene Rivera.
 # Copyright 2011 Steven Watanabe
@@ -72,7 +72,6 @@ t.run_build_system(["-ffile.jam", "-j2"], stdout="""\
 003
 .use.2 u2.user
 004
-
 ...updated 4 targets...
 """)
 

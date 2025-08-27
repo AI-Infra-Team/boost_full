@@ -1,4 +1,4 @@
-// Copyright Louis Dionne 2013-2022
+// Copyright Louis Dionne 2013-2017
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE.md or copy at http://boost.org/LICENSE_1_0.txt)
 
@@ -834,7 +834,7 @@ type-level approach, aren't we? But there's more; we can also use
 
 @code{cpp}
 template <char ...digits>
-constexpr auto operator ""_c() {
+constexpr auto operator"" _c() {
   // parse the digits and return an integral_constant
 }
 

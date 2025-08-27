@@ -31,9 +31,8 @@
 #include <boost/container/detail/singleton.hpp>
 #include <boost/container/detail/placement_new.hpp>
 
-#include <boost/move/detail/force_ptr.hpp>
-
 #include <boost/assert.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/move/utility_core.hpp>
 #include <cstddef>
 
@@ -71,12 +70,12 @@ class adaptive_pool
          BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)
          >   self_t;
 
-   BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block        = NodesPerBlock;
-   BOOST_STATIC_CONSTEXPR std::size_t max_free_blocks        = MaxFreeBlocks;
-   BOOST_STATIC_CONSTEXPR std::size_t overhead_percent       = OverheadPercent;
-   BOOST_STATIC_CONSTEXPR std::size_t real_nodes_per_block   = NodesPerBlock;
+   static const std::size_t nodes_per_block        = NodesPerBlock;
+   static const std::size_t max_free_blocks        = MaxFreeBlocks;
+   static const std::size_t overhead_percent       = OverheadPercent;
+   static const std::size_t real_nodes_per_block   = NodesPerBlock;
 
-   BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_STATIC_ASSERT((Version <=2)));
+   BOOST_CONTAINER_DOCIGN(BOOST_STATIC_ASSERT((Version <=2)));
 
    public:
    //-------
@@ -253,7 +252,7 @@ class adaptive_pool
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
-      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
+      BOOST_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes(n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
@@ -264,8 +263,7 @@ class adaptive_pool
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes
-            ( n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
-            , move_detail::force_ptr<dlmalloc_memchain *>(&chain)))){
+            (n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -274,7 +272,7 @@ class adaptive_pool
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
-      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));/*
+      BOOST_STATIC_ASSERT(( Version > 1 ));/*
       dlmalloc_memchain ch;
       BOOST_CONTAINER_MEMCHAIN_INIT(&ch);
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays(n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, &ch))){
@@ -285,8 +283,7 @@ class adaptive_pool
                              ,(T*)BOOST_CONTAINER_MEMCHAIN_LASTMEM(&ch)
                              ,BOOST_CONTAINER_MEMCHAIN_SIZE(&ch) );*/
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays
-         ( n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
-         , move_detail::force_ptr<dlmalloc_memchain *>(&chain)))){
+         (n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -298,7 +295,7 @@ class adaptive_pool
       size_t size(chain.size());
       BOOST_CONTAINER_MEMCHAIN_INIT_FROM(&ch, beg, last, size);
       dlmalloc_multidealloc(&ch);*/
-      dlmalloc_multidealloc(move_detail::force_ptr<dlmalloc_memchain *>(&chain));
+      dlmalloc_multidealloc(reinterpret_cast<dlmalloc_memchain *>(&chain));
    }
 
    //!Deallocates all free blocks of the pool
@@ -384,12 +381,12 @@ class private_adaptive_pool
          BOOST_CONTAINER_DOCIGN(BOOST_MOVE_I Version)
          >   self_t;
 
-   BOOST_STATIC_CONSTEXPR std::size_t nodes_per_block        = NodesPerBlock;
-   BOOST_STATIC_CONSTEXPR std::size_t max_free_blocks        = MaxFreeBlocks;
-   BOOST_STATIC_CONSTEXPR std::size_t overhead_percent       = OverheadPercent;
-   BOOST_STATIC_CONSTEXPR std::size_t real_nodes_per_block   = NodesPerBlock;
+   static const std::size_t nodes_per_block        = NodesPerBlock;
+   static const std::size_t max_free_blocks        = MaxFreeBlocks;
+   static const std::size_t overhead_percent       = OverheadPercent;
+   static const std::size_t real_nodes_per_block   = NodesPerBlock;
 
-   BOOST_CONTAINER_DOCIGN(BOOST_CONTAINER_STATIC_ASSERT((Version <=2)));
+   BOOST_CONTAINER_DOCIGN(BOOST_STATIC_ASSERT((Version <=2)));
 
    typedef dtl::private_adaptive_node_pool
       <sizeof(T), NodesPerBlock, MaxFreeBlocks, OverheadPercent> pool_t;
@@ -545,10 +542,9 @@ class private_adaptive_pool
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(size_type elem_size, std::size_t n_elements, multiallocation_chain &chain)
    {
-      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
+      BOOST_STATIC_ASSERT(( Version > 1 ));
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_nodes
-            ( n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
-            , move_detail::force_ptr<dlmalloc_memchain *>(&chain)))){
+            (n_elements, elem_size*sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
@@ -557,17 +553,16 @@ class private_adaptive_pool
    //!Elements must be individually deallocated with deallocate()
    void allocate_many(const size_type *elem_sizes, size_type n_elements, multiallocation_chain &chain)
    {
-      BOOST_CONTAINER_STATIC_ASSERT(( Version > 1 ));
+      BOOST_STATIC_ASSERT(( Version > 1 ));
       if(BOOST_UNLIKELY(!dlmalloc_multialloc_arrays
-         (n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS
-         , move_detail::force_ptr<dlmalloc_memchain *>(&chain)))){
+         (n_elements, elem_sizes, sizeof(T), BOOST_CONTAINER_DL_MULTIALLOC_DEFAULT_CONTIGUOUS, reinterpret_cast<dlmalloc_memchain *>(&chain)))){
          boost::container::throw_bad_alloc();
       }
    }
 
    void deallocate_many(multiallocation_chain &chain) BOOST_NOEXCEPT_OR_NOTHROW
    {
-      dlmalloc_multidealloc(move_detail::force_ptr<dlmalloc_memchain *>(&chain));
+      dlmalloc_multidealloc(reinterpret_cast<dlmalloc_memchain *>(&chain));
    }
 
    //!Deallocates all free blocks of the pool

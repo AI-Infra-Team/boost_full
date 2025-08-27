@@ -9,7 +9,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/container/slist.hpp>
 #include <boost/container/node_allocator.hpp>
-#include <boost/container/adaptive_pool.hpp>
 
 #include <memory>
 #include "dummy_test_allocator.hpp"
@@ -24,6 +23,7 @@ using namespace boost::container;
 class recursive_slist
 {
 public:
+   int id_;
    slist<recursive_slist> slist_;
    slist<recursive_slist>::iterator it_;
    slist<recursive_slist>::const_iterator cit_;
@@ -53,32 +53,6 @@ struct GetAllocatorCont
                    > type;
    };
 };
-
-template<class VoidAllocator>
-int test_cont_variants()
-{
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<int>::type MyCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_int>::type MyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::movable_and_copyable_int>::type MyCopyMoveCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::copyable_int>::type MyCopyCont;
-   typedef typename GetAllocatorCont<VoidAllocator>::template apply<test::moveconstruct_int>::type MyMoveConstructCont;
-
-   if(test::list_test<MyCont, false>())
-      return 1;
-
-   if(test::list_test<MyMoveCont, false>())
-      return 1;
-   if(test::list_test<MyCopyMoveCont, false>())
-      return 1;
-   if(test::list_test<MyCopyMoveCont, false>())
-      return 1;
-   if(test::list_test<MyCopyCont, false>())
-      return 1;
-   if (test::list_test<MyMoveConstructCont, false>())
-      return 1;
-
-   return 0;
-}
 
 bool test_support_for_initializer_list()
 {
@@ -194,17 +168,17 @@ int main ()
    ////////////////////////////////////
    //    Testing allocator implementations
    ////////////////////////////////////
-   if (test_cont_variants< new_allocator<void> >()) {
-      std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
+   if (test::list_test<slist<int, std::allocator<int> >, false>())
       return 1;
-   }
-   if (test_cont_variants< std::allocator<void> >()) {
-      std::cerr << "test_cont_variants< std::allocator<void> > failed" << std::endl;
-      return 1;
-   }
-   if (test::list_test<slist<int, adaptive_pool<int> >, false>())
+   if (test::list_test<slist<int>, false>())
       return 1;
    if (test::list_test<slist<int, node_allocator<int> >, false>())
+      return 1;
+   if (test::list_test<slist<test::movable_int>, false>())
+      return 1;
+   if (test::list_test<slist<test::movable_and_copyable_int>, false>())
+      return 1;
+   if (test::list_test<slist<test::copyable_int>, false>())
       return 1;
 
    ////////////////////////////////////
@@ -292,7 +266,7 @@ int main ()
       typedef boost::container::slist<int> cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      BOOST_CONTAINER_STATIC_ASSERT_MSG(
+      BOOST_STATIC_ASSERT_MSG(
         !(boost::has_trivial_destructor_after_move<cont>::value !=
           boost::has_trivial_destructor_after_move<allocator_type>::value &&
           boost::has_trivial_destructor_after_move<pointer>::value)
@@ -303,7 +277,7 @@ int main ()
       typedef boost::container::slist<int, std::allocator<int> > cont;
       typedef cont::allocator_type allocator_type;
       typedef boost::container::allocator_traits<allocator_type>::pointer pointer;
-      BOOST_CONTAINER_STATIC_ASSERT_MSG(
+      BOOST_STATIC_ASSERT_MSG(
         !(boost::has_trivial_destructor_after_move<cont>::value !=
           boost::has_trivial_destructor_after_move<allocator_type>::value &&
           boost::has_trivial_destructor_after_move<pointer>::value)

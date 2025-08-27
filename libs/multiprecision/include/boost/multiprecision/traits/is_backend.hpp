@@ -6,7 +6,6 @@
 #ifndef BOOST_MP_IS_BACKEND_HPP
 #define BOOST_MP_IS_BACKEND_HPP
 
-#include <type_traits>
 #include <boost/multiprecision/detail/number_base.hpp>
 
 namespace boost { namespace multiprecision { namespace detail {
@@ -15,7 +14,7 @@ template <class T>
 struct has_signed_types
 {
    template <class U>
-   static double check(U*, typename U::signed_types* = nullptr);
+   static double check(U*, typename U::signed_types* = 0);
    static char   check(...);
    static T* get();
    static constexpr bool value = sizeof(check(get())) == sizeof(double);
@@ -24,7 +23,7 @@ template <class T>
 struct has_unsigned_types
 {
    template <class U>
-   static double check(U*, typename U::unsigned_types* = nullptr);
+   static double check(U*, typename U::unsigned_types* = 0);
    static char   check(...);
    static T* get();
    static constexpr bool value = sizeof(check(get())) == sizeof(double);
@@ -33,7 +32,7 @@ template <class T>
 struct has_float_types
 {
    template <class U>
-   static double check(U*, typename U::float_types* = nullptr);
+   static double check(U*, typename U::float_types* = 0);
    static char   check(...);
    static T* get();
    static constexpr bool value = sizeof(check(get())) == sizeof(double);
@@ -72,12 +71,12 @@ struct is_first_backend : is_first_backend_imp<is_backend<T>::value, T, U>
 template <bool b, class T, class U>
 struct is_second_backend_imp
 {
-   static constexpr bool value = false;
+   static constexpr const bool value = false;
 };
 template <class T, class U>
 struct is_second_backend_imp<true, T, U>
 {
-   static constexpr bool value = (std::is_convertible<T, number<U, et_on> >::value || std::is_convertible<T, number<U, et_off> >::value) && !is_first_backend<T, U>::value;
+   static constexpr const bool value = (std::is_convertible<T, number<U, et_on> >::value || std::is_convertible<T, number<U, et_off> >::value) && !is_first_backend<T, U>::value;
 };
 
 template <class T, class U>

@@ -171,7 +171,7 @@ void test_spots(T, const char* type_name)
 {
     // Function values calculated on https://wolframalpha.com/
     // EllipticTheta[1, z, q]
-    static const std::array<std::array<typename table_type<T>::type, 3>, 22> data1 = {{
+    static const boost::array<boost::array<typename table_type<T>::type, 3>, 22> data1 = {{
         {{ SC_(0.25), SC_(0.5), SC_(0.1540230688155610552510349122197994458164480291364308) }},
         {{ SC_(0.5), SC_(0.5), SC_(0.402768575854814314826394321410682828786027207014725) }},
         {{ SC_(1.0), SC_(0.5), SC_(1.330378498179274650272750199052730280058943456725878763411) }},
@@ -200,7 +200,7 @@ void test_spots(T, const char* type_name)
     }};
 
     // EllipticTheta[2, z, q]
-    static const std::array<std::array<typename table_type<T>::type, 3>, 22> data2 = {{
+    static const boost::array<boost::array<typename table_type<T>::type, 3>, 22> data2 = {{
         {{ SC_(0.25), SC_(0.5), SC_(1.945359087094512287818938605108992884433591043123906291186) }},
         {{ SC_(0.5), SC_(0.5), SC_(1.484216087659583107499509464625356597654932790316228596683) }},
         {{ SC_(1.0), SC_(0.5), SC_(0.500198138514456200618643558666164246520575297293771869190) }},
@@ -229,7 +229,7 @@ void test_spots(T, const char* type_name)
     }};
 
     // EllipticTheta[3, z, q]
-    static const std::array<std::array<typename table_type<T>::type, 3>, 22> data3 = {{
+    static const boost::array<boost::array<typename table_type<T>::type, 3>, 22> data3 = {{
         {{ SC_(0.25), SC_(0.5), SC_(1.945383919743612326705943032930976804537995814958244156964) }},
         {{ SC_(0.5), SC_(0.5), SC_(1.484396862425166928164115914328477415075581759665236164625) }},
         {{ SC_(1.0), SC_(0.5), SC_(0.505893885730484607919474452677852065978820023168006719298) }},
@@ -258,7 +258,7 @@ void test_spots(T, const char* type_name)
     }};
 
     // EllipticTheta[4, z, q]
-    static const std::array<std::array<typename table_type<T>::type, 3>, 20> data4 = {{
+    static const boost::array<boost::array<typename table_type<T>::type, 3>, 20> data4 = {{
         {{ SC_(0.25), SC_(0.5), SC_(0.189666257078605856907477593562312286776776156459895303534) }},
         {{ SC_(0.5), SC_(0.5), SC_(0.411526533253405515206323680892825857445581901774756902114) }},
         {{ SC_(1.0), SC_(0.5), SC_(1.330686328485433289294314954726283002076056588770122570003) }},
@@ -286,10 +286,10 @@ void test_spots(T, const char* type_name)
         // {{ SC_(0.0), SC_(0.9921875), SC_(0.0) }},
     }};
 
-    do_test_jacobi_theta1<T>(data1, type_name, "Jacobi Theta 1: WolframAlpha Data");
-    do_test_jacobi_theta2<T>(data2, type_name, "Jacobi Theta 2: WolframAlpha Data");
-    do_test_jacobi_theta3<T>(data3, type_name, "Jacobi Theta 3: WolframAlpha Data");
-    do_test_jacobi_theta4<T>(data4, type_name, "Jacobi Theta 4: WolframAlpha Data");
+    do_test_jacobi_theta1<T>(data1, type_name, "Jacobi Theta 1: Wolfrom Alpha Data");
+    do_test_jacobi_theta2<T>(data2, type_name, "Jacobi Theta 2: Wolfram Alpha Data");
+    do_test_jacobi_theta3<T>(data3, type_name, "Jacobi Theta 3: Wolfram Alpha Data");
+    do_test_jacobi_theta4<T>(data4, type_name, "Jacobi Theta 4: Wolfram Alpha Data");
 
 #include "jacobi_theta_data.ipp"
 
@@ -298,37 +298,6 @@ void test_spots(T, const char* type_name)
 #include "jacobi_theta_small_tau.ipp"
 
     do_test_jacobi_theta_tau<T>(jacobi_theta_small_tau_data, type_name, "Jacobi Theta: Random Data (Small Tau)");
-
-    //
-    // coverage and bugs:
-    //
-#ifndef BOOST_MATH_NO_EXCEPTIONS
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4(T(0.5), T(0)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4(T(0.5), T(-0.5)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4(T(0.5), T(1)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4(T(0.5), T(1.5)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4m1(T(0.5), T(0)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4m1(T(0.5), T(-0.5)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4m1(T(0.5), T(1)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta4m1(T(0.5), T(1.5)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta3m1(T(0.5), T(0)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta3m1(T(0.5), T(-0.5)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta3m1(T(0.5), T(1)), std::domain_error);
-    BOOST_CHECK_THROW(boost::math::jacobi_theta3m1(T(0.5), T(1.5)), std::domain_error);
-#else
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4(T(0.5), T(0))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4(T(0.5), T(-0.5))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4(T(0.5), T(1))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4(T(0.5), T(1.5))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4m1(T(0.5), T(0))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4m1(T(0.5), T(-0.5))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4m1(T(0.5), T(1))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta4m1(T(0.5), T(1.5))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta3m1(T(0.5), T(0))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta3m1(T(0.5), T(-0.5))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta3m1(T(0.5), T(1))));
-    BOOST_CHECK((boost::math::isnan)(boost::math::jacobi_theta3m1(T(0.5), T(1.5))));
-#endif
 }
 
 #define _check_close(a, b, eps) \

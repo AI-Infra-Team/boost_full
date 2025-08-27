@@ -1,9 +1,10 @@
 //
-// Copyright (c) 2012 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
-
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+//
 #ifndef BOOST_NOWIDE_STACKSTRING_HPP_INCLUDED
 #define BOOST_NOWIDE_STACKSTRING_HPP_INCLUDED
 
@@ -25,7 +26,7 @@ namespace nowide {
     /// Invalid UTF characters are replaced by the substitution character, see #BOOST_NOWIDE_REPLACEMENT_CHARACTER
     ///
     /// If a NULL pointer is passed to the constructor or convert method, NULL will be returned by c_str.
-    /// Similarly a default constructed stackstring will return NULL on calling c_str.
+    /// Similarily a default constructed stackstring will return NULL on calling c_str.
     ///
     template<typename CharOut = wchar_t, typename CharIn = char, size_t BufferSize = 256>
     class basic_stackstring
@@ -39,24 +40,24 @@ namespace nowide {
         using input_char = CharIn;
 
         /// Creates a NULL stackstring
-        basic_stackstring()
+        basic_stackstring() : data_(NULL)
         {
             buffer_[0] = 0;
         }
         /// Convert the NULL terminated string input and store in internal buffer
         /// If input is NULL, nothing will be stored
-        explicit basic_stackstring(const input_char* input)
+        explicit basic_stackstring(const input_char* input) : data_(NULL)
         {
             convert(input);
         }
         /// Convert the sequence [begin, end) and store in internal buffer
         /// If begin is NULL, nothing will be stored
-        basic_stackstring(const input_char* begin, const input_char* end)
+        basic_stackstring(const input_char* begin, const input_char* end) : data_(NULL)
         {
             convert(begin, end);
         }
         /// Copy construct from other
-        basic_stackstring(const basic_stackstring& other)
+        basic_stackstring(const basic_stackstring& other) : data_(NULL)
         {
             *this = other;
         }
@@ -73,7 +74,7 @@ namespace nowide {
                     data_ = new output_char[len + 1];
                 else
                 {
-                    data_ = nullptr;
+                    data_ = NULL;
                     return *this;
                 }
                 std::memcpy(data_, other.data_, sizeof(output_char) * (len + 1));
@@ -137,7 +138,7 @@ namespace nowide {
         {
             if(!uses_stack_memory())
                 delete[] data_;
-            data_ = nullptr;
+            data_ = NULL;
         }
         /// Swap lhs with rhs
         friend void swap(basic_stackstring& lhs, basic_stackstring& rhs)
@@ -185,7 +186,7 @@ namespace nowide {
 
     private:
         output_char buffer_[buffer_size];
-        output_char* data_ = nullptr;
+        output_char* data_;
     }; // basic_stackstring
 
     ///

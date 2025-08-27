@@ -18,12 +18,11 @@ path-constant THIS_PATH : . ;
 
 doxygen reference
 :
-  $(THIS_PATH)/../include/boost/histogram.hpp
-  [ glob $(THIS_PATH)/../include/boost/histogram/*.hpp ]
-  [ glob $(THIS_PATH)/../include/boost/histogram/accumulators/*.hpp ]
-  [ glob $(THIS_PATH)/../include/boost/histogram/algorithm/*.hpp ]
-  [ glob $(THIS_PATH)/../include/boost/histogram/axis/*.hpp ]
-  [ glob $(THIS_PATH)/../include/boost/histogram/utility/*.hpp ]
+  $(THIS_PATH)/../../../boost/histogram.hpp
+  [ glob $(THIS_PATH)/../../../boost/histogram/*.hpp ]
+  [ glob $(THIS_PATH)/../../../boost/histogram/accumulators/*.hpp ]
+  [ glob $(THIS_PATH)/../../../boost/histogram/algorithm/*.hpp ]
+  [ glob $(THIS_PATH)/../../../boost/histogram/axis/*.hpp ]
 :
   <doxygen:param>QUIET=YES
   <doxygen:param>WARNINGS=YES
@@ -39,20 +38,10 @@ doxygen reference
                              \"BOOST_ATTRIBUTE_NODISCARD\""
 ;
 
-if [ os.name ] = NT
-  {
-    actions doxygen-postprocessing
-    {
-      python $(THIS_PATH)/doxygen_postprocessing.py "$(>)"
-    }
-  }
-  else
-  {
-    actions doxygen-postprocessing
-    {
-      python3 $(THIS_PATH)/doxygen_postprocessing.py "$(>)"
-    }
-  }
+actions doxygen-postprocessing
+{
+  python3 $(THIS_PATH)/doxygen_postprocessing.py "$(>)"
+}
 
 notfile reference-pp : @doxygen-postprocessing : reference.xml ;
 

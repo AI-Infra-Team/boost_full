@@ -4,9 +4,8 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2020-2023.
-// Modifications copyright (c) 2020-2023 Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2020-2021.
+// Modifications copyright (c) 2020-2021 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
@@ -23,7 +22,6 @@
 #include <boost/version.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
-#include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/point_order.hpp>
 #include <boost/geometry/core/ring_type.hpp>
 #include <boost/geometry/core/tag.hpp>
@@ -42,27 +40,19 @@ namespace detail
 {
 
 
+// As template alias for now. It's possible that this should be a struct.
+//   It'd also prevent instantiating the other, unneeded view.
 template
 <
     typename Range,
     order_selector Order = geometry::point_order<Range>::value
 >
-struct clockwise_view
-    : identity_view<Range>
-{
-    explicit inline clockwise_view(Range& r)
-        : identity_view<Range>(r)
-    {}
-};
-
-template <typename Range>
-struct clockwise_view<Range, counterclockwise>
-    : boost::reversed_range<Range>
-{
-    explicit inline clockwise_view(Range& r)
-        : boost::reversed_range<Range>(r)
-    {}
-};
+using clockwise_view = std::conditional_t
+    <
+        Order == counterclockwise,
+        boost::reversed_range<Range>,
+        identity_view<Range>
+    >;
 
 
 } // namespace detail
@@ -95,32 +85,6 @@ struct reversible_view<Range, iterate_reverse>
 };
 
 #endif // DOXYGEN_NO_SPECIALIZATIONS
-
-
-#ifndef DOXYGEN_NO_TRAITS_SPECIALIZATIONS
-namespace traits
-{
-
-
-template <typename Range, order_selector Order>
-struct tag<geometry::detail::clockwise_view<Range, Order> >
-    : geometry::tag<Range>
-{};
-
-template <typename Range, order_selector Order>
-struct point_order<geometry::detail::clockwise_view<Range, Order> >
-{
-    static const order_selector value = clockwise;
-};
-
-template <typename Range, order_selector Order>
-struct closure<geometry::detail::clockwise_view<Range, Order> >
-    : geometry::closure<Range>
-{};
-
-
-} // namespace traits
-#endif // DOXYGEN_NO_TRAITS_SPECIALIZATIONS
 
 
 }} // namespace boost::geometry

@@ -29,130 +29,94 @@ namespace boost
 
 namespace detail
 {
-    /**
-     * \brief Performs a phase of the Stoer-Wagner min-cut algorithm
-     *
-     * Performs a phase of the Stoer-Wagner min-cut algorithm.
-     *
-     * As described by Stoer & Wagner (1997), a phase is simply a maximum
-     * adjacency search (also called a maximum cardinality search), which
-     * results in the selection of two vertices \em s and \em t, and, as a side
-     * product, a minimum <em>s</em>-<em>t</em> cut of the input graph. Here,
-     * the input graph is basically \p g, but some vertices are virtually
-     * assigned to others as a way of viewing \p g as a graph with some sets of
-     * vertices merged together.
-     *
-     * This implementation is a translation of pseudocode by Professor Uri
-     * Zwick, School of Computer Science, Tel Aviv University.
-     *
-     * \pre \p g is a connected, undirected graph
-     * \param[in] g the input graph
-     * \param[in] assignments a read/write property map from each vertex to the
-     *                        vertex that it is assigned to
-     * \param[in] assignedVertices a list of vertices that are assigned to
-     *                             others
-     * \param[in] weights a readable property map from each edge to its
-     *                    weight (a non-negative value)
-     * \param[out] pq a keyed, updatable max-priority queue
-     * \returns a tuple (\em s, \em t, \em w) of the "<em>s</em>" and
-     *          "<em>t</em>" of the minimum <em>s</em>-<em>t</em> cut and the
-     *          cut weight \em w of the minimum <em>s</em>-<em>t</em> cut.
-     * \see http://www.cs.tau.ac.il/~zwick/grad-algo-08/gmc.pdf
-     *
-     * \author Daniel Trebbien
-     * \date 2010-09-11
-     */
-    template < class UndirectedGraph, class VertexAssignmentMap,
-        class WeightMap, class KeyedUpdatablePriorityQueue >
-    boost::tuple<
-        typename boost::graph_traits< UndirectedGraph >::vertex_descriptor,
-        typename boost::graph_traits< UndirectedGraph >::vertex_descriptor,
-        typename boost::property_traits< WeightMap >::value_type >
-    stoer_wagner_phase(const UndirectedGraph& g,
-        VertexAssignmentMap assignments,
-        const std::set< typename boost::graph_traits<
-            UndirectedGraph >::vertex_descriptor >& assignedVertices,
-        WeightMap weights, KeyedUpdatablePriorityQueue& pq)
+    template < typename ParityMap, typename WeightMap, typename IndexMap >
+    class mas_min_cut_visitor : public boost::default_mas_visitor
     {
-        typedef
-            typename boost::graph_traits< UndirectedGraph >::vertex_descriptor
-                vertex_descriptor;
+        typedef one_bit_color_map< IndexMap > InternalParityMap;
         typedef typename boost::property_traits< WeightMap >::value_type
             weight_type;
 
-        BOOST_ASSERT(pq.empty());
-        typename KeyedUpdatablePriorityQueue::key_map keys = pq.keys();
-
-        BGL_FORALL_VERTICES_T(v, g, UndirectedGraph)
+    public:
+        template < typename Graph >
+        mas_min_cut_visitor(const Graph& g, ParityMap parity,
+            weight_type& cutweight, const WeightMap& weight_map,
+            IndexMap index_map)
+        : m_bestParity(parity)
+        , m_parity(make_one_bit_color_map(num_vertices(g), index_map))
+        , m_bestWeight(cutweight)
+        , m_cutweight(0)
+        , m_visited(0)
+        , m_weightMap(weight_map)
         {
-            if (v == get(assignments, v))
-            { // foreach u \in V do
-                put(keys, v, weight_type(0));
-
-                pq.push(v);
-            }
+            // set here since the init list sets the reference
+            m_bestWeight = (std::numeric_limits< weight_type >::max)();
         }
 
-        BOOST_ASSERT(pq.size() >= 2);
+        template < typename Vertex, typename Graph >
+        void initialize_vertex(Vertex u, const Graph& g)
+        {
+            typedef typename boost::property_traits< ParityMap >::value_type
+                parity_type;
+            typedef
+                typename boost::property_traits< InternalParityMap >::value_type
+                    internal_parity_type;
 
-        vertex_descriptor s
-            = boost::graph_traits< UndirectedGraph >::null_vertex();
-        vertex_descriptor t
-            = boost::graph_traits< UndirectedGraph >::null_vertex();
-        weight_type w;
-        while (!pq.empty())
-        { // while PQ \neq {} do
-            const vertex_descriptor u = pq.top(); // u = extractmax(PQ)
-            w = get(keys, u);
-            pq.pop();
+            put(m_parity, u, internal_parity_type(0));
+            put(m_bestParity, u, parity_type(0));
+        }
 
-            s = t;
-            t = u;
+        template < typename Edge, typename Graph >
+        void examine_edge(Edge e, const Graph& g)
+        {
+            weight_type w = get(m_weightMap, e);
 
-            BGL_FORALL_OUTEDGES_T(u, e, g, UndirectedGraph)
-            { // foreach (u, v) \in E do
-                const vertex_descriptor v = get(assignments, target(e, g));
-
-                if (pq.contains(v))
-                { // if v \in PQ then
-                    put(keys, v,
-                        get(keys, v)
-                            + get(weights,
-                                e)); // increasekey(PQ, v, wA(v) + w(u, v))
-                    pq.update(v);
-                }
-            }
-
-            typename std::set< vertex_descriptor >::const_iterator
-                assignedVertexIt,
-                assignedVertexEnd = assignedVertices.end();
-            for (assignedVertexIt = assignedVertices.begin();
-                 assignedVertexIt != assignedVertexEnd; ++assignedVertexIt)
+            // if the target of e is already marked then decrease cutweight
+            // otherwise, increase it
+            if (get(m_parity, boost::target(e, g)))
             {
-                const vertex_descriptor uPrime = *assignedVertexIt;
+                m_cutweight -= w;
+            }
+            else
+            {
+                m_cutweight += w;
+            }
+        }
 
-                if (get(assignments, uPrime) == u)
+        template < typename Vertex, typename Graph >
+        void finish_vertex(Vertex u, const Graph& g)
+        {
+            typedef
+                typename boost::property_traits< InternalParityMap >::value_type
+                    internal_parity_type;
+
+            ++m_visited;
+            put(m_parity, u, internal_parity_type(1));
+
+            if (m_cutweight < m_bestWeight && m_visited < num_vertices(g))
+            {
+                m_bestWeight = m_cutweight;
+                BGL_FORALL_VERTICES_T(i, g, Graph)
                 {
-                    BGL_FORALL_OUTEDGES_T(uPrime, e, g, UndirectedGraph)
-                    { // foreach (u, v) \in E do
-                        const vertex_descriptor v
-                            = get(assignments, target(e, g));
-
-                        if (pq.contains(v))
-                        { // if v \in PQ then
-                            put(keys, v,
-                                get(keys, v)
-                                    + get(weights, e)); // increasekey(PQ, v,
-                                                        // wA(v) + w(u, v))
-                            pq.update(v);
-                        }
-                    }
+                    put(m_bestParity, i, get(m_parity, i));
                 }
             }
         }
 
-        return boost::make_tuple(s, t, w);
-    }
+        inline void clear()
+        {
+            m_bestWeight = (std::numeric_limits< weight_type >::max)();
+            m_visited = 0;
+            m_cutweight = 0;
+        }
+
+    private:
+        ParityMap m_bestParity;
+        InternalParityMap m_parity;
+        weight_type& m_bestWeight;
+        weight_type m_cutweight;
+        unsigned m_visited;
+        const WeightMap& m_weightMap;
+    };
 
     /**
      * \brief Computes a min-cut of the input graph
@@ -192,71 +156,44 @@ namespace detail
                 vertex_descriptor;
         typedef typename boost::property_traits< WeightMap >::value_type
             weight_type;
-        typedef
-            typename boost::graph_traits< UndirectedGraph >::vertices_size_type
-                vertices_size_type;
-        typedef typename boost::property_traits< ParityMap >::value_type
-            parity_type;
 
-        vertices_size_type n = num_vertices(g);
+        typename graph_traits< UndirectedGraph >::vertex_iterator u_iter, u_end;
 
-        std::set< vertex_descriptor > assignedVertices;
+        weight_type bestW = (std::numeric_limits< weight_type >::max)();
+        weight_type bestThisTime = (std::numeric_limits< weight_type >::max)();
+        vertex_descriptor bestStart
+            = boost::graph_traits< UndirectedGraph >::null_vertex();
 
-        // initialize `assignments` (all vertices are initially assigned to
-        // themselves)
-        BGL_FORALL_VERTICES_T(v, g, UndirectedGraph) { put(assignments, v, v); }
+        detail::mas_min_cut_visitor< ParityMap, WeightMap, IndexMap > vis(
+            g, parities, bestThisTime, weights, index_map);
 
-        vertex_descriptor s, t;
-        weight_type bestW;
-
-        boost::tie(s, t, bestW) = boost::detail::stoer_wagner_phase(
-            g, assignments, assignedVertices, weights, pq);
-        BOOST_ASSERT(s != t);
-        BGL_FORALL_VERTICES_T(v, g, UndirectedGraph)
+        // for each node in the graph,
+        for (boost::tie(u_iter, u_end) = vertices(g); u_iter != u_end; ++u_iter)
         {
-            put(parities, v, parity_type(v == t ? 1 : 0));
-        }
-        put(assignments, t, s);
-        assignedVertices.insert(t);
-        --n;
-
-        for (; n >= 2; --n)
-        {
-            weight_type w;
-            boost::tie(s, t, w) = boost::detail::stoer_wagner_phase(
-                g, assignments, assignedVertices, weights, pq);
-            BOOST_ASSERT(s != t);
-
-            if (w < bestW)
+            // run the MAS and find the min cut
+            vis.clear();
+            boost::maximum_adjacency_search(g,
+                boost::weight_map(weights)
+                    .visitor(vis)
+                    .root_vertex(*u_iter)
+                    .vertex_assignment_map(assignments)
+                    .max_priority_queue(pq));
+            if (bestThisTime < bestW)
             {
-                BGL_FORALL_VERTICES_T(v, g, UndirectedGraph)
-                {
-                    put(parities, v,
-                        parity_type(get(assignments, v) == t ? 1 : 0));
-
-                    if (get(assignments, v)
-                        == t) // all vertices that were assigned to t are now
-                              // assigned to s
-                        put(assignments, v, s);
-                }
-
-                bestW = w;
+                bestW = bestThisTime;
+                bestStart = *u_iter;
             }
-            else
-            {
-                BGL_FORALL_VERTICES_T(v, g, UndirectedGraph)
-                {
-                    if (get(assignments, v)
-                        == t) // all vertices that were assigned to t are now
-                              // assigned to s
-                        put(assignments, v, s);
-                }
-            }
-            put(assignments, t, s);
-            assignedVertices.insert(t);
         }
 
-        BOOST_ASSERT(pq.empty());
+        // Run one more time, starting from the best start location, to
+        // ensure the visitor has the best values.
+        vis.clear();
+        boost::maximum_adjacency_search(g,
+            boost::vertex_assignment_map(assignments)
+                .weight_map(weights)
+                .visitor(vis)
+                .root_vertex(bestStart)
+                .max_priority_queue(pq));
 
         return bestW;
     }

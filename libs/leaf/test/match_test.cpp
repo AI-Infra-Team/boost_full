@@ -1,4 +1,5 @@
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -79,7 +80,6 @@ int main()
         BOOST_TEST(( !test<leaf::if_not<leaf::match<my_error, my_error::e2, my_error::e1>>>(e) ));
     }
 
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     {
         std::error_code e = errc_a::a0;
 
@@ -102,7 +102,6 @@ int main()
         BOOST_TEST(( !test<leaf::if_not<leaf::match<std::error_code, errc_a::a2, errc_a::a0>>>(e) ));
 #endif
     }
-#endif
 
 #if __cplusplus >= 201703L
     {
@@ -163,7 +162,7 @@ int main()
                 return 1;
             },
 
-            []( my_error )
+            []( my_error e )
             {
                 return 2;
             },
@@ -187,7 +186,7 @@ int main()
                 return 1;
             },
 
-            []( my_error )
+            []( my_error e )
             {
                 return 2;
             },
@@ -245,7 +244,7 @@ int main()
                 return leaf::new_error(e_my_error{42});
             },
 
-            []( leaf::match<e_my_error, e_my_error_gt<41>> )
+            []( leaf::match<e_my_error, e_my_error_gt<41>> m )
             {
                 return 1;
             },
@@ -264,7 +263,7 @@ int main()
                 return leaf::new_error(e_my_error{42});
             },
 
-            []( leaf::match<e_my_error, e_my_error_gt<42>> )
+            []( leaf::match<e_my_error, e_my_error_gt<42>> m )
             {
                 return 1;
             },

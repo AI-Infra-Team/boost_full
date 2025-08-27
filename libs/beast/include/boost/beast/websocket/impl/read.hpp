@@ -15,6 +15,7 @@
 #include <boost/beast/websocket/detail/mask.hpp>
 #include <boost/beast/websocket/impl/stream_impl.hpp>
 #include <boost/beast/core/async_base.hpp>
+#include <boost/beast/core/bind_handler.hpp>
 #include <boost/beast/core/buffers_prefix.hpp>
 #include <boost/beast/core/buffers_suffix.hpp>
 #include <boost/beast/core/flat_static_buffer.hpp>
@@ -25,6 +26,7 @@
 #include <boost/beast/core/detail/clamp.hpp>
 #include <boost/beast/core/detail/config.hpp>
 #include <boost/asio/coroutine.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
 #include <boost/optional.hpp>
@@ -85,7 +87,7 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+            ec = net::error::operation_aborted;
             bytes_written_ = 0;
             return this->complete(cont, ec, bytes_written_);
         }
@@ -105,14 +107,8 @@ public:
                         __FILE__, __LINE__,
                         "websocket::async_read_some"));
 
-                    this->set_allowed_cancellation(net::cancellation_type::all);
-                    impl.op_r_rd.emplace(std::move(*this), net::cancellation_type::all);
+                    impl.op_r_rd.emplace(std::move(*this));
                 }
-                if (ec)
-                    return this->complete(cont, ec, bytes_written_);
-
-                this->set_allowed_cancellation(net::cancellation_type::terminal);
-
                 impl.rd_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
                 {
@@ -120,19 +116,14 @@ public:
                         __FILE__, __LINE__,
                         "websocket::async_read_some"));
 
-                    const auto ex = this->get_immediate_executor();
-                    net::dispatch(ex, std::move(*this));
+                    net::post(std::move(*this));
                 }
                 BOOST_ASSERT(impl.rd_block.is_locked(this));
 
                 BOOST_ASSERT(!ec);
                 if(impl.check_stop_now(ec))
                 {
-                    // Issue 2264 - There is no guarantee that the next
-                    // error will be operation_aborted.
-                    // The error could be a result of the peer resetting the 
-                    // connection
-                    // BOOST_ASSERT(ec == net::error::operation_aborted);
+                    BOOST_ASSERT(ec == net::error::operation_aborted);
                     goto upcall;
                 }
                 // VFALCO Should never get here
@@ -141,7 +132,7 @@ public:
                 // a `close_op` wrote a close frame
                 BOOST_ASSERT(impl.wr_close);
                 BOOST_ASSERT(impl.status_ != status::open);
-                BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+                ec = net::error::operation_aborted;
                 goto upcall;
             }
             else
@@ -150,7 +141,7 @@ public:
                 if( impl.status_ == status::closed ||
                     impl.status_ == status::failed)
                 {
-                    BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+                    ec = net::error::operation_aborted;
                     goto upcall;
                 }
             }
@@ -227,8 +218,6 @@ public:
                     // Handle ping frame
                     if(impl.rd_fh.op == detail::opcode::ping)
                     {
-                        impl.update_timer(this->get_executor());
-
                         if(impl.ctrl_cb)
                         {
                             if(! cont)
@@ -239,8 +228,7 @@ public:
                                         __FILE__, __LINE__,
                                         "websocket::async_read_some"));
 
-                                    const auto ex = this->get_immediate_executor();
-                                    net::dispatch(ex, std::move(*this));
+                                    net::post(std::move(*this));
                                 }
                                 BOOST_ASSERT(cont);
                                 // VFALCO call check_stop_now() here?
@@ -260,7 +248,7 @@ public:
                                 goto loop;
                             if(impl.ctrl_cb)
                                 impl.ctrl_cb(
-                                    frame_type::ping, to_string_view(payload));
+                                    frame_type::ping, payload);
                             impl.rd_fb.clear();
                             impl.template write_ping<
                                 flat_static_buffer_base>(impl.rd_fb,
@@ -283,9 +271,6 @@ public:
 
                                 impl.op_rd.emplace(std::move(*this));
                             }
-                            if (ec)
-                                return this->complete(cont, ec, bytes_written_);
-
                             impl.wr_block.lock(this);
                             BOOST_ASIO_CORO_YIELD
                             {
@@ -293,8 +278,7 @@ public:
                                     __FILE__, __LINE__,
                                     "websocket::async_read_some"));
 
-                                const auto ex = this->get_immediate_executor();
-                                net::dispatch(ex, std::move(*this));
+                                net::post(std::move(*this));
                             }
                             BOOST_ASSERT(impl.wr_block.is_locked(this));
                             if(impl.check_stop_now(ec))
@@ -338,8 +322,7 @@ public:
                                         __FILE__, __LINE__,
                                         "websocket::async_read_some"));
 
-                                    const auto ex = this->get_immediate_executor();
-                                    net::dispatch(ex, std::move(*this));
+                                    net::post(std::move(*this));
                                 }
                                 BOOST_ASSERT(cont);
                             }
@@ -353,7 +336,7 @@ public:
                         impl.rd_buf.consume(len);
                         // Ignore pong when closing
                         if(! impl.wr_close && impl.ctrl_cb)
-                            impl.ctrl_cb(frame_type::pong, to_string_view(payload));
+                            impl.ctrl_cb(frame_type::pong, payload);
                         goto loop;
                     }
 
@@ -370,8 +353,7 @@ public:
                                         __FILE__, __LINE__,
                                         "websocket::async_read_some"));
 
-                                    const auto ex = this->get_immediate_executor();
-                                    net::dispatch(ex, std::move(*this));
+                                    net::post(std::move(*this));
                                 }
                                 BOOST_ASSERT(cont);
                             }
@@ -394,7 +376,7 @@ public:
                         impl.rd_buf.consume(len);
                         if(impl.ctrl_cb)
                             impl.ctrl_cb(frame_type::close,
-                                to_string_view(impl.cr.reason));
+                                impl.cr.reason);
                         // See if we are already closing
                         if(impl.status_ == status::closing)
                         {
@@ -643,9 +625,6 @@ public:
 
                     impl.op_rd.emplace(std::move(*this));
                 }
-                if (ec)
-                    return this->complete(cont, ec, bytes_written_);
-
                 impl.wr_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
                 {
@@ -653,8 +632,7 @@ public:
                         __FILE__, __LINE__,
                         "websocket::async_read_some"));
 
-                    const auto ex = this->get_immediate_executor();
-                    net::dispatch(ex, std::move(*this));
+                    net::post(std::move(*this));
                 }
                 BOOST_ASSERT(impl.wr_block.is_locked(this));
                 if(impl.check_stop_now(ec))
@@ -662,7 +640,6 @@ public:
             }
 
             impl.change_status(status::closing);
-            impl.update_timer(this->get_executor());
 
             if(! impl.wr_close)
             {
@@ -710,9 +687,7 @@ public:
                 ec = {};
             }
             if(! ec)
-            {
-                BOOST_BEAST_ASSIGN_EC(ec, result_);
-            }
+                ec = result_;
             if(ec && ec != error::closed)
                 impl.change_status(status::failed);
             else
@@ -777,7 +752,7 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+            ec = net::error::operation_aborted;
             bytes_written_ = 0;
             return this->complete(cont, ec, bytes_written_);
         }
@@ -822,22 +797,13 @@ template<class NextLayer, bool deflateSupported>
 struct stream<NextLayer, deflateSupported>::
     run_read_some_op
 {
-    boost::shared_ptr<impl_type> const& self;
-
-    using executor_type = typename stream::executor_type;
-
-    executor_type
-    get_executor() const noexcept
-    {
-        return self->stream().get_executor();
-    }
-
     template<
         class ReadHandler,
         class MutableBufferSequence>
     void
     operator()(
         ReadHandler&& h,
+        boost::shared_ptr<impl_type> const& sp,
         MutableBufferSequence const& b)
     {
         // If you get an error on the following line it means
@@ -853,7 +819,7 @@ struct stream<NextLayer, deflateSupported>::
             typename std::decay<ReadHandler>::type,
             MutableBufferSequence>(
                 std::forward<ReadHandler>(h),
-                self,
+                sp,
                 b);
     }
 };
@@ -862,22 +828,13 @@ template<class NextLayer, bool deflateSupported>
 struct stream<NextLayer, deflateSupported>::
     run_read_op
 {
-    boost::shared_ptr<impl_type> const& self;
-
-    using executor_type = typename stream::executor_type;
-
-    executor_type
-    get_executor() const noexcept
-    {
-        return self->stream().get_executor();
-    }
-
     template<
         class ReadHandler,
         class DynamicBuffer>
     void
     operator()(
         ReadHandler&& h,
+        boost::shared_ptr<impl_type> const& sp,
         DynamicBuffer* b,
         std::size_t limit,
         bool some)
@@ -895,7 +852,7 @@ struct stream<NextLayer, deflateSupported>::
             typename std::decay<ReadHandler>::type,
             DynamicBuffer>(
                 std::forward<ReadHandler>(h),
-                self,
+                sp,
                 *b,
                 limit,
                 some);
@@ -958,8 +915,9 @@ async_read(DynamicBuffer& buffer, ReadHandler&& handler)
     return net::async_initiate<
         ReadHandler,
         void(error_code, std::size_t)>(
-            run_read_op{impl_},
+            run_read_op{},
             handler,
+            impl_,
             &buffer,
             0,
             false);
@@ -1006,7 +964,7 @@ read_some(
     if(! limit)
         limit = (std::numeric_limits<std::size_t>::max)();
     auto const size =
-        clamp(impl_->read_size_hint_db(buffer), limit);
+        clamp(read_size_hint(buffer), limit);
     BOOST_ASSERT(size > 0);
     auto mb = beast::detail::dynamic_buffer_prepare(
         buffer, size, ec, error::buffer_overflow);
@@ -1034,8 +992,9 @@ async_read_some(
     return net::async_initiate<
         ReadHandler,
         void(error_code, std::size_t)>(
-            run_read_op{impl_},
+            run_read_op{},
             handler,
+            impl_,
             &buffer,
             limit,
             true);
@@ -1144,7 +1103,7 @@ loop:
                     goto loop;
                 }
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::ping, to_string_view(payload));
+                    impl.ctrl_cb(frame_type::ping, payload);
                 detail::frame_buffer fb;
                 impl.template write_ping<flat_static_buffer_base>(fb,
                     detail::opcode::pong, payload);
@@ -1160,7 +1119,7 @@ loop:
                 detail::read_ping(payload, b);
                 impl.rd_buf.consume(len);
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::pong, to_string_view(payload));
+                    impl.ctrl_cb(frame_type::pong, payload);
                 goto loop;
             }
             // Handle close frame
@@ -1180,7 +1139,7 @@ loop:
                 impl.cr = cr;
                 impl.rd_buf.consume(len);
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::close, to_string_view(impl.cr.reason));
+                    impl.ctrl_cb(frame_type::close, impl.cr.reason);
                 BOOST_ASSERT(! impl.wr_close);
                 // _Start the WebSocket Closing Handshake_
                 do_fail(
@@ -1414,8 +1373,9 @@ async_read_some(
     return net::async_initiate<
         ReadHandler,
         void(error_code, std::size_t)>(
-            run_read_some_op{impl_},
+            run_read_some_op{},
             handler,
+            impl_,
             buffers);
 }
 

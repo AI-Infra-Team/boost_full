@@ -27,7 +27,7 @@ int main(void)
         {
             std::cout << "[directory] " << iter->path().generic_string() << std::endl;
         }
-        else if (fs::is_regular_file(*iter))
+        else if (fs::is_regular(*iter))
         {
             std::cout << " [file] " << iter->path().generic_string() << std::endl;
         }

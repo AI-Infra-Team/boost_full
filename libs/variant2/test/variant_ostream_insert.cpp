@@ -20,24 +20,17 @@ template<class T> std::string to_string( T const& t )
 
 int main()
 {
-    {
-        BOOST_TEST_EQ( to_string( monostate() ), "monostate" );
-    }
+    variant<int, float, std::string> v( 1 );
 
-    {
-        variant<monostate, int, float, std::string> v;
+    BOOST_TEST_EQ( to_string( v ), to_string( 1 ) );
 
-        BOOST_TEST_EQ( to_string( v ), to_string( monostate() ) );
+    v = 3.14f;
 
-        v = 1;
-        BOOST_TEST_EQ( to_string( v ), to_string( 1 ) );
+    BOOST_TEST_EQ( to_string( v ), to_string( 3.14f ) );
 
-        v = 3.14f;
-        BOOST_TEST_EQ( to_string( v ), to_string( 3.14f ) );
+    v = "test";
 
-        v = "test";
-        BOOST_TEST_EQ( to_string( v ), to_string( "test" ) );
-    }
+    BOOST_TEST_EQ( to_string( v ), to_string( "test" ) );
 
     return boost::report_errors();
 }

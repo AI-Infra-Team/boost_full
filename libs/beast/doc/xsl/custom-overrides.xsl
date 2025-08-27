@@ -15,8 +15,6 @@
   <xsl:template mode="convenience-header" match="@file[contains(., 'boost/beast/zlib')]"     >zlib.hpp</xsl:template>
   <xsl:template mode="convenience-header" match="@file"/>
 
-  <xsl:template mode="before" match="para">{$nl}{$nl}</xsl:template>
-
   <xsl:variable name="emphasized-template-parameter-types" select="
     'Allocator',
     'AsyncStream',
@@ -25,7 +23,6 @@
     'Body',
     'BufferSequence',
     'BufferSequence',  (: TODO: Was this intended to be 'BufferSequence_' ?? :)
-    'BuffersGenerator',
     'CompletionCondition',
     'CompletionHandler',
     'CompletionToken',

@@ -1,5 +1,4 @@
 /bin
-/bin.v2
 /bin64
 /_build*
 temp
@@ -16,10 +15,3 @@ temp
 
 # Visual Studio Code
 /.vscode
-
-# local copy of bench
-/bench/bench
-/bench/bench.exe
-
-# Python
-__pycache__

@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+# Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
 
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -72,7 +72,6 @@ if option_enable_unit_tests
 		'mag_v_test',
 		'mat_index_test',
 		'mat_traits_array_test',
-		'mat_traits_std_array_test',
 		'math_test',
 		'minus_eq_mm_test',
 		'minus_eq_qq_test',
@@ -110,7 +109,6 @@ if option_enable_unit_tests
 		'plus_vv_test',
 		'projection_test',
 		'quat_traits_array_test',
-		'quat_traits_std_array_test',
 		'rot_mat_test',
 		'rot_quat_test',
 		'rotx_mat_test',
@@ -148,8 +146,6 @@ if option_enable_unit_tests
 		'vec_index_test',
 		'vec_register_test',
 		'vec_traits_array_test',
-		'vec_traits_gnuc_test',
-		'vec_traits_std_array_test',
 		'zero_mat_test',
 		'zero_quat_test',
 		'zero_vec_test',

@@ -19,8 +19,7 @@
 #include "test.hpp"
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 BOOST_STATIC_ASSERT( std::is_nothrow_destructible<array>::value );
 BOOST_STATIC_ASSERT( std::is_nothrow_move_constructible<array>::value );
@@ -451,60 +450,41 @@ public:
     void
     testAccess()
     {
-        // at(pos) &
+        // at(pos)
         {
             array a({1, true, str_});
             BOOST_TEST(a.at(0).is_number());
             BOOST_TEST(a.at(1).is_bool());
             BOOST_TEST(a.at(2).is_string());
-            BOOST_TEST_THROWS_WITH_LOCATION( a.at(3) );
+            try
+            {
+                a.at(3);
+                BOOST_TEST_FAIL();
+            }
+            catch(std::out_of_range const&)
+            {
+                BOOST_TEST_PASS();
+            }
         }
 
-        // at(pos) &&
-        {
-            array a({1, true, str_});
-            BOOST_TEST(std::move(a).at(0).is_number());
-            BOOST_TEST(std::move(a).at(1).is_bool());
-            BOOST_TEST(std::move(a).at(2).is_string());
-            BOOST_TEST_THROWS_WITH_LOCATION( a.at(3) );
-            value&& rv = std::move(a).at(0);
-            (void)rv;
-        }
-
-        // at(pos) const&
+        // at(pos) const
         {
             array const a({1, true, str_});
             BOOST_TEST(a.at(0).is_number());
             BOOST_TEST(a.at(1).is_bool());
             BOOST_TEST(a.at(2).is_string());
-            BOOST_TEST_THROWS_WITH_LOCATION( a.at(3) );
+            try
+            {
+                a.at(3);
+                BOOST_TEST_FAIL();
+            }
+            catch(std::out_of_range const&)
+            {
+                BOOST_TEST_PASS();
+            }
         }
 
-        // try_at(pos)
-        {
-            array a({ 1, true, str_ });
-            BOOST_TEST( a.try_at(0)->is_number() );
-            BOOST_TEST( a.try_at(1)->is_bool() );
-            BOOST_TEST( a.try_at(2)->is_string() );
-
-            system::error_code const ec = a.try_at(3).error();
-            BOOST_TEST( ec == error::out_of_range );
-            BOOST_TEST( ec.has_location() );
-        }
-
-        // try_at(pos) const
-        {
-            array const a({1, true, str_});
-            BOOST_TEST(a.try_at(0)->is_number());
-            BOOST_TEST(a.try_at(1)->is_bool());
-            BOOST_TEST(a.try_at(2)->is_string());
-
-            system::error_code const ec = a.try_at(3).error();
-            BOOST_TEST( ec == error::out_of_range );
-            BOOST_TEST( ec.has_location() );
-        }
-
-        // operator[&](size_type) &
+        // operator[&](size_type)
         {
             array a({1, true, str_});
             BOOST_TEST(a[0].is_number());
@@ -512,7 +492,7 @@ public:
             BOOST_TEST(a[2].is_string());
         }
 
-        // operator[&](size_type) const&
+        // operator[&](size_type) const
         {
             array const a({1, true, str_});
             BOOST_TEST(a[0].is_number());
@@ -520,54 +500,28 @@ public:
             BOOST_TEST(a[2].is_string());
         }
 
-        // operator[&](size_type) &&
-        {
-            array a({1, true, str_});
-            BOOST_TEST(std::move(a)[0].is_number());
-            BOOST_TEST(std::move(a)[1].is_bool());
-            BOOST_TEST(std::move(a)[2].is_string());
-            value&& rv = std::move(a)[0];
-            (void)rv;
-        }
-
-        // front() &
+        // front()
         {
             array a({1, true, str_});
             BOOST_TEST(a.front().is_number());
         }
 
-        // front() const&
+        // front() const
         {
             array const a({1, true, str_});
             BOOST_TEST(a.front().is_number());
         }
 
-        // front() &&
-        {
-            array a({1, true, str_});
-            BOOST_TEST(std::move(a).front().is_number());
-            value&& rv = std::move(a).front();
-            (void)rv;
-        }
-
-        // back() &
+        // back()
         {
             array a({1, true, str_});
             BOOST_TEST(a.back().is_string());
         }
 
-        // back() const&
+        // back() const
         {
             array const a({1, true, str_});
             BOOST_TEST(a.back().is_string());
-        }
-
-        // back() &&
-        {
-            array a({1, true, str_});
-            BOOST_TEST(std::move(a).back().is_string());
-            value&& rv = std::move(a).back();
-            (void)rv;
         }
 
         // if_contains()
@@ -1200,12 +1154,6 @@ public:
                 check(a1);
                 BOOST_TEST(a2.size() == 1);
             });
-            fail_loop([&](storage_ptr const& sp)
-            {
-                array a({1, true, str_}, sp);
-                swap(a, a);
-                check(a);
-            });
         }
     }
 
@@ -1322,21 +1270,6 @@ public:
     }
 
     void
-    testIssue692()
-    {
-        array a;
-        object obj;
-        obj["test1"] = "hello";
-        a.push_back(obj);
-        a.push_back(obj);
-        a.push_back(obj);
-        a.push_back(obj);
-        a.push_back(obj);
-        while(a.size())
-            a.erase(a.begin());
-    }
-
-    void
     run()
     {
         testDestroy();
@@ -1350,11 +1283,9 @@ public:
         testExceptions();
         testEquality();
         testHash();
-        testIssue692();
     }
 };
 
 TEST_SUITE(array_test, "boost.json.array");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

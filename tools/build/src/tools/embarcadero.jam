@@ -6,7 +6,7 @@
 
 #| tag::doc[]
 
-[[b2.reference.tools.compiler.embarcadero]]
+[[bbv2.reference.tools.compiler.borland]]
 = Embarcadero C++ Compiler
 
 The `embarcadero` module supports the 32-bit command line C++ compiler
@@ -137,11 +137,13 @@ import clang ;
 import gcc ;
 import generators ;
 import errors ;
-import args ;
 
 feature.extend toolset : embarcadero ;
 
 toolset.inherit-generators embarcadero : clang-linux ;
+generators.override embarcadero.prebuilt : builtin.lib-generator ;
+generators.override embarcadero.prebuilt : builtin.prebuilt ;
+generators.override embarcadero.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules embarcadero : clang-linux ;
 toolset.inherit-flags embarcadero
@@ -180,7 +182,9 @@ toolset.inherit-flags embarcadero
       <cxxstd>latest/<cxxstd-dialect>iso
     ;
 
-.debug-configuration = [ args.get-arg debug-configuration ] ;
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
+  .debug-configuration = true ;
+}
 
 rule init ( version ? :  command * : options * )
 {
@@ -236,7 +240,8 @@ rule init ( version ? :  command * : options * )
     {
       # Determine the version
       if $(command) {
-        local command-string = [ common.make-command-string $(command) ] ;
+        local command-string = "$(command)" ;
+        command-string = $(command-string:J=" ") ;
         local soutput = [ SHELL "$(command-string) --version" ] ;
         version ?= [ MATCH "Embarcadero C[+][+] ([0-9.]+)" : $(soutput) ] ;
         cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : $(soutput) ] ;

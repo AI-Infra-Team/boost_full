@@ -11,6 +11,5 @@
   "std": [ "c++23" ],
   "category": [
     "System", "Correctness"
-  ],
-  "cxxstd": "11"
+  ]
 }

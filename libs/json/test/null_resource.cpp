@@ -14,8 +14,7 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 class null_resource_test
 {
@@ -43,5 +42,4 @@ public:
 
 TEST_SUITE(null_resource_test, "boost.json.null_resource");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

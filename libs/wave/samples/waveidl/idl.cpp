@@ -15,7 +15,6 @@
 #include <boost/assert.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/wave/util/filesystem_compatibility.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Include Wave itself
@@ -476,7 +475,7 @@ main (int argc, char *argv[])
     // started from. If this exists, treat it as a wave config file
     fs::path filename = boost::wave::util::create_path(argv[0]);
 
-        filename = boost::wave::util::branch_path(filename) / "waveidl.cfg";
+        filename = filename.branch_path() / "waveidl.cfg";
         cmd_line_util::read_config_file_options(filename.string(), 
             desc_overall_cfgfile, vm, true);
 

@@ -14,7 +14,6 @@ namespace boost { namespace cnv
     using  char_type = char;
     using uchar_type = unsigned char;
     using wchar_type = wchar_t;
-    using  char_cptr = char const*;
 
     namespace detail
     {

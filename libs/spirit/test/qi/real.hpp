@@ -20,15 +20,10 @@
 #include <boost/core/cmath.hpp>
 #include <climits>
 
-#ifdef _MSVC_LANG
-# if _MSC_VER < 1910 || _MSVC_LANG < 201402L
-#  define BOOST_SPIRIT_NO_MATH_REAL_CONCEPT
-# endif
-#elif __cplusplus < 201402L
-# define BOOST_SPIRIT_NO_MATH_REAL_CONCEPT
-#endif
-#ifndef BOOST_SPIRIT_NO_MATH_REAL_CONCEPT
+#ifndef BOOST_NO_CXX11_SFINAE_EXPR
 # include <boost/math/concepts/real_concept.hpp>
+#else
+# define BOOST_SPIRIT_NO_MATH_REAL_CONCEPT
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

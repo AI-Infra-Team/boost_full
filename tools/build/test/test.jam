@@ -6,7 +6,6 @@
 
 # util
 import assert ;
-import db ;
 import container ;
 import indirect ;
 import numbers ;

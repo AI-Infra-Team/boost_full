@@ -37,7 +37,7 @@ namespace traits
     template <typename Point>
     struct tag<all_custom_linestring<Point> >
     {
-        using type = linestring_tag;
+        typedef linestring_tag type;
     };
 
 

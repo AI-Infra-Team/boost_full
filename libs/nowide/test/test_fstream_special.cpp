@@ -1,8 +1,9 @@
-// Copyright (c) 2015 Artyom Beilis (Tonkikh)
-// Copyright (c) 2019-2021 Alexander Grund
+//  Copyright (c) 2015 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2019-2021 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/nowide/fstream.hpp>
 
@@ -28,22 +29,24 @@ void test_with_different_buffer_sizes(const char* filepath)
     */
     for(int i = -1; i < 16; i++)
     {
-        remove_file_at_exit _(filepath);
-
         std::cout << "Buffer size = " << i << std::endl;
         char buf[16];
         nw::fstream f;
         // Different conditions when setbuf might be called: Usually before opening a file is OK
         if(i >= 0)
-            f.rdbuf()->pubsetbuf((i == 0) ? nullptr : buf, i);
+            f.rdbuf()->pubsetbuf((i == 0) ? NULL : buf, i);
         f.open(filepath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
         TEST(f);
+        remove_file_at_exit _(filepath);
 
         // Add 'abcdefg'
         TEST(f.put('a'));
         TEST(f.put('b'));
         TEST(f.put('c'));
-        TEST(f.write("defg", 4));
+        TEST(f.put('d'));
+        TEST(f.put('e'));
+        TEST(f.put('f'));
+        TEST(f.put('g'));
         // Read first char
         TEST(f.seekg(0));
         TEST_EQ(f.get(), 'a');
@@ -83,25 +86,18 @@ void test_with_different_buffer_sizes(const char* filepath)
         TEST_EQ(f.get(), 'e');
 
         // Putback after flush is implementation defined
+        // Boost.Nowide: Works
+#if BOOST_NOWIDE_USE_FILEBUF_REPLACEMENT
         TEST(f << std::flush);
-        if(f.putback('e'))
-        {
-            if(f.putback('d'))
-                TEST_EQ(f.get(), 'd');
-            else
-                f.clear(); // LCOV_EXCL_LINE
-            TEST_EQ(f.get(), 'e');
-        } else
-            f.clear();
-        TEST(f << std::flush);
-        if(f.unget())
-            TEST_EQ(f.get(), 'e');
-        else
-            f.clear();
-
-        // Put back different char
-        TEST(f.seekg(-1, std::ios::cur));
+        TEST(f.putback('e'));
+        TEST(f.putback('d'));
+        TEST_EQ(f.get(), 'd');
         TEST_EQ(f.get(), 'e');
+        TEST(f << std::flush);
+        TEST(f.unget());
+        TEST_EQ(f.get(), 'e');
+#endif
+        // Put back different char
         TEST(f.putback('x'));
         TEST_EQ(f.get(), 'x');
         // Rest of sequence
@@ -116,15 +112,11 @@ void test_with_different_buffer_sizes(const char* filepath)
         TEST(f.putback('B'));
         // Putting back multiple chars is not possible on all implementations after a seek/flush
 #if BOOST_NOWIDE_USE_FILEBUF_REPLACEMENT
-        if(f.putback('a'))
-        {
-            // At beginning of file -> No putback possible
-            TEST(!f.putback('x')); // LCOV_EXCL_LINE
-            f.clear();             // LCOV_EXCL_LINE
-            // Get characters that were putback to avoid MSVC bug https://github.com/microsoft/STL/issues/342
-            TEST_EQ(f.get(), 'a'); // LCOV_EXCL_LINE
-        } else
-            f.clear();
+        TEST(f.putback('a'));
+        TEST(!f.putback('x')); // At beginning of file -> No putback possible
+        // Get characters that were putback to avoid MSVC bug https://github.com/microsoft/STL/issues/342
+        f.clear();
+        TEST_EQ(f.get(), 'a');
 #endif
         TEST_EQ(f.get(), 'B');
         f.close();
@@ -222,7 +214,6 @@ void test_swap(const char* filename, const char* filename2)
     {
         const int curChar1 = f1.peek();
         const int curChar2 = f2.peek();
-        TEST_CONTEXT("ctr " << ctr << ": c1=" << curChar1 << " c2=" << curChar2);
         // Randomly do a no-op seek of either or both streams to flush internal buffer
         if(ctr % 10 == 0)
             TEST(f1.seekg(f1.tellg()));
@@ -235,9 +226,9 @@ void test_swap(const char* filename, const char* filename2)
             TEST(f1.seekg(f1.tellg()));
         else if(ctr % 15 == 4)
             TEST(f2.seekg(f2.tellg()));
-        TEST_EQ(f1.get(), curChar2);
+        TEST_EQ(f1.get(), char(curChar2));
         f1.swap(f2);
-        TEST_EQ(f1.get(), curChar1);
+        TEST_EQ(f1.get(), char(curChar1));
         ++ctr;
     }
 }
@@ -266,8 +257,7 @@ void testPutback(const char* filename)
     }
 }
 
-// coverity[root_function]
-void test_main(int, char** argv, char**)
+void test_main(int, char** argv, char**) // coverity [root_function]
 {
     const std::string exampleFilename = std::string(argv[0]) + "-\xd7\xa9-\xd0\xbc-\xce\xbd.txt";
     const std::string exampleFilename2 = std::string(argv[0]) + "-\xd7\xa9-\xd0\xbc-\xce\xbd 2.txt";

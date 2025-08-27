@@ -6,9 +6,9 @@
 #
 
 import project ;
-import ../../build/log-platform-config ;
+import log-platform-config ;
 
-project
+project /boost/log/pthread-mutex-robust
     : source-location .
     : requirements
         <conditional>@log-platform-config.set-platform-defines

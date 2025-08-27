@@ -5,9 +5,13 @@ Copyright 2019 Glen Joseph Fernandes
 Distributed under the Boost Software License, Version 1.0.
 (http://www.boost.org/LICENSE_1_0.txt)
 */
+#include <boost/config.hpp>
+#if (!defined(BOOST_LIBSTDCXX_VERSION) || \
+    BOOST_LIBSTDCXX_VERSION >= 48000) && \
+    !defined(BOOST_NO_CXX11_SMART_PTR) && \
+    !defined(BOOST_NO_CXX11_ALLOCATOR)
 #include <boost/smart_ptr/allocate_unique.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/config.hpp>
 
 struct allow { };
 
@@ -154,3 +158,9 @@ int main()
     }
     return boost::report_errors();
 }
+#else
+int main()
+{
+    return 0;
+}
+#endif

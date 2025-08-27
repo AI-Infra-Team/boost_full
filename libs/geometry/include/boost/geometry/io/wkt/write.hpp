@@ -1,13 +1,14 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2007-2022 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2007-2017 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2017 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2017 Mateusz Loskot, London, UK.
-// Copyright (c) 2014-2023 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2014-2017 Adam Wulkiewicz, Lodz, Poland.
 // Copyright (c) 2020 Baidyanath Kundu, Haldia, India.
 
 // This file was modified by Oracle on 2015-2021.
 // Modifications copyright (c) 2015-2021, Oracle and/or its affiliates.
+
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -21,15 +22,16 @@
 #ifndef BOOST_GEOMETRY_IO_WKT_WRITE_HPP
 #define BOOST_GEOMETRY_IO_WKT_WRITE_HPP
 
-#include <array>
 #include <ostream>
 #include <string>
 
+#include <boost/array.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/size.hpp>
 #include <boost/range/value_type.hpp>
 
+#include <boost/geometry/algorithms/detail/interior_iterator.hpp>
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/algorithms/convert.hpp>
 #include <boost/geometry/algorithms/detail/disjoint/point_point.hpp>
@@ -50,7 +52,7 @@
 #include <boost/geometry/strategies/io/geographic.hpp>
 #include <boost/geometry/strategies/io/spherical.hpp>
 
-#include <boost/geometry/util/constexpr.hpp>
+#include <boost/geometry/util/condition.hpp>
 #include <boost/geometry/util/type_traits.hpp>
 
 
@@ -59,8 +61,8 @@ namespace boost { namespace geometry
 
 // Silence warning C4512: 'boost::geometry::wkt_manipulator<Geometry>' : assignment operator could not be generated
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4512)
+#pragma warning(push)  
+#pragma warning(disable : 4512)  
 #endif
 
 #ifndef DOXYGEN_NO_DETAIL
@@ -86,8 +88,34 @@ struct stream_coordinate<P, Count, Count>
     {}
 };
 
+struct prefix_linestring_par
+{
+    static inline const char* apply() { return "LINESTRING("; }
+};
+
+struct prefix_ring_par_par
+{
+    // Note, double parentheses are intentional, indicating WKT ring begin/end
+    static inline const char* apply() { return "POLYGON(("; }
+};
+
+struct opening_parenthesis
+{
+    static inline const char* apply() { return "("; }
+};
+
+struct closing_parenthesis
+{
+    static inline const char* apply() { return ")"; }
+};
+
+struct double_closing_parenthesis
+{
+    static inline const char* apply() { return "))"; }
+};
+
 /*!
-\brief Stream points as \wkt
+\brief Stream points as \ref WKT
 */
 template <typename Point, typename Policy>
 struct wkt_point
@@ -103,13 +131,14 @@ struct wkt_point
 
 /*!
 \brief Stream ranges as WKT
+\note policy is used to stream prefix/postfix, enabling derived classes to override this
 */
 template
 <
     typename Range,
+    bool ForceClosurePossible,
     typename PrefixPolicy,
-    bool ForceClosurePossible = false,
-    bool WriteDoubleBrackets = false
+    typename SuffixPolicy
 >
 struct wkt_range
 {
@@ -117,62 +146,52 @@ struct wkt_range
     static inline void apply(std::basic_ostream<Char, Traits>& os,
                 Range const& range, bool force_closure = ForceClosurePossible)
     {
-        using stream_type = stream_coordinate
+        typedef typename boost::range_iterator<Range const>::type iterator_type;
+
+        typedef stream_coordinate
             <
                 point_type, 0, dimension<point_type>::type::value
-            >;
+            > stream_type;
 
         bool first = true;
 
         os << PrefixPolicy::apply();
-        os << "(";
 
-        if (boost::size(range) > 0)
+        // TODO: check EMPTY here
+
+        iterator_type begin = boost::begin(range);
+        iterator_type end = boost::end(range);
+        for (iterator_type it = begin; it != end; ++it)
         {
-            if BOOST_GEOMETRY_CONSTEXPR (WriteDoubleBrackets)
-            {
-                os << "(";
-            }
-            auto begin = boost::begin(range);
-            auto const end = boost::end(range);
-            for (auto it = begin; it != end; ++it)
-            {
-                os << (first ? "" : ",");
-                stream_type::apply(os, *it);
-                first = false;
-            }
-
-            // optionally, close range to ring by repeating the first point
-            if BOOST_GEOMETRY_CONSTEXPR (ForceClosurePossible)
-            {
-                if (force_closure
-                    && boost::size(range) > 1
-                    && wkt_range::disjoint(*begin, *(end - 1)))
-                {
-                    os << ",";
-                    stream_type::apply(os, *begin);
-                }
-            }
-            if BOOST_GEOMETRY_CONSTEXPR (WriteDoubleBrackets)
-            {
-                os << ")";
-            }
+            os << (first ? "" : ",");
+            stream_type::apply(os, *it);
+            first = false;
         }
 
-        os << ")";
+        // optionally, close range to ring by repeating the first point
+        if (BOOST_GEOMETRY_CONDITION(ForceClosurePossible)
+            && force_closure
+            && boost::size(range) > 1
+            && wkt_range::disjoint(*begin, *(end - 1)))
+        {
+            os << ",";
+            stream_type::apply(os, *begin);
+        }
+
+        os << SuffixPolicy::apply();
     }
 
 
 private:
-    using point_type = typename boost::range_value<Range>::type;
+    typedef typename boost::range_value<Range>::type point_type;
 
     static inline bool disjoint(point_type const& p1, point_type const& p2)
     {
         // TODO: pass strategy
-        using strategy_type = typename strategies::io::services::default_strategy
+        typedef typename strategies::io::services::default_strategy
             <
                 point_type
-            >::type;
+            >::type strategy_type;
 
         return detail::disjoint::disjoint_point_point(p1, p2, strategy_type());
     }
@@ -187,8 +206,9 @@ struct wkt_sequence
     : wkt_range
         <
             Range,
-            prefix_null,
-            ForceClosurePossible
+            ForceClosurePossible,
+            opening_parenthesis,
+            closing_parenthesis
         >
 {};
 
@@ -199,57 +219,24 @@ struct wkt_poly
     static inline void apply(std::basic_ostream<Char, Traits>& os,
                 Polygon const& poly, bool force_closure)
     {
-        using ring_t = ring_type_t<Polygon const>;
-
-        auto const& exterior = exterior_ring(poly);
-        auto const& rings = interior_rings(poly);
-
-        std::size_t point_count = boost::size(exterior);
-        for (auto it = boost::begin(rings); it != boost::end(rings); ++it)
-        {
-            point_count += boost::size(*it);
-        }
+        typedef typename ring_type<Polygon const>::type ring;
 
         os << PrefixPolicy::apply();
-
+        // TODO: check EMPTY here
         os << "(";
-        if (point_count > 0)
-        {
-            wkt_sequence<ring_t>::apply(os, exterior, force_closure);
+        wkt_sequence<ring>::apply(os, exterior_ring(poly), force_closure);
 
-            for (auto it = boost::begin(rings); it != boost::end(rings); ++it)
-            {
-                os << ",";
-                wkt_sequence<ring_t>::apply(os, *it, force_closure);
-            }
+        typename interior_return_type<Polygon const>::type
+            rings = interior_rings(poly);
+        for (typename detail::interior_iterator<Polygon const>::type
+                it = boost::begin(rings); it != boost::end(rings); ++it)
+        {
+            os << ",";
+            wkt_sequence<ring>::apply(os, *it, force_closure);
         }
         os << ")";
     }
 
-};
-
-template <typename PolyhedralSurface, typename PrefixPolicy>
-struct wkt_polyhedral_surface
-{
-    template <typename Char, typename Traits>
-    static inline void apply(std::basic_ostream<Char, Traits>& os,
-                             PolyhedralSurface const& polyhedral, bool force_closure)
-    {
-        using polygon = typename PolyhedralSurface::polygon_type;
-
-        os << PrefixPolicy::apply();
-
-        os << "(";
-        for (auto it = boost::begin(polyhedral); it != boost::end(polyhedral); ++it)
-        {
-            if (it != boost::begin(polyhedral))
-            {
-                os << ",";
-            }
-            wkt_poly<polygon, detail::wkt::prefix_null>::apply(os, *it, force_closure);
-        }
-        os << ")";
-    }
 };
 
 template <typename Multi, typename StreamPolicy, typename PrefixPolicy>
@@ -260,9 +247,13 @@ struct wkt_multi
                 Multi const& geometry, bool force_closure)
     {
         os << PrefixPolicy::apply();
+        // TODO: check EMPTY here
         os << "(";
 
-        for (auto it = boost::begin(geometry); it != boost::end(geometry); ++it)
+        for (typename boost::range_iterator<Multi const>::type
+                    it = boost::begin(geometry);
+            it != boost::end(geometry);
+            ++it)
         {
             if (it != boost::begin(geometry))
             {
@@ -278,7 +269,7 @@ struct wkt_multi
 template <typename Box>
 struct wkt_box
 {
-    using point_type = point_type_t<Box>;
+    typedef typename point_type<Box>::type point_type;
 
     template <typename Char, typename Traits>
     static inline void apply(std::basic_ostream<Char, Traits>& os,
@@ -322,14 +313,14 @@ struct wkt_box
 template <typename Segment>
 struct wkt_segment
 {
-    using point_type = point_type_t<Segment>;
+    typedef typename point_type<Segment>::type point_type;
 
     template <typename Char, typename Traits>
     static inline void apply(std::basic_ostream<Char, Traits>& os,
                 Segment const& segment, bool)
     {
         // Convert to two points, then stream
-        using sequence = std::array<point_type, 2>;
+        typedef boost::array<point_type, 2> sequence;
 
         sequence points;
         geometry::detail::assign_point_from_index<0>(segment, points[0]);
@@ -354,7 +345,7 @@ struct wkt_segment
 namespace dispatch
 {
 
-template <typename Geometry, typename Tag = tag_t<Geometry>>
+template <typename Geometry, typename Tag = typename tag<Geometry>::type>
 struct wkt: not_implemented<Tag>
 {};
 
@@ -372,7 +363,9 @@ struct wkt<Linestring, linestring_tag>
     : detail::wkt::wkt_range
         <
             Linestring,
-            detail::wkt::prefix_linestring
+            false,
+            detail::wkt::prefix_linestring_par,
+            detail::wkt::closing_parenthesis
         >
 {};
 
@@ -402,9 +395,9 @@ struct wkt<Ring, ring_tag>
     : detail::wkt::wkt_range
         <
             Ring,
-            detail::wkt::prefix_polygon,
             true,
-            true
+            detail::wkt::prefix_ring_par_par,
+            detail::wkt::double_closing_parenthesis
         >
 {};
 
@@ -417,15 +410,6 @@ struct wkt<Polygon, polygon_tag>
         <
             Polygon,
             detail::wkt::prefix_polygon
-        >
-{};
-
-template <typename PolyhedralSurface>
-struct wkt<PolyhedralSurface, polyhedral_surface_tag>
-    : detail::wkt::wkt_polyhedral_surface
-        <
-            PolyhedralSurface,
-            detail::wkt::prefix_polyhedral_surface
         >
 {};
 
@@ -543,7 +527,7 @@ private:
 /*!
 \brief Generic geometry template manipulator class, takes corresponding output class from traits class
 \ingroup wkt
-\details Stream manipulator, streams geometry classes as \wkt streams
+\details Stream manipulator, streams geometry classes as \ref WKT streams
 \par Example:
 Small example showing how to use the wkt class
 \dontinclude doxygen_1.cpp
@@ -600,6 +584,7 @@ inline wkt_manipulator<Geometry> wkt(Geometry const& geometry)
 \brief WKT-string formulating function
 \tparam Geometry \tparam_geometry
 \param geometry \param_geometry
+\param significant_digits Specifies the no of significant digits to use in the output wkt
 \ingroup wkt
 \qbk{[include reference/io/to_wkt.qbk]}
 */
@@ -611,14 +596,6 @@ inline std::string to_wkt(Geometry const& geometry)
     return ss.str();
 }
 
-/*!
-\brief WKT-string formulating function (with significant digits)
-\tparam Geometry \tparam_geometry
-\param geometry \param_geometry
-\param significant_digits Specifies the number of significant digits to use in the output wkt
-\ingroup wkt
-\qbk{distinguish, with significant digits}
-*/
 template <typename Geometry>
 inline std::string to_wkt(Geometry const& geometry, int significant_digits)
 {
@@ -629,7 +606,7 @@ inline std::string to_wkt(Geometry const& geometry, int significant_digits)
 }
 
 #if defined(_MSC_VER)
-#pragma warning(pop)
+#pragma warning(pop)  
 #endif
 
 }} // namespace boost::geometry

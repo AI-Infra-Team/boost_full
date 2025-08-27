@@ -14,8 +14,7 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 class error_test
 {
@@ -61,45 +60,15 @@ public:
         check(condition::parse_error, error::array_too_large);
         check(condition::parse_error, error::key_too_large);
         check(condition::parse_error, error::string_too_large);
-        check(condition::parse_error, error::number_too_large);
-        check(condition::parse_error, error::input_error);
+        check(condition::parse_error, error::exception);
 
-        check(condition::pointer_parse_error, error::missing_slash);
-        check(condition::pointer_parse_error, error::invalid_escape);
+        check(condition::assign_error, error::not_number);
+        check(condition::assign_error, error::not_exact);
 
-        check(condition::pointer_use_error, error::token_not_number);
-        check(condition::pointer_use_error, error::value_is_scalar);
-        check(condition::pointer_use_error, error::not_found);
-        check(condition::pointer_use_error, error::token_overflow);
-        check(condition::pointer_use_error, error::past_the_end);
-
-        check(condition::conversion_error, error::not_number);
-        check(condition::conversion_error, error::not_exact);
-        check(condition::conversion_error, error::not_null);
-        check(condition::conversion_error, error::not_bool);
-        check(condition::conversion_error, error::not_array);
-        check(condition::conversion_error, error::not_object);
-        check(condition::conversion_error, error::not_string);
-        check(condition::conversion_error, error::not_int64);
-        check(condition::conversion_error, error::not_uint64);
-        check(condition::conversion_error, error::not_double);
-        check(condition::conversion_error, error::not_integer);
-        check(condition::conversion_error, error::size_mismatch);
-        check(condition::conversion_error, error::exhausted_variants);
-        check(condition::conversion_error, error::unknown_name);
-
-        check(condition::generic_error, error::exception);
-        check(condition::generic_error, error::out_of_range);
         check(error::test_failure);
-
-        // check std interop
-        std::error_code const ec = error::syntax;
-        BOOST_TEST(ec == error::syntax);
-        BOOST_TEST(ec == condition::parse_error);
     }
 };
 
 TEST_SUITE(error_test, "boost.json.error");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

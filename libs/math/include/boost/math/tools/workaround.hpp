@@ -10,10 +10,6 @@
 #pragma once
 #endif
 
-#if (defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__))
-#  include <math.h>
-#endif
-
 #include <boost/math/tools/config.hpp>
 
 namespace boost{ namespace math{ namespace tools{
@@ -23,7 +19,7 @@ namespace boost{ namespace math{ namespace tools{
 // std::fmod(1185.0L, 1.5L);
 //
 template <class T>
-BOOST_MATH_GPU_ENABLED inline T fmod_workaround(T a, T b) BOOST_MATH_NOEXCEPT(T)
+inline T fmod_workaround(T a, T b) BOOST_MATH_NOEXCEPT(T)
 {
    BOOST_MATH_STD_USING
    return fmod(a, b);

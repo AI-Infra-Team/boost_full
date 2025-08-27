@@ -15,11 +15,10 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 class checking_resource
-    : public container::pmr::memory_resource
+    : public memory_resource
 {
     storage_ptr upstream_;
     std::map<void const*, std::pair<std::size_t, std::size_t>> allocs_;
@@ -59,7 +58,6 @@ private:
     }
 };
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif // BOOST_JSON_CHECKING_RESOURCE_HPP

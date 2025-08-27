@@ -28,7 +28,7 @@ namespace test{
 template<class RobustMutex>
 int robust_mutex_test(int argc, char *argv[])
 {
-   BOOST_INTERPROCESS_TRY{
+   BOOST_TRY{
    if(argc == 1){  //Parent process
       //First usual mutex tests
       {
@@ -101,12 +101,12 @@ int robust_mutex_test(int argc, char *argv[])
          instance[1].unlock();
          //Since it's NOT consistent, locking is NOT possible again
          bool exception_thrown = false;
-         BOOST_INTERPROCESS_TRY{
+         BOOST_TRY{
             instance[1].lock();
          }
-         BOOST_INTERPROCESS_CATCH(interprocess_exception &){
+         BOOST_CATCH(interprocess_exception &){
             exception_thrown = true;
-         } BOOST_INTERPROCESS_CATCH_END
+         } BOOST_CATCH_END
          if(!exception_thrown){
             return 1;
          }
@@ -125,12 +125,12 @@ int robust_mutex_test(int argc, char *argv[])
          instance[2].unlock();
          //Since it's NOT consistent, locking is NOT possible again
          bool exception_thrown = false;
-         BOOST_INTERPROCESS_TRY{
+         BOOST_TRY{
             instance[2].lock();
          }
-         BOOST_INTERPROCESS_CATCH(interprocess_exception &){
+         BOOST_CATCH(interprocess_exception &){
             exception_thrown = true;
-         } BOOST_INTERPROCESS_CATCH_END
+         } BOOST_CATCH_END
          if(!exception_thrown){
             return 1;
          }
@@ -192,10 +192,10 @@ int robust_mutex_test(int argc, char *argv[])
          *go_ahead2 = true;
       }
    }
-   }BOOST_INTERPROCESS_CATCH(...){
+   }BOOST_CATCH(...){
       std::cout << "Exception thrown error!" << std::endl;
-      BOOST_INTERPROCESS_RETHROW
-   } BOOST_INTERPROCESS_CATCH_END
+      BOOST_RETHROW
+   } BOOST_CATCH_END
    return 0;
 }
 

@@ -1,8 +1,7 @@
 // Boost.Geometry
 
-// Copyright (c) 2014-2023, Oracle and/or its affiliates.
+// Copyright (c) 2017-2020 Oracle and/or its affiliates.
 
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -51,7 +50,7 @@ namespace detail { namespace relate
 template
 <
     typename Geometry,
-    typename Tag = tag_t<Geometry>
+    typename Tag = typename tag<Geometry>::type
 >
 struct multi_point_geometry_eb
 {
@@ -95,8 +94,9 @@ struct multi_point_geometry_eb<Geometry, linestring_tag>
         template <typename Point, typename Strategy>
         bool apply(Point const& boundary_point, Strategy const& strategy)
         {
-            if ( std::none_of(m_points.begin(), m_points.end(),
-                              find_pred<Point, Strategy>(boundary_point, strategy)))
+            if ( std::find_if(m_points.begin(), m_points.end(),
+                              find_pred<Point, Strategy>(boundary_point, strategy))
+                    == m_points.end() )
             {
                 m_boundary_found = true;
                 return false;
@@ -135,7 +135,7 @@ struct multi_point_geometry_eb<Geometry, multi_linestring_tag>
         template <typename Point, typename Strategy>
         bool apply(Point const& boundary_point, Strategy const&)
         {
-            typedef geometry::less<void, -1, Strategy> less_type;
+            typedef geometry::less<void, -1, typename Strategy::cs_tag> less_type;
 
             if (! std::binary_search(m_points.begin(), m_points.end(),
                                      boundary_point, less_type()) )
@@ -159,9 +159,9 @@ struct multi_point_geometry_eb<Geometry, multi_linestring_tag>
     {
         typedef typename boost::range_value<MultiPoint>::type point_type;
         typedef std::vector<point_type> points_type;
-        typedef geometry::less<void, -1, Strategy> less_type;
+        typedef geometry::less<void, -1, typename Strategy::cs_tag> less_type;
 
-        points_type points(boost::begin(multi_point), boost::end(multi_point));
+        points_type points(boost::begin(multi_point), boost::end(multi_point));        
         std::sort(points.begin(), points.end(), less_type());
 
         boundary_visitor<points_type> visitor(points);
@@ -182,13 +182,15 @@ struct multi_point_single_geometry
                              Result & result,
                              Strategy const& strategy)
     {
-        using box2_type = model::box<point_type_t<SingleGeometry>> ;
-
+        typedef typename point_type<SingleGeometry>::type point2_type;
+        typedef model::box<point2_type> box2_type;
+        
         box2_type box2;
         geometry::envelope(single_geometry, box2, strategy);
         geometry::detail::expand_by_epsilon(box2);
 
-        for (auto it = boost::begin(multi_point); it != boost::end(multi_point); ++it)
+        typedef typename boost::range_const_iterator<MultiPoint>::type iterator;
+        for ( iterator it = boost::begin(multi_point) ; it != boost::end(multi_point) ; ++it )
         {
             if (! (relate::may_update<interior, interior, '0', Transpose>(result)
                 || relate::may_update<interior, boundary, '0', Transpose>(result)
@@ -200,7 +202,7 @@ struct multi_point_single_geometry
             // The default strategy is enough for Point/Box
             if (detail::disjoint::disjoint_point_box(*it, box2, strategy))
             {
-                update<interior, exterior, '0', Transpose>(result);
+                relate::set<interior, exterior, '0', Transpose>(result);
             }
             else
             {
@@ -208,15 +210,15 @@ struct multi_point_single_geometry
 
                 if (in_val > 0) // within
                 {
-                    update<interior, interior, '0', Transpose>(result);
+                    relate::set<interior, interior, '0', Transpose>(result);
                 }
                 else if (in_val == 0)
                 {
-                    update<interior, boundary, '0', Transpose>(result);
+                    relate::set<interior, boundary, '0', Transpose>(result);
                 }
                 else // in_val < 0 - not within
                 {
-                    update<interior, exterior, '0', Transpose>(result);
+                    relate::set<interior, exterior, '0', Transpose>(result);
                 }
             }
 
@@ -238,7 +240,7 @@ struct multi_point_single_geometry
             {
                 // TODO: this is not true if a linestring is degenerated to a point
                 // then the interior has topological dimension = 0, not 1
-                update<exterior, interior, tc_t::interior, Transpose>(result);
+                relate::set<exterior, interior, tc_t::interior, Transpose>(result);
             }
 
             if ( relate::may_update<exterior, boundary, tc_t::boundary, Transpose>(result)
@@ -246,12 +248,12 @@ struct multi_point_single_geometry
             {
                 if (multi_point_geometry_eb<SingleGeometry>::apply(multi_point, tc))
                 {
-                    update<exterior, boundary, tc_t::boundary, Transpose>(result);
+                    relate::set<exterior, boundary, tc_t::boundary, Transpose>(result);
                 }
             }
         }
 
-        update<exterior, exterior, result_dimension<MultiPoint>::value, Transpose>(result);
+        relate::set<exterior, exterior, result_dimension<MultiPoint>::value, Transpose>(result);
     }
 };
 
@@ -363,18 +365,14 @@ class multi_point_multi_geometry_ii_ib
 
                 if (in_val > 0) // within
                 {
-                    update<interior, interior, '0', Transpose>(m_result);
+                    relate::set<interior, interior, '0', Transpose>(m_result);
                 }
                 else if (in_val == 0)
                 {
                     if (m_tc.check_boundary_point(point))
-                    {
-                        update<interior, boundary, '0', Transpose>(m_result);
-                    }
+                        relate::set<interior, boundary, '0', Transpose>(m_result);
                     else
-                    {
-                        update<interior, interior, '0', Transpose>(m_result);
-                    }
+                        relate::set<interior, interior, '0', Transpose>(m_result);
                 }
             }
 
@@ -401,9 +399,11 @@ class multi_point_multi_geometry_ii_ib
     };
 
 public:
-    using box1_type = model::box<point_type_t<MultiPoint>>;
-    using box2_type = model::box<point_type_t<MultiGeometry>>;
-    using box_pair_type = std::pair<box2_type, std::size_t>;
+    typedef typename point_type<MultiPoint>::type point1_type;
+    typedef typename point_type<MultiGeometry>::type point2_type;
+    typedef model::box<point1_type> box1_type;
+    typedef model::box<point2_type> box2_type;
+    typedef std::pair<box2_type, std::size_t> box_pair_type;
 
     template <typename Result, typename Strategy>
     static inline void apply(MultiPoint const& multi_point,
@@ -436,10 +436,13 @@ public:
 template <typename MultiPoint, typename MultiGeometry, bool Transpose>
 struct multi_point_multi_geometry_ii_ib_ie
 {
-    using box1_type = model::box<point_type_t<MultiPoint>>;
-    using box2_type = model::box<point_type_t<MultiGeometry>>;
-    using box_pair_type = std::pair<box2_type, std::size_t>;
-    using boxes_type = std::vector<box_pair_type>;
+    typedef typename point_type<MultiPoint>::type point1_type;
+    typedef typename point_type<MultiGeometry>::type point2_type;
+    typedef model::box<point1_type> box1_type;
+    typedef model::box<point2_type> box2_type;
+    typedef std::pair<box2_type, std::size_t> box_pair_type;
+    typedef std::vector<box_pair_type> boxes_type;
+    typedef typename boxes_type::const_iterator boxes_iterator;
 
     template <typename Result, typename Strategy>
     static inline void apply(MultiPoint const& multi_point,
@@ -460,7 +463,8 @@ struct multi_point_multi_geometry_ii_ib_ie
             rtree(boxes.begin(), boxes.end(),
                   index_parameters_type(index::rstar<4>(), strategy));
 
-        for (auto it = boost::begin(multi_point); it != boost::end(multi_point); ++it)
+        typedef typename boost::range_const_iterator<MultiPoint>::type iterator;
+        for ( iterator it = boost::begin(multi_point) ; it != boost::end(multi_point) ; ++it )
         {
             if (! (relate::may_update<interior, interior, '0', Transpose>(result)
                 || relate::may_update<interior, boundary, '0', Transpose>(result)
@@ -475,28 +479,24 @@ struct multi_point_multi_geometry_ii_ib_ie
             rtree.query(index::intersects(point), std::back_inserter(boxes_found));
 
             bool found_ii_or_ib = false;
-            for (auto const& box_found : boxes_found)
+            for (boxes_iterator bi = boxes_found.begin() ; bi != boxes_found.end() ; ++bi)
             {
                 typename boost::range_value<MultiGeometry>::type const&
-                    single = range::at(multi_geometry, box_found.second);
+                    single = range::at(multi_geometry, bi->second);
 
                 int in_val = detail::within::point_in_geometry(point, single, strategy);
 
                 if (in_val > 0) // within
                 {
-                    update<interior, interior, '0', Transpose>(result);
+                    relate::set<interior, interior, '0', Transpose>(result);
                     found_ii_or_ib = true;
                 }
                 else if (in_val == 0) // on boundary of single
                 {
                     if (tc.check_boundary_point(point))
-                    {
-                        update<interior, boundary, '0', Transpose>(result);
-                    }
+                        relate::set<interior, boundary, '0', Transpose>(result);
                     else
-                    {
-                        update<interior, interior, '0', Transpose>(result);
-                    }
+                        relate::set<interior, interior, '0', Transpose>(result);
                     found_ii_or_ib = true;
                 }
             }
@@ -504,7 +504,7 @@ struct multi_point_multi_geometry_ii_ib_ie
             // neither interior nor boundary found -> exterior
             if (found_ii_or_ib == false)
             {
-                update<interior, exterior, '0', Transpose>(result);
+                relate::set<interior, exterior, '0', Transpose>(result);
             }
 
             if ( BOOST_GEOMETRY_CONDITION(result.interrupt) )
@@ -527,7 +527,9 @@ struct multi_point_multi_geometry
                              Result & result,
                              Strategy const& strategy)
     {
-        using box_pair_type = std::pair<model::box<point_type_t<MultiGeometry>>, std::size_t>;
+        typedef typename point_type<MultiGeometry>::type point2_type;
+        typedef model::box<point2_type> box2_type;
+        typedef std::pair<box2_type, std::size_t> box_pair_type;
 
         std::size_t count2 = boost::size(multi_geometry);
         std::vector<box_pair_type> boxes(count2);
@@ -571,7 +573,7 @@ struct multi_point_multi_geometry
             {
                 // TODO: this is not true if a linestring is degenerated to a point
                 // then the interior has topological dimension = 0, not 1
-                update<exterior, interior, tc_t::interior, Transpose>(result);
+                relate::set<exterior, interior, tc_t::interior, Transpose>(result);
             }
 
             if ( relate::may_update<exterior, boundary, tc_t::boundary, Transpose>(result)
@@ -579,12 +581,12 @@ struct multi_point_multi_geometry
             {
                 if (multi_point_geometry_eb<MultiGeometry>::apply(multi_point, tc))
                 {
-                    update<exterior, boundary, tc_t::boundary, Transpose>(result);
+                    relate::set<exterior, boundary, tc_t::boundary, Transpose>(result);
                 }
             }
         }
 
-        update<exterior, exterior, result_dimension<MultiPoint>::value, Transpose>(result);
+        relate::set<exterior, exterior, result_dimension<MultiPoint>::value, Transpose>(result);
     }
 
 };

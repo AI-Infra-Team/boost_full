@@ -8,23 +8,14 @@
 
 // test_lognormal.cpp
 
-#ifdef SYCL_LANGUAGE_VERSION
-#include "sycl/sycl.hpp"
-#endif
-
-#include <boost/math/tools/config.hpp>
-
-#ifndef BOOST_MATH_NO_REAL_CONCEPT_TESTS
 #include <boost/math/concepts/real_concept.hpp> // for real_concept
-#endif
-
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp> // Boost.Test
 #include <boost/test/tools/floating_point_comparison.hpp>
 
 #include <boost/math/distributions/lognormal.hpp>
     using boost::math::lognormal_distribution;
-#include "../include_private/boost/math/tools/test.hpp"
+#include <boost/math/tools/test.hpp>
 #include "test_out_of_range.hpp"
 
 #include <iostream>
@@ -295,7 +286,7 @@ BOOST_AUTO_TEST_CASE( test_main )
   test_spots(0.0); // Test double. OK at decdigits 7, tolerance = 1e07 %
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
   test_spots(0.0L); // Test long double.
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x0582)) && !defined(BOOST_MATH_NO_REAL_CONCEPT_TESTS)
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x0582))
   test_spots(boost::math::concepts::real_concept(0.)); // Test real concept.
 #endif
 #else

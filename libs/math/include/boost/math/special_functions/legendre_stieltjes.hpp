@@ -38,7 +38,8 @@ public:
         std::ptrdiff_t n = m - 1;
         std::ptrdiff_t q;
         std::ptrdiff_t r;
-        if ((n & 1) == 1)
+        bool odd = n & 1;
+        if (odd)
         {
            q = 1;
            r = (n-1)/2 + 2;
@@ -74,7 +75,7 @@ public:
     Real norm_sq() const
     {
         Real t = 0;
-        bool odd = ((m_m & 1) == 1);
+        bool odd = m_m & 1;
         for (size_t i = 1; i < m_a.size(); ++i)
         {
             if(odd)
@@ -100,7 +101,7 @@ public:
         Real p1 = x;
 
         Real Em;
-        bool odd = ((m_m & 1) == 1);
+        bool odd = m_m & 1;
         if (odd)
         {
             Em = m_a[1]*p1;
@@ -156,7 +157,7 @@ public:
 
         std::vector<Real> stieltjes_zeros;
         std::vector<Real> legendre_zeros = legendre_p_zeros<Real>(m_m - 1);
-        size_t k;
+        int k;
         if (m_m & 1)
         {
             stieltjes_zeros.resize(legendre_zeros.size() + 1, std::numeric_limits<Real>::quiet_NaN());
@@ -169,14 +170,14 @@ public:
             k = 0;
         }
 
-        while (k < stieltjes_zeros.size())
+        while (k < (int)stieltjes_zeros.size())
         {
             Real lower_bound;
             Real upper_bound;
             if (m_m & 1)
             {
                 lower_bound = legendre_zeros[k - 1];
-                if (k == legendre_zeros.size())
+                if (k == (int)legendre_zeros.size())
                 {
                     upper_bound = 1;
                 }
@@ -188,7 +189,7 @@ public:
             else
             {
                 lower_bound = legendre_zeros[k];
-                if (k == legendre_zeros.size() - 1)
+                if (k == (int)legendre_zeros.size() - 1)
                 {
                     upper_bound = 1;
                 }

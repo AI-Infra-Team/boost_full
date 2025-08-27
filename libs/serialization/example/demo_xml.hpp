@@ -23,14 +23,14 @@
 
 // This illustration models the bus system of a small city.
 // This includes, multiple bus stops,  bus routes and schedules.
-// There are different kinds of stops.  Bus stops in general
+// There are different kinds of stops.  Bus stops in general will
 // will appear on multiple routes.  A schedule will include
-// multiple trips on the same route.
+// muliple trips on the same route.
 
 /////////////////////////////////////////////////////////////
 // gps coordinate
 //
-// illustrates serialization for a simple type
+// llustrates serialization for a simple type
 //
 class gps_position
 {
@@ -159,7 +159,7 @@ public:
 //
 // illustrates serialization of STL collection templates.
 //
-// illustrates serialization of polymorphic pointer (bus stop *);
+// illustrates serialzation of polymorphic pointer (bus stop *);
 //
 // illustrates storage and recovery of shared pointers is correct
 // and efficient.  That is objects pointed to by more than one
@@ -236,7 +236,7 @@ public:
             if(file_version >= 2)
                 // read the drivers name
                 ar & BOOST_SERIALIZATION_NVP(driver);
-            // all versions have the following info
+            // all versions have the follwing info
             ar  & BOOST_SERIALIZATION_NVP(hour)
                 & BOOST_SERIALIZATION_NVP(minute);
         }

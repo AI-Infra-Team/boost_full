@@ -16,13 +16,13 @@
    namespace boost{ namespace math{
 
    template<typename Real>
-   BOOST_MATH_GPU_ENABLED Real gegenbauer(unsigned n, Real lambda, Real x);
+   Real gegenbauer(unsigned n, Real lambda, Real x);
 
    template<typename Real>
-   BOOST_MATH_GPU_ENABLED Real gegenbauer_prime(unsigned n, Real lambda, Real x);
+   Real gegenbauer_prime(unsigned n, Real lambda, Real x);
 
    template<typename Real>
-   BOOST_MATH_GPU_ENABLED Real gegenbauer_derivative(unsigned n, Real lambda, Real x, unsigned k);
+   Real gegenbauer_derivative(unsigned n, Real lambda, Real x, unsigned k);
 
    }} // namespaces
 

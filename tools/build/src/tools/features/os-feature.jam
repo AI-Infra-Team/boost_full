@@ -8,7 +8,6 @@ import modules ;
 import os ;
 
 .os-names =
-    none
     aix android appletv bsd cygwin darwin freebsd haiku hpux iphone linux
     netbsd openbsd osf qnx qnxnto sgi solaris unix unixware windows vms vxworks
     freertos
@@ -76,7 +75,7 @@ feature.set-default host-os : [ default-host-os ] ;
 
 #| tag::doc[]
 
-[[b2.builtin.features.target-os]]`target-os`::
+[[bbv2.builtin.features.target-os]]`target-os`::
 *Allowed values:* `aix`, `android`, `appletv`, `bsd`, `cygwin`, `darwin`,
 `freebsd`, `haiku`, `hpux`, `iphone`, `linux`, `netbsd`, `openbsd`, `osf`,
 `qnx`, `qnxnto`, `sgi`, `solaris`, `unix`, `unixware`, `windows`, `vms`,

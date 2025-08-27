@@ -13,5 +13,5 @@
     "maintainers": [
         "Richard Hodges <hodges.r@gmail.com>"
     ],
-    "cxxstd": "11"
+    "cxxstd": "03"
 }

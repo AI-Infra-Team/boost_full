@@ -2,7 +2,6 @@
 //  Tests the pow function
 
 //  (C) Copyright Bruno Lalande 2008.
-//  (C) Copyright Matt Borland 2024.
 //  Distributed under the Boost Software License, Version 1.0.
 //  (See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
@@ -12,17 +11,13 @@
 #include <iostream>
 
 #include <boost/math/concepts/real_concept.hpp>
-#include "../include_private/boost/math/tools/test.hpp"
+#include <boost/math/tools/test.hpp>
 #define BOOST_TEST_MAIN
-
-#ifdef SYCL_LANGUAGE_VERSION
-#include "sycl/sycl.hpp"
-#endif
-
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
 
 #include <boost/typeof/typeof.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/math/tools/assert.hpp>
 
 #include <boost/math/special_functions/pow.hpp>
@@ -42,9 +37,7 @@ void test_pow(T base)
 
     if ((base == 0) && N < 0)
     {
-       #ifndef BOOST_MATH_NO_EXCEPTIONS 
        BOOST_MATH_CHECK_THROW(math::pow<N>(base), std::overflow_error);
-       #endif
     }
     else
     {
@@ -107,15 +100,15 @@ void test_with_big_exponents()
 
 void test_return_types()
 {
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>('\1')), double>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(L'\2')), double>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(3)), double>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(4u)), double>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(5ul)), double>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(6.0f)), float>::value), "Return type mismatch");
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(7.0)), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>('\1')), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(L'\2')), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(3)), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(4u)), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(5ul)), double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(6.0f)), float>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(7.0)), double>::value), "Return type mismatch");
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
-    static_assert((boost::math::is_same<BOOST_TYPEOF(pow<2>(7.0l)), long double>::value), "Return type mismatch");
+    static_assert((is_same<BOOST_TYPEOF(pow<2>(7.0l)), long double>::value), "Return type mismatch");
 #endif
 }
 

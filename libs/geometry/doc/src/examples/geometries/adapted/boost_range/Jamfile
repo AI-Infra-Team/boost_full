@@ -10,8 +10,7 @@
 
 
 project boost-geometry-doc-src-example-geometries-adapted-boost_range
-    : requirements
-        <library>/boost/assign//boost_assign
+    : # requirements
     ;
 
 exe filtered : filtered.cpp ;

@@ -23,6 +23,7 @@
 #include <boost/interprocess/detail/workaround.hpp>
 
 #include <boost/interprocess/sync/cv_status.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/interprocess/detail/type_traits.hpp>
 #include <boost/interprocess/creation_tags.hpp>
 #include <boost/interprocess/exceptions.hpp>
@@ -34,7 +35,6 @@
 #include <boost/interprocess/permissions.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/timed_utils.hpp>
 #include <boost/interprocess/sync/detail/condition_any_algorithm.hpp>
 
 //!\file
@@ -63,8 +63,8 @@ class shm_named_condition_any
    //!Creates a global condition with a name.
    //!If the condition can't be created throws interprocess_exception
    template <class CharT>
-   shm_named_condition_any(create_only_t, const CharT *name, const permissions &perm = permissions())
-      :  m_shmem  (create_only_t()
+   shm_named_condition_any(create_only_t create_only, const CharT *name, const permissions &perm = permissions())
+      :  m_shmem  (create_only
                   ,name
                   ,sizeof(internal_condition) +
                      open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -81,8 +81,8 @@ class shm_named_condition_any
    //!shm_named_condition_any(open_only_t, ... )
    //!Does not throw
    template <class CharT>
-   shm_named_condition_any(open_or_create_t, const CharT *name, const permissions &perm = permissions())
-      :  m_shmem  (open_or_create_t()
+   shm_named_condition_any(open_or_create_t open_or_create, const CharT *name, const permissions &perm = permissions())
+      :  m_shmem  (open_or_create
                   ,name
                   ,sizeof(internal_condition) +
                      open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -96,8 +96,8 @@ class shm_named_condition_any
    //!created. If it is not previously created this function throws
    //!interprocess_exception.
    template <class CharT>
-   shm_named_condition_any(open_only_t, const CharT *name)
-      :  m_shmem  (open_only_t()
+   shm_named_condition_any(open_only_t open_only, const CharT *name)
+      :  m_shmem  (open_only
                   ,name
                   ,read_write
                   ,0

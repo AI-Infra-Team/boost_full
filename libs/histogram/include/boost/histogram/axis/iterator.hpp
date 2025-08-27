@@ -19,14 +19,12 @@ template <class Axis>
 class iterator : public detail::iterator_adaptor<iterator<Axis>, index_type,
                                                  decltype(std::declval<Axis>().bin(0))> {
 public:
-  using reference = typename iterator::iterator_adaptor_::reference;
-
   /// Make iterator from axis and index.
   iterator(const Axis& axis, index_type idx)
       : iterator::iterator_adaptor_(idx), axis_(axis) {}
 
   /// Return current bin object.
-  reference operator*() const { return axis_.bin(this->base()); }
+  decltype(auto) operator*() const { return axis_.bin(this->base()); }
 
 private:
   const Axis& axis_;

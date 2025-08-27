@@ -1,7 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
-// Copyright (c) 2023 Adam Wulkiewicz, Lodz, Poland.
 
 // This file was modified by Oracle on 2020-2021.
 // Modifications copyright (c) 2020-2021, Oracle and/or its affiliates.
@@ -15,8 +14,7 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_OVERLAY_COPY_SEGMENT_POINT_HPP
 
 
-#include <array>
-
+#include <boost/array.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/size.hpp>
@@ -92,7 +90,7 @@ struct copy_segment_point_polygon
         // Call ring-version with the right ring
         return copy_segment_point_range
             <
-                geometry::ring_type_t<Polygon>,
+                typename geometry::ring_type<Polygon>::type,
                 Reverse,
                 SegmentIdentifier,
                 PointOut
@@ -115,7 +113,7 @@ struct copy_segment_point_box
             SegmentIdentifier const& seg_id, signed_size_type offset,
             PointOut& point)
     {
-        std::array<point_type_t<Box>, 4> bp;
+        boost::array<typename point_type<Box>::type, 4> bp;
         assign_box_corners_oriented<Reverse>(box, bp);
 
         signed_size_type const target = circular_offset(4, seg_id.segment_index, offset);
@@ -288,7 +286,7 @@ inline bool copy_segment_point(Geometry const& geometry,
 
     return dispatch::copy_segment_point
         <
-            tag_t<Geometry>,
+            typename tag<Geometry>::type,
             Geometry,
             Reverse,
             SegmentIdentifier,
@@ -322,7 +320,7 @@ inline bool copy_segment_point(Geometry1 const& geometry1, Geometry2 const& geom
     {
         return dispatch::copy_segment_point
             <
-                tag_t<Geometry1>,
+                typename tag<Geometry1>::type,
                 Geometry1,
                 Reverse1,
                 SegmentIdentifier,
@@ -333,7 +331,7 @@ inline bool copy_segment_point(Geometry1 const& geometry1, Geometry2 const& geom
     {
         return dispatch::copy_segment_point
             <
-                tag_t<Geometry2>,
+                typename tag<Geometry2>::type,
                 Geometry2,
                 Reverse2,
                 SegmentIdentifier,

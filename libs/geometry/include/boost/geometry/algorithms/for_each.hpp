@@ -5,9 +5,9 @@
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 // Copyright (c) 2014 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2014-2023.
-// Modifications copyright (c) 2014-2023, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2014-2020.
+// Modifications copyright (c) 2014-2020, Oracle and/or its affiliates.
+
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -22,11 +22,14 @@
 #define BOOST_GEOMETRY_ALGORITHMS_FOR_EACH_HPP
 
 
+#include <algorithm>
+
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/reference.hpp>
 #include <boost/range/value_type.hpp>
 
+#include <boost/geometry/algorithms/detail/interior_iterator.hpp>
 #include <boost/geometry/algorithms/not_implemented.hpp>
 #include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/exterior_ring.hpp>
@@ -38,6 +41,9 @@
 #include <boost/geometry/geometries/concepts/check.hpp>
 
 #include <boost/geometry/geometries/segment.hpp>
+
+#include <boost/geometry/util/range.hpp>
+#include <boost/geometry/util/type_traits.hpp>
 
 #include <boost/geometry/views/detail/indexed_point_view.hpp>
 
@@ -117,7 +123,7 @@ struct fe_point_type
     typedef util::transcribe_const_t
         <
             Range,
-            point_type_t<Range>
+            typename point_type<Range>::type
         > type;
 };
 
@@ -271,10 +277,7 @@ struct fe_segment_range_with_closure<open>
     template <typename Range, typename Functor>
     static inline bool apply(Range& range, Functor&& f)
     {
-        if (! fe_segment_range_with_closure<closed>::apply(range, f))
-        {
-            return false;
-        }
+        fe_segment_range_with_closure<closed>::apply(range, f);
 
         auto const begin = boost::begin(range);
         auto end = boost::end(range);
@@ -282,9 +285,9 @@ struct fe_segment_range_with_closure<open>
         {
             return true;
         }
-
+        
         --end;
-
+        
         if (begin == end)
         {
             // single point ranges already handled in closed case above
@@ -320,7 +323,9 @@ struct for_each_polygon
             return false;
         }
 
-        auto&& rings = interior_rings(poly);
+        typename interior_return_type<Polygon>::type
+            rings = interior_rings(poly);
+
         auto const end = boost::end(rings);
         for (auto it = boost::begin(rings); it != end; ++it)
         {
@@ -369,7 +374,7 @@ namespace dispatch
 template
 <
     typename Geometry,
-    typename Tag = tag_cast_t<tag_t<Geometry>, multi_tag>
+    typename Tag = typename tag_cast<typename tag<Geometry>::type, multi_tag>::type
 >
 struct for_each_point: not_implemented<Tag>
 {};
@@ -427,7 +432,7 @@ struct for_each_point<MultiGeometry, multi_tag>
 template
 <
     typename Geometry,
-    typename Tag = tag_t<Geometry>
+    typename Tag = typename tag<Geometry>::type
 >
 struct for_each_segment: not_implemented<Tag>
 {};

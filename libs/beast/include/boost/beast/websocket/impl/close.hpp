@@ -18,7 +18,7 @@
 #include <boost/beast/core/stream_traits.hpp>
 #include <boost/beast/core/detail/bind_continuation.hpp>
 #include <boost/asio/coroutine.hpp>
-#include <boost/asio/dispatch.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/throw_exception.hpp>
 #include <memory>
 
@@ -76,7 +76,7 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+            ec = net::error::operation_aborted;
             return this->complete(cont, ec);
         }
         auto& impl = *sp;
@@ -90,15 +90,9 @@ public:
                     BOOST_ASIO_HANDLER_LOCATION((
                         __FILE__, __LINE__,
                         "websocket::async_close"));
-                    this->set_allowed_cancellation(net::cancellation_type::all);
-                    impl.op_close.emplace(std::move(*this),
-                                          net::cancellation_type::all);
-                }
-                // cancel fired before we could do anything.
-                if (ec == net::error::operation_aborted)
-                    return this->complete(cont, ec);
-                this->set_allowed_cancellation(net::cancellation_type::terminal);
 
+                    impl.op_close.emplace(std::move(*this));
+                }
                 impl.wr_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
                 {
@@ -106,8 +100,7 @@ public:
                         __FILE__, __LINE__,
                         "websocket::async_close"));
 
-                    const auto ex = this->get_immediate_executor();
-                    net::dispatch(ex, std::move(*this));
+                    net::post(std::move(*this));
                 }
                 BOOST_ASSERT(impl.wr_block.is_locked(this));
             }
@@ -150,17 +143,9 @@ public:
                     BOOST_ASIO_HANDLER_LOCATION((
                         __FILE__, __LINE__,
                         "websocket::async_close"));
-                    // terminal only, that's the default
+
                     impl.op_r_close.emplace(std::move(*this));
                 }
-                if (ec == net::error::operation_aborted)
-                {
-                    // if a cancellation fires here, we do a dirty shutdown
-                    impl.change_status(status::closed);
-                    close_socket(get_lowest_layer(impl.stream()));
-                    return this->complete(cont, ec);
-                }
-
                 impl.rd_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
                 {
@@ -168,8 +153,7 @@ public:
                         __FILE__, __LINE__,
                         "websocket::async_close"));
 
-                    const auto ex = this->get_immediate_executor();
-                    net::dispatch(ex, std::move(*this));
+                    net::post(std::move(*this));
                 }
                 BOOST_ASSERT(impl.rd_block.is_locked(this));
                 if(impl.check_stop_now(ec))
@@ -178,6 +162,7 @@ public:
             }
 
             // Read until a receiving a close frame
+            // TODO There should be a timeout on this
             if(impl.rd_remain > 0)
                 goto read_payload;
             for(;;)
@@ -200,7 +185,7 @@ public:
                             beast::detail::bind_continuation(std::move(*this)));
                     }
                     impl.rd_buf.commit(bytes_transferred);
-                    if(impl.check_stop_now(ec)) //< this catches cancellation
+                    if(impl.check_stop_now(ec))
                         goto upcall;
                 }
                 if(detail::is_control(impl.rd_fh.op))
@@ -275,9 +260,7 @@ public:
                 ec = {};
             }
             if(! ec)
-            {
-                BOOST_BEAST_ASSIGN_EC(ec, ev_);
-            }
+                ec = ev_;
             if(ec)
                 impl.change_status(status::failed);
             else
@@ -301,20 +284,11 @@ template<class NextLayer, bool deflateSupported>
 struct stream<NextLayer, deflateSupported>::
     run_close_op
 {
-    boost::shared_ptr<impl_type> const& self;
-
-    using executor_type = typename stream::executor_type;
-
-    executor_type
-    get_executor() const noexcept
-    {
-        return self->stream().get_executor();
-    }
-
     template<class CloseHandler>
     void
     operator()(
         CloseHandler&& h,
+        boost::shared_ptr<impl_type> const& sp,
         close_reason const& cr)
     {
         // If you get an error on the following line it means
@@ -329,7 +303,7 @@ struct stream<NextLayer, deflateSupported>::
         close_op<
             typename std::decay<CloseHandler>::type>(
                 std::forward<CloseHandler>(h),
-                self,
+                sp,
                 cr);
     }
 };
@@ -466,8 +440,9 @@ async_close(close_reason const& cr, CloseHandler&& handler)
     return net::async_initiate<
         CloseHandler,
         void(error_code)>(
-            run_close_op{impl_},
+            run_close_op{},
             handler,
+            impl_,
             cr);
 }
 

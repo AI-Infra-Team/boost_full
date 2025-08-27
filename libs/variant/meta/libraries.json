@@ -14,5 +14,5 @@
         "Antony Polukhin <antoshkka -at- gmail.com>",
         "Eric Friedman <ericbrandon -at- gmail.com>"
     ],
-    "cxxstd": "11"
+    "cxxstd": "03"
 }

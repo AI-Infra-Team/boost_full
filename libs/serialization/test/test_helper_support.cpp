@@ -21,6 +21,7 @@ namespace std{
 #endif
 
 #include "test_tools.hpp"
+#include <boost/lexical_cast.hpp>
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/vector.hpp>
 #include <string>
@@ -107,9 +108,7 @@ int test_main( int /* argc */, char* /* argv */[] ){
 
     std::vector<my_string> v1;
     for(int i=0; i<1000; ++i){
-        char sbuffer[10];
-        std::snprintf(sbuffer, sizeof(sbuffer), "%i", i % 100);
-        v1.push_back(my_string(sbuffer));
+        v1.push_back(my_string(boost::lexical_cast<std::string>(i % 100)));
     }
     {
         test_ostream os(testfile, TEST_STREAM_FLAGS);

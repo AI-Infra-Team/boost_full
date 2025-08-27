@@ -1,4 +1,5 @@
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -23,8 +24,8 @@ public:
 
     int value;
 
-    explicit my_info( int val ):
-        value(val)
+    explicit my_info( int value ):
+        value(value)
     {
         BOOST_TEST(++object_count>0);
         BOOST_TEST(++value_count>0);
@@ -46,7 +47,7 @@ public:
     ~my_info()
     {
         BOOST_TEST(--object_count>=0);
-        if( value != -1 )
+        if( value!=-1 )
             BOOST_TEST(--value_count>=0);
     }
 };
@@ -84,7 +85,7 @@ public:
 
 void run_tests()
 {
-    using leaf::detail::optional;
+    using leaf::leaf_detail::optional;
     {
         optional<my_info> x;
         BOOST_TEST(x.empty());
@@ -299,7 +300,7 @@ void run_tests()
     {
         optional<my_info> x;
         my_info a(42);
-        x.load(10, a);
+        x.put(10, a);
         BOOST_TEST_EQ(object_count, 2);
         BOOST_TEST_EQ(value_count, 2);
         BOOST_TEST(!x.empty());
@@ -315,7 +316,7 @@ void run_tests()
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
         my_info a(42);
-        x.load(10, a);
+        x.put(10, a);
         BOOST_TEST_EQ(object_count, 2);
         BOOST_TEST_EQ(value_count, 2);
         BOOST_TEST(!x.empty());
@@ -328,7 +329,7 @@ void run_tests()
     {
         optional<my_info> x;
         BOOST_TEST(x.empty());
-        x.load(10, my_info(42));
+        x.put(10, my_info(42));
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
         BOOST_TEST(!x.empty());
@@ -343,7 +344,7 @@ void run_tests()
         BOOST_TEST(!x.empty());
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
-        x.load(10, my_info(42));
+        x.put(10, my_info(42));
         BOOST_TEST(!x.empty());
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);

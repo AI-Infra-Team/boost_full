@@ -14,9 +14,26 @@
 #include <utility>
 
 #include <boost/any/basic_any.hpp>
+#include "test.hpp"
+#include <boost/move/move.hpp>
 
-int main() {
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+
+int main()
+{
+    BOOST_STATIC_ASSERT(false);
+    return EXIT_SUCCESS;
+}
+
+#else
+
+
+int main()
+{
     int i = boost::any_cast<int&>(boost::anys::basic_any<>(10));
     (void)i;
+    return EXIT_SUCCESS;
 }
+
+#endif
 

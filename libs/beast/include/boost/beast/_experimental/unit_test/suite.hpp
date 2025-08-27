@@ -16,11 +16,6 @@
 #include <sstream>
 #include <string>
 
-#if defined(BOOST_GCC) && BOOST_GCC >= 70000 && BOOST_GCC < 80000
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnoexcept-type"
-#endif
-
 namespace boost {
 namespace beast {
 namespace unit_test {
@@ -658,17 +653,6 @@ run(runner& r)
         BEAST_FAIL(); \
     }
 
-/** Ensure an exception is not thrown
-*/
-#define BEAST_NO_THROW( EXPR ) \
-    try { \
-        EXPR; \
-        BEAST_PASS(); \
-    } \
-    catch(...) { \
-        BEAST_FAIL(); \
-    }
-
 } // unit_test
 } // beast
 } // boost
@@ -734,10 +718,6 @@ run(runner& r)
 
 #endif
 
-#endif
-
-#if defined(BOOST_GCC) && BOOST_GCC >= 70000 && BOOST_GCC < 80000
-#pragma GCC diagnostic pop
 #endif
 
 //------------------------------------------------------------------------------

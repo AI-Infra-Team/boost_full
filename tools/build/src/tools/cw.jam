@@ -5,7 +5,7 @@
 
 #| tag::doc[]
 
-[[b2.reference.tools.compiler.cw]]
+[[bbv2.reference.tools.compiler.cw]]
 = Code Warrior
 
 The `cw` module support CodeWarrior compiler, originally produced by
@@ -71,9 +71,11 @@ import feature : feature get-values ;
 import path ;
 import sequence : unique ;
 import common ;
-import args ;
 
-.debug-configuration = [ args.get-arg debug-configuration ] ;
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+   .debug-configuration = true ;
+}
 
 feature.extend toolset : cw ;
 

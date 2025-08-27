@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2014 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
@@ -45,14 +45,11 @@ run test-py ;
 DEPENDS all : test-raw test-raw-fail test-py ;
 """)
 
-t.run_build_system(["-ffile.jam", "-d1", '-sPYTHON="' + sys.executable + '"'], status=1)
+t.run_build_system(["-ffile.jam", "-d1", "-sPYTHON=" + sys.executable], status=1)
 t.expect_output_lines([
     "...failed run test-raw-fail...",
     "0,1,2",
-    "",
-    "...updated 2 targets...",
-    "",
     "...failed updating 1 target...",
-    "   run test-raw-fail"])
+    "...updated 2 targets..."])
 
 t.cleanup()

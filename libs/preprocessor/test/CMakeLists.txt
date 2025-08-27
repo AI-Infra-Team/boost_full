@@ -1,4 +1,4 @@
-# Copyright 2018, 2019, 2022 Peter Dimov
+# Copyright 2018, 2019 Peter Dimov
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
 
@@ -16,11 +16,12 @@ set(tests_c ${tests_common})
 set(tests_cpp ${tests_common} iteration repetition checkempty vaopt quick)
 
 set(BOOST_TEST_LINK_LIBRARIES Boost::preprocessor)
-set(BOOST_TEST_INCLUDE_DIRECTORIES .)
+
+include_directories(../../..) # for `include <libs/preprocessor/...>` to work
 
 foreach(test IN LISTS tests_c)
 
-  boost_test(TYPE compile SOURCES ${test}.c NAME ${test}_c)
+  boost_test(TYPE compile SOURCES ${test}.c)
 
 endforeach()
 
@@ -32,7 +33,7 @@ endforeach()
 
 foreach(test IN LISTS tests_common_fail)
 
-  boost_test(TYPE compile-fail SOURCES ${test}.c NAME ${test}_c)
+  boost_test(TYPE compile-fail SOURCES ${test}.c)
   boost_test(TYPE compile-fail SOURCES ${test}.cpp)
 
 endforeach()

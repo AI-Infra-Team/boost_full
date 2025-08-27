@@ -6,7 +6,6 @@
 // Copyright 1999 Dave Abrahams
 // Copyright 2014 Peter Dimov
 // Copyright 2014 Boris Rasin, Antony Polukhin
-// Copyright 2023 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0.
 //
@@ -238,6 +237,8 @@ static void test_polymorphic_pointer_downcast_intrusive()
     }
 }
 
+#ifndef BOOST_NO_CXX11_SMART_PTR
+
 static void test_polymorphic_pointer_downcast_std_shared()
 {
     std::shared_ptr<Base> base (new Derived);
@@ -251,6 +252,8 @@ static void test_polymorphic_pointer_downcast_std_shared()
         BOOST_TEST_EQ( derived->kind(), "Derived" );
     }
 }
+
+#endif
 
 static void test_polymorphic_cast_fail()
 {
@@ -269,7 +272,9 @@ static void test_polymorphic_pointer_cast_fail()
 
     BOOST_TEST_THROWS( boost::polymorphic_pointer_cast<Derived>( boost::shared_ptr<Base>(new Base) ), std::bad_cast );
 
+#ifndef BOOST_NO_CXX11_SMART_PTR
     BOOST_TEST_THROWS( boost::polymorphic_pointer_cast<Derived>( std::shared_ptr<Base>(new Base) ), std::bad_cast );
+#endif
 
     BOOST_TEST_THROWS( boost::polymorphic_pointer_cast<Derived>( boost::intrusive_ptr<Base>(new Base) ), std::bad_cast );
 }
@@ -332,6 +337,7 @@ static void test_polymorphic_pointer_downcast_boost_shared_fail()
     expect_assertion = false;
 }
 
+#ifndef BOOST_NO_CXX11_SMART_PTR
 
 static void test_polymorphic_pointer_downcast_std_shared_fail()
 {
@@ -346,6 +352,7 @@ static void test_polymorphic_pointer_downcast_std_shared_fail()
     expect_assertion = false;
 }
 
+#endif
 
 static void test_polymorphic_pointer_downcast_intrusive_fail()
 {
@@ -375,9 +382,10 @@ int main()
     test_polymorphic_pointer_downcast_boost_shared_fail();
     test_polymorphic_pointer_downcast_intrusive_fail();
 
+#ifndef BOOST_NO_CXX11_SMART_PTR
     test_polymorphic_pointer_downcast_std_shared();
     test_polymorphic_pointer_downcast_std_shared_fail();
-
+#endif
 
     return boost::report_errors();
 }

@@ -1038,7 +1038,7 @@ struct function_address_holder
    }
 
    public:
-   static void* get(const unsigned int id)
+   static farproc_t get(const unsigned int id)
    {
       BOOST_ASSERT(id < (unsigned int)NumFunction);
       for(unsigned i = 0; FunctionStates[id] < 2; ++i){
@@ -1054,7 +1054,7 @@ struct function_address_holder
             sleep_tick();
          }
       }
-      return reinterpret_cast<void*>(FunctionAddresses[id]);
+      return FunctionAddresses[id];
    }
 };
 
@@ -1243,8 +1243,8 @@ class nt_query_mem_deleter
       (SystemTimeOfDayInfoLength + sizeof(unsigned long) + sizeof(boost::winapi::DWORD_))*2;
 
    public:
-   explicit nt_query_mem_deleter(unsigned long object_name_info_size)
-      : m_size(static_cast<unsigned long>(object_name_info_size + rename_offset + rename_suffix))
+   explicit nt_query_mem_deleter(std::size_t object_name_information_size)
+      : m_size(object_name_information_size + rename_offset + rename_suffix)
       , m_buf(new char [m_size])
    {}
 
@@ -1270,7 +1270,7 @@ class nt_query_mem_deleter
       return static_cast<unsigned long>(m_size - rename_offset - SystemTimeOfDayInfoLength*2);
    }
 
-   unsigned long file_rename_information_size() const
+   std::size_t file_rename_information_size() const
    {  return static_cast<unsigned long>(m_size);  }
 
    private:
@@ -1324,7 +1324,7 @@ inline bool unlink_file(const CharT *filename)
    //- Close the handle. If there are no file users, it will be deleted.
    //  Otherwise it will be used by already connected handles but the
    //  file name can't be used to open this file again
-   BOOST_INTERPROCESS_TRY{
+   BOOST_TRY{
       NtSetInformationFile_t pNtSetInformationFile =
          reinterpret_cast<NtSetInformationFile_t>(dll_func::get(dll_func::NtSetInformationFile));
 
@@ -1418,9 +1418,9 @@ inline bool unlink_file(const CharT *filename)
          return true;
       }
    }
-   BOOST_INTERPROCESS_CATCH(...){
+   BOOST_CATCH(...){
       return false;
-   } BOOST_INTERPROCESS_CATCH_END
+   } BOOST_CATCH_END
    return true;
 }
 
@@ -1444,7 +1444,7 @@ inline bool get_registry_value_buffer(hkey key_type, const CharT *subkey_name, c
       reg_closer key_closer(key);
 
       //Obtain the value
-      unsigned long size = static_cast<unsigned long>(buflen);
+      unsigned long size = buflen;
       unsigned long type;
       buflen = 0;
       bret = 0 == reg_query_value_ex( key, value_name, 0, &type, (unsigned char*)buf, &size);
@@ -1723,10 +1723,10 @@ inline bool find_record_in_buffer( const void* pBuffer, unsigned long dwBytesRea
    const unsigned char * pEndOfRecords = pRecord + dwBytesRead;
 
    while (pRecord < pEndOfRecords){
-      interprocess_eventlogrecord *pTypedRecord = (interprocess_eventlogrecord*)(void*)pRecord;
+      interprocess_eventlogrecord *pTypedRecord = (interprocess_eventlogrecord*)pRecord;
       // Check provider, written at the end of the fixed-part of the record
 
-      if (0 == winapi_traits<CharT>::cmp(provider_name, (CharT*)(void*)(pRecord + sizeof(interprocess_eventlogrecord))))
+      if (0 == winapi_traits<CharT>::cmp(provider_name, (CharT*)(pRecord + sizeof(interprocess_eventlogrecord))))
       {
          // Check event id
          if(id_to_find == (pTypedRecord->EventID & 0xFFFF)){

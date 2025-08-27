@@ -15,7 +15,6 @@ doc/warnings.txt
 /.vs
 .vscode
 *.code-workspace
-out
 
 # Clang/LLVM
 /.clang-format

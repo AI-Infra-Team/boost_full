@@ -14,13 +14,11 @@
 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
-#include <boost/core/lightweight_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #if defined(BOOST_NO_CXX17_STD_INVOKE)
 #include <boost/context/detail/invoke.hpp>
 #include <boost/context/detail/config.hpp>
-
-#define BOOST_CHECK_EQUAL(a, b) BOOST_TEST_EQ(a, b)
 
 namespace ctx = boost::context;
 
@@ -222,20 +220,23 @@ void test8() {
 void dummy() {}
 #endif
 
-int main()
+boost::unit_test::test_suite * init_unit_test_suite( int, char* [])
 {
+    boost::unit_test::test_suite * test =
+        BOOST_TEST_SUITE("Boost.Context: invoke test suite");
+
 #if defined(BOOST_NO_CXX17_STD_INVOKE)
-    test1();
-    test2();
-    test3();
-    test4();
-    test5();
-    test6();
-    test7();
-    test8();
+    test->add( BOOST_TEST_CASE( & test1) );
+    test->add( BOOST_TEST_CASE( & test2) );
+    test->add( BOOST_TEST_CASE( & test3) );
+    test->add( BOOST_TEST_CASE( & test4) );
+    test->add( BOOST_TEST_CASE( & test5) );
+    test->add( BOOST_TEST_CASE( & test6) );
+    test->add( BOOST_TEST_CASE( & test7) );
+    test->add( BOOST_TEST_CASE( & test8) );
 #else
-    dummy();
+    test->add( BOOST_TEST_CASE( & dummy) );
 #endif
 
-    return boost::report_errors();
+    return test;
 }

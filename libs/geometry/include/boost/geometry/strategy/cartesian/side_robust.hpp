@@ -96,7 +96,7 @@ struct side_robust
 
 public:
 
-    using cs_tag = cartesian_tag;
+    typedef cartesian_tag cs_tag;
 
     //! \brief Computes the sign of the CCW triangle p1, p2, p
     template
@@ -178,20 +178,22 @@ public:
 
 };
 
+#ifdef BOOST_GEOMETRY_USE_RESCALING
 #ifndef DOXYGEN_NO_STRATEGY_SPECIALIZATIONS
-#if defined(BOOST_GEOMETRY_DEFAULT_STRATEGY_SIDE_USE_SIDE_ROBUST)
+
 namespace services
 {
 
 template <typename CalculationType>
 struct default_strategy<cartesian_tag, CalculationType>
 {
-    using type = side_robust<CalculationType>;
+    typedef side_robust<CalculationType> type;
 };
 
-} // namespace services
+}
+
 #endif
-#endif // DOXYGEN_NO_STRATEGY_SPECIALIZATIONS
+#endif
 
 }} // namespace strategy::side
 

@@ -37,11 +37,7 @@ T bessel_y_derivative_bare(T v, T x)
 template <class T>
 T bessel_i_derivative_bare(T v, T x)
 {
-   if ((x < 1) && (x > 0))
-      return (boost::math::cyl_bessel_i(v - 1, x) + boost::math::cyl_bessel_i(v + 1, x)) / 2;
-   if (x == 0)
-      throw std::domain_error("");
-   return (boost::math::cyl_bessel_i(v - 1, x) + boost::math::cyl_bessel_i(v + 1, x)) / 2;
+   return (v / x) * boost::math::cyl_bessel_i(v, x) + boost::math::cyl_bessel_i(v+1, x);
 }
 
 template <class T>
@@ -82,7 +78,7 @@ enum
 
 int cpp_main(int argc, char*argv [])
 {
-   typedef number<mpfr_float_backend<500> > bignum;
+   typedef number<mpfr_float_backend<200> > bignum;
 
    parameter_info<bignum> arg1, arg2;
    test_data<bignum> data;
@@ -127,9 +123,9 @@ int cpp_main(int argc, char*argv [])
    std::cout << "Welcome.\n"
       "This program will generate spot tests for the Bessel " << letter << " function derivative\n\n";
    do{
-      if(0 == get_user_parameter_info(arg1, "x"))
+      if(0 == get_user_parameter_info(arg1, "a"))
          return 1;
-      if(0 == get_user_parameter_info(arg2, "v"))
+      if(0 == get_user_parameter_info(arg2, "b"))
          return 1;
 
       bignum (*fp)(bignum, bignum) = 0;

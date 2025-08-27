@@ -15,10 +15,9 @@
 #include <boost/gil/premultiply.hpp>
 #include <boost/gil/io/base.hpp>
 #include <boost/gil/io/device.hpp>
-#include <boost/gil/io/detail/dynamic.hpp>
+#include <boost/gil/io/dynamic_io_new.hpp>
 
 #include <algorithm>
-#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -184,7 +183,7 @@ private:
 
 
             this->_io_dev.write_scaline( row
-                                       , static_cast<std::uint32_t>( y )
+                                       , (uint32) y
                                        , 0
                                        );
 
@@ -212,7 +211,7 @@ private:
 
 
             this->_io_dev.write_scaline( row
-                                       , static_cast<std::uint32_t>( y )
+                                       , (uint32) y
                                        , 0
                                        );
 
@@ -274,7 +273,7 @@ private:
 						);
 
             this->_io_dev.write_scaline( row_addr
-                                       , static_cast<std::uint32_t>( y )
+                                       , (uint32) y
                                        , 0
                                        );
 
@@ -394,8 +393,8 @@ private:
                 }
 
                 this->_io_dev.write_tile( row
-                                        , static_cast< std::uint32_t >( j )
-                                        , static_cast< std::uint32_t >( i )
+                                        , static_cast< uint32 >( j )
+                                        , static_cast< uint32 >( i )
                                         , 0
                                         , 0
                                         );
@@ -438,7 +437,7 @@ public:
                                 , parent_t
                                 > op( this );
 
-        variant2::visit( op, views );
+        apply_operation( views, op );
     }
 };
 

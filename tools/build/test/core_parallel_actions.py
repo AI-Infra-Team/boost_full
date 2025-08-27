@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2006 Rene Rivera.
 # Copyright 2011 Steven Watanabe
@@ -97,7 +97,6 @@ sleeper 4.b
 [.b] 0
 [.b] 1
 [.b] 2
-
 ...updated 8 targets...
 """)
 

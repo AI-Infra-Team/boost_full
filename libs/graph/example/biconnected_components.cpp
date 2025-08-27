@@ -45,9 +45,10 @@ int main()
     add_edge(6, 7, g);
     add_edge(7, 8, g);
 
-    auto component = get(edge_component, g);
+    property_map< graph_t, edge_component_t >::type component
+        = get(edge_component, g);
 
-    auto num_comps = biconnected_components(g, component);
+    std::size_t num_comps = biconnected_components(g, component);
     std::cerr << "Found " << num_comps << " biconnected components.\n";
 
     std::vector< vertex_t > art_points;

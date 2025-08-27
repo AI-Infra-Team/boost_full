@@ -85,6 +85,8 @@ int main()
         BOOST_TEST_EQ( ec.location().line(), 75 );
     }
 
+#if defined(BOOST_SYSTEM_HAS_SYSTEM_ERROR)
+
     {
         std::error_code e2( val, std::generic_category() );
 
@@ -105,8 +107,10 @@ int main()
         BOOST_TEST( ec.failed() );
 
         BOOST_TEST( ec.has_location() );
-        BOOST_TEST_EQ( ec.location().line(), 98 );
+        BOOST_TEST_EQ( ec.location().line(), 100 );
     }
+
+#endif
 
     return boost::report_errors();
 }

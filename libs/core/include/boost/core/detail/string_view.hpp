@@ -14,7 +14,7 @@
 // https://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/core/enable_if.hpp>
-#include <boost/core/detail/is_same.hpp>
+#include <boost/core/is_same.hpp>
 #include <boost/assert.hpp>
 #include <boost/assert/source_location.hpp>
 #include <boost/throw_exception.hpp>
@@ -31,19 +31,9 @@
 #if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 # include <string_view>
 #endif
-#if !defined(BOOST_NO_CXX20_HDR_CONCEPTS) // std::common_reference_with
-# include <type_traits>
-#endif
-#if !defined(BOOST_NO_CXX20_HDR_FORMAT)
-# include <format> // std::formatter
-#endif
 
 namespace boost
 {
-
-// forward declaration of boost::basic_string_view from Utility
-template<class Ch, class Tr> class basic_string_view;
-
 namespace core
 {
 namespace detail
@@ -74,7 +64,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_of( Ch const* p_
 
     for( std::size_t j = 0; j < n; ++j )
     {
-        UCh ch = static_cast<UCh>( s[ j ] );
+        UCh ch = s[ j ];
 
         if( ch >= 0 && ch < 256 )
         {
@@ -91,7 +81,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_of( Ch const* p_
     {
         for( std::size_t i = pos; i < n_; ++i )
         {
-            UCh ch = static_cast<UCh>( p_[ i ] );
+            UCh ch = p_[ i ];
             if( ch >= 0 && ch < 256 && table[ ch ] ) return i;
         }
     }
@@ -129,7 +119,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_of( Ch const* p_,
 
     for( std::size_t j = 0; j < n; ++j )
     {
-        UCh ch = static_cast<UCh>( s[ j ] );
+        UCh ch = s[ j ];
 
         if( ch >= 0 && ch < 256 )
         {
@@ -150,7 +140,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_of( Ch const* p_,
     {
         do
         {
-            UCh ch = static_cast<UCh>( p_[ i ] );
+            UCh ch = p_[ i ];
 
             if( ch >= 0 && ch < 256 && table[ ch ] ) return i;
 
@@ -199,7 +189,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_not_of( Ch const
 
     for( std::size_t j = 0; j < n; ++j )
     {
-        UCh ch = static_cast<UCh>( s[ j ] );
+        UCh ch = s[ j ];
 
         if( ch >= 0 && ch < 256 )
         {
@@ -216,7 +206,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_not_of( Ch const
     {
         for( std::size_t i = pos; i < n_; ++i )
         {
-            UCh ch = static_cast<UCh>( p_[ i ] );
+            UCh ch = p_[ i ];
             if( !( ch >= 0 && ch < 256 && table[ ch ] ) ) return i;
         }
     }
@@ -262,7 +252,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_not_of( Ch const*
 
     for( std::size_t j = 0; j < n; ++j )
     {
-        UCh ch = static_cast<UCh>( s[ j ] );
+        UCh ch = s[ j ];
 
         if( ch >= 0 && ch < 256 )
         {
@@ -283,7 +273,7 @@ template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_not_of( Ch const*
     {
         do
         {
-            UCh ch = static_cast<UCh>( p_[ i ] );
+            UCh ch = p_[ i ];
 
             if( !( ch >= 0 && ch < 256 && table[ ch ] ) ) return i;
 
@@ -380,10 +370,10 @@ public:
     {
     }
 
-    template<class End> BOOST_CXX14_CONSTEXPR basic_string_view( Ch const* first, End last,
-        typename boost::enable_if<boost::core::detail::is_same<End, Ch const*>, int >::type = 0 ) BOOST_NOEXCEPT: p_( first ), n_( static_cast<size_type>( last - first ) )
+    template<class End> BOOST_CXX14_CONSTEXPR basic_string_view( Ch const* begin, End end,
+        typename boost::enable_if<is_same<End, Ch const*> >::type* = 0 ) BOOST_NOEXCEPT: p_( begin ), n_( end - begin )
     {
-        BOOST_ASSERT( last - first >= 0 );
+        BOOST_ASSERT( end - begin >= 0 );
     }
 
     template<class A> basic_string_view( std::basic_string<Ch, std::char_traits<Ch>, A> const& str ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
@@ -392,31 +382,10 @@ public:
 
 #if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 
-    BOOST_CONSTEXPR basic_string_view( std::basic_string_view<Ch, std::char_traits<Ch> > const& str ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
+    basic_string_view( std::basic_string_view<Ch, std::char_traits<Ch> > const& str ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
     {
     }
 
-#endif
-
-    template<class Ch2> basic_string_view( boost::basic_string_view<Ch2, std::char_traits<Ch2> > const& str,
-        typename boost::enable_if<boost::core::detail::is_same<Ch, Ch2>, int >::type = 0 ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
-    {
-    }
-
-#if !defined(BOOST_NO_CXX11_NULLPTR)
-# if !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
-
-    basic_string_view( std::nullptr_t ) = delete;
-
-# else
-
-private:
-
-    basic_string_view( std::nullptr_t );
-
-public:
-
-# endif
 #endif
 
     // BOOST_CONSTEXPR basic_string_view& operator=( basic_string_view const& ) BOOST_NOEXCEPT & = default;
@@ -430,19 +399,13 @@ public:
 
 #if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 
-    template<class Ch2, class En = typename boost::enable_if<boost::core::detail::is_same<Ch2, Ch> >::type>
+    template<class Ch2, class En = typename boost::enable_if<is_same<Ch2, Ch> >::type>
     operator std::basic_string_view<Ch2>() const BOOST_NOEXCEPT
     {
         return std::basic_string_view<Ch>( data(), size() );
     }
 
 #endif
-
-    template<class Ch2> operator boost::basic_string_view<Ch2,
-        typename boost::enable_if<boost::core::detail::is_same<Ch2, Ch>, std::char_traits<Ch> >::type> () const BOOST_NOEXCEPT
-    {
-        return boost::basic_string_view< Ch, std::char_traits<Ch> >( data(), size() );
-    }
 
     // iterator support
 
@@ -575,7 +538,7 @@ public:
             boost::throw_exception( std::out_of_range( "basic_string_view::copy" ), BOOST_CURRENT_LOCATION );
         }
 
-        std::size_t rlen = (std::min)( n, size() - pos );
+        std::size_t rlen = std::min( n, size() - pos );
 
         traits_type::copy( s, data() + pos, rlen );
 
@@ -589,7 +552,7 @@ public:
             boost::throw_exception( std::out_of_range( "basic_string_view::substr" ), BOOST_CURRENT_LOCATION );
         }
 
-        std::size_t rlen = (std::min)( n, size() - pos );
+        std::size_t rlen = std::min( n, size() - pos );
 
         return basic_string_view( data() + pos, rlen );
     }
@@ -598,14 +561,14 @@ public:
 
     BOOST_CXX14_CONSTEXPR int compare( basic_string_view str ) const BOOST_NOEXCEPT
     {
-        std::size_t rlen = (std::min)( size(), str.size() );
+        std::size_t rlen = std::min( size(), str.size() );
 
         int cmp = traits_type::compare( data(), str.data(), rlen );
 
         if( cmp != 0 ) return cmp;
 
         if( size() == str.size() ) return 0;
-
+        
         return size() < str.size()? -1: +1;
     }
 
@@ -681,7 +644,7 @@ public:
 
         Ch const* r = traits_type::find( data() + pos, size() - pos, c );
 
-        return r? static_cast<size_type>( r - data() ): npos;
+        return r? r - data(): npos;
     }
 
     BOOST_CXX14_CONSTEXPR size_type find( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
@@ -696,11 +659,11 @@ public:
 
         for( ;; )
         {
-            p = traits_type::find( p, static_cast<size_type>( last - p ), s[0] );
+            p = traits_type::find( p, last - p, s[0] );
 
             if( p == 0 ) break;
 
-            if( traits_type::compare( p + 1, s + 1, n - 1 ) == 0 ) return static_cast<size_type>( p - data() );
+            if( traits_type::compare( p + 1, s + 1, n - 1 ) == 0 ) return p - data();
 
             ++p;
         }
@@ -1188,7 +1151,7 @@ public:
 template<class Ch> std::basic_ostream<Ch>& operator<<( std::basic_ostream<Ch>& os, basic_string_view<Ch> str )
 {
     Ch const* p = str.data();
-    std::streamsize n = static_cast<std::streamsize>( str.size() );
+    std::streamsize n = str.size();
 
     std::streamsize m = os.width();
 
@@ -1238,41 +1201,5 @@ typedef basic_string_view<char8_t> u8string_view;
 
 } // namespace core
 } // namespace boost
-
-// std::common_reference support
-// needed for iterators that have reference=string_view and value_type=std::string
-
-#if !defined(BOOST_NO_CXX20_HDR_CONCEPTS)
-
-template<class Ch, class A, template<class> class Q1, template<class> class Q2>
-struct std::basic_common_reference<
-    boost::core::basic_string_view<Ch>,
-    std::basic_string<Ch, std::char_traits<Ch>, A>,
-    Q1, Q2>
-{
-    using type = boost::core::basic_string_view<Ch>;
-};
-
-template<class Ch, class A, template<class> class Q1, template<class> class Q2>
-struct std::basic_common_reference<
-    std::basic_string<Ch, std::char_traits<Ch>, A>,
-    boost::core::basic_string_view<Ch>,
-    Q1, Q2>
-{
-    using type = boost::core::basic_string_view<Ch>;
-};
-
-#endif
-
-// std::format support
-
-#if !defined(BOOST_NO_CXX20_HDR_FORMAT)
-
-template<class Ch, class Ch2>
-struct std::formatter<boost::core::basic_string_view<Ch>, Ch2>: std::formatter<std::basic_string_view<Ch>, Ch2>
-{
-};
-
-#endif
 
 #endif  // #ifndef BOOST_CORE_STRING_VIEW_HPP_INCLUDED

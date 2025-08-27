@@ -2,8 +2,8 @@
 // experimental/coro/exception.cpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2021-2023 Klemens D. Morgenstern
-//                         (klemens dot morgenstern at gmx dot net)
+// Copyright (c) 2021 Klemens D. Morgenstern
+//                    (klemens dot morgenstern at gmx dot net)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -61,10 +61,7 @@ boost::asio::experimental::coro<int> throwing_generator(
 
   int i = 0;
   while (i < 3)
-  {
-    last = ++i;
-    co_yield last;
-  }
+    co_yield last = ++i;
 
   throw std::runtime_error("throwing-generator");
 }

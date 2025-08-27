@@ -30,7 +30,6 @@ public:
         using boost::math::constants::pi;
         using std::isfinite;
         using std::floor;
-        using std::ceil;
         Real y = 0;
         Real x = (t - m_t0)/m_h;
         Real z = x;
@@ -41,6 +40,7 @@ public:
         auto end = m_y.end();
         while(it != end)
         {
+
             y += *it++/z;
             z -= 1;
         }
@@ -48,7 +48,7 @@ public:
         if (!isfinite(y))
         {
             BOOST_MATH_ASSERT_MSG(floor(x) == ceil(x), "Floor and ceiling should be equal.\n");
-            auto i = static_cast<size_t>(floor(x));
+            size_t i = static_cast<size_t>(floor(x));
             if (i & 1)
             {
                 return -m_y[i];
@@ -62,13 +62,12 @@ public:
         using boost::math::constants::pi;
         using std::isfinite;
         using std::floor;
-        using std::ceil;
 
         Real x = (t - m_t0)/m_h;
         if (ceil(x) == x) {
             Real s = 0;
-            auto j = static_cast<long>(x);
-            auto n = static_cast<long>(m_y.size());
+            long j = static_cast<long>(x);
+            long n = m_y.size();
             for (long i = 0; i < n; ++i)
             {
                 if (j - i != 0)

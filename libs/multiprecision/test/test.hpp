@@ -1,7 +1,5 @@
 ///////////////////////////////////////////////////////////////
-//  Copyright 2012 - 2025 John Maddock.
-//  Copyright 2025 Christopher Kormanyos.
-//  Distributed under the Boost
+//  Copyright 2012 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 //
@@ -9,14 +7,13 @@
 #ifndef BOOST_MULTIPRECISION_TEST_HPP
 #define BOOST_MULTIPRECISION_TEST_HPP
 
-#include <boost/detail/lightweight_test.hpp>
-#include <boost/current_function.hpp>
-#include <boost/multiprecision/number.hpp>
-#include <boost/multiprecision/detail/standalone_config.hpp>
-
 #include <limits>
 #include <cmath>
 #include <typeinfo>
+
+#include <boost/detail/lightweight_test.hpp>
+#include <boost/current_function.hpp>
+#include <boost/multiprecision/number.hpp>
 
 namespace detail {
 
@@ -153,30 +150,6 @@ void report_unexpected_exception(const E& e, int severity, const char* file, int
    BOOST_MP_REPORT_SEVERITY(severity);
 }
 
-#ifdef BOOST_HAS_INT128
-
-std::ostream& operator<<(std::ostream& os, boost::int128_type val)
-{
-   std::stringstream ss;
-   ss << std::hex << "0x" << static_cast<std::uint64_t>(static_cast<boost::uint128_type>(val) >> 64) << static_cast<std::uint64_t>(val);
-   return os << ss.str();
-}
-
-std::ostream& operator<<(std::ostream& os, boost::uint128_type val)
-{
-   std::stringstream ss;
-   ss << std::hex << "0x" << static_cast<std::uint64_t>(val >> 64) << static_cast<std::uint64_t>(val);
-   return os << ss.str();
-}
-
-#endif
-#if defined(BOOST_HAS_FLOAT128) && !defined(BOOST_MP_HAVE_CSTDFLOAT)
-std::ostream& operator<<(std::ostream& os, __float128 f)
-{
-   return os << static_cast<long double>(f);
-}
-#endif
-
 #ifndef BOOST_NO_EXCEPTIONS
 #define BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)                                       \
    catch (const std::exception& e)                                                          \
@@ -188,14 +161,14 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
       std::cout << "Exception of unknown type was thrown" << std::endl;                     \
       report_severity(severity);                                                            \
    }
-#define BOOST_MP_TEST_TRY try
+#define BOOST_MP_TRY try
 #else
 #define BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
-#define BOOST_MP_TEST_TRY
+#define BOOST_MP_TRY
 #endif
 
 #define BOOST_CHECK_IMP(x, severity)                                                        \
-   BOOST_MP_TEST_TRY                                                                        \
+   BOOST_MP_TRY                                                                             \
    {                                                                                        \
       if (x)                                                                                \
       {                                                                                     \
@@ -213,7 +186,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
 #define BOOST_REQUIRE(x) BOOST_CHECK_IMP(x, abort_on_fail)
 
 #define BOOST_CLOSE_IMP(x, y, tol, severity)                                                \
-   BOOST_MP_TEST_TRY                                                                        \
+   BOOST_MP_TRY                                                                             \
    {                                                                                        \
       if (relative_error(x, y) > tol)                                                       \
       {                                                                                     \
@@ -230,7 +203,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_EQUAL_IMP(x, y, severity)                                              \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!((x) == (y)))                                                             \
       {                                                                              \
@@ -245,7 +218,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_NE_IMP(x, y, severity)                                                 \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!(x != y))                                                                 \
       {                                                                              \
@@ -260,7 +233,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_LT_IMP(x, y, severity)                                                 \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!(x < y))                                                                  \
       {                                                                              \
@@ -275,7 +248,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_GT_IMP(x, y, severity)                                                 \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!(x > y))                                                                  \
       {                                                                              \
@@ -290,7 +263,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_LE_IMP(x, y, severity)                                                 \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!(x <= y))                                                                 \
       {                                                                              \
@@ -305,7 +278,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 
 #define BOOST_GE_IMP(x, y, severity)                                                 \
-   BOOST_MP_TEST_TRY                                                                 \
+   BOOST_MP_TRY                                                                      \
    {                                                                                 \
       if (!(x >= y))                                                                 \
       {                                                                              \
@@ -321,7 +294,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
 
 #ifndef BOOST_NO_EXCEPTIONS
 #define BOOST_MT_CHECK_THROW_IMP(x, E, severity)                                                                   \
-   BOOST_MP_TEST_TRY                                                                                               \
+   BOOST_MP_TRY                                                                                                    \
    {                                                                                                               \
       x;                                                                                                           \
       BOOST_MP_REPORT_WHERE << " Expected exception not thrown in expression " << BOOST_STRINGIZE(x) << std::endl; \
@@ -330,10 +303,7 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
    catch (const E&) {}                                                                                             \
    BOOST_MP_UNEXPECTED_EXCEPTION_CHECK(severity)
 #else
-#define BOOST_MT_CHECK_THROW_IMP(x, E, severity)       \
-   static_cast<void>(x);                               \
-   static_cast<void>(E);                               \
-   static_cast<void>(severity)
+#define BOOST_MT_CHECK_THROW_IMP(x, E, severity)
 #endif
 
 #define BOOST_CHECK_CLOSE(x, y, tol) BOOST_CLOSE_IMP(x, y, ((tol / (100 * epsilon_of(x)))), error_on_fail)
@@ -372,4 +342,4 @@ std::ostream& operator<<(std::ostream& os, __float128 f)
 #define BOOST_WARN_THROW(x, E) BOOST_MT_CHECK_THROW_IMP(x, E, warn_on_fail)
 #define BOOST_REQUIRE_THROW(x, E) BOOST_MT_CHECK_THROW_IMP(x, E, abort_on_fail)
 
-#endif // BOOST_MULTIPRECISION_TEST_HPP
+#endif

@@ -16,6 +16,7 @@
 #include "varray.hpp"
 #include <boost/container/vector.hpp>
 #include <boost/container/static_vector.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #include "../test/movable_int.hpp"
 #include <vector>

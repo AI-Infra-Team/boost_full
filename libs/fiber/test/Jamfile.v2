@@ -13,12 +13,11 @@ import os ;
 import path ;
 import testing ;
 import toolset ;
-import-search /boost/config/checks ;
-import config : requires ;
+import ../../config/checks/config : requires ;
 
-project
+project boost/fiber/test
     : requirements
-      <library>/boost/test//boost_unit_test_framework
+      <library>../../test/build//boost_unit_test_framework
       <library>/boost/context//boost_context
       <library>/boost/fiber//boost_fiber
       <library>/boost/thread//boost_thread

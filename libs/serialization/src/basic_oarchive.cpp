@@ -68,6 +68,13 @@ class basic_oarchive_impl {
                 return false;
             return class_id < rhs.class_id;
         }
+        aobject & operator=(const aobject & rhs)
+        {
+            address = rhs.address;
+            class_id = rhs.class_id;
+            object_id = rhs.object_id;
+            return *this;
+        }
         aobject(
             const void *a,
             class_id_type class_id_,
@@ -262,11 +269,11 @@ basic_oarchive_impl::save_object(
     }
 
     // we're not tracking this type of object
-    if(! co.m_bos_ptr->tracking(m_flags)){
+    if(! bos.tracking(m_flags)){
         // just windup the preamble - no object id to write
         ar.end_preamble();
         // and save the data
-        (co.m_bos_ptr->save_object_data)(ar, t);
+        (bos.save_object_data)(ar, t);
         return;
     }
 
@@ -284,7 +291,7 @@ basic_oarchive_impl::save_object(
         ar.vsave(oid);
         ar.end_preamble();
         // and data
-        (co.m_bos_ptr->save_object_data)(ar, t);
+        (bos.save_object_data)(ar, t);
         return;
     }
 
@@ -353,7 +360,7 @@ basic_oarchive_impl::save_pointer(
     }
 
     // if we're not tracking
-    if(! co.m_bos_ptr->tracking(m_flags)){
+    if(! bos.tracking(m_flags)){
         // just save the data itself
         ar.end_preamble();
         serialization::state_saver<const void *> x(pending_object);

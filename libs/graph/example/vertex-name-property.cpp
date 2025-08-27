@@ -67,7 +67,8 @@ int main(int argc, const char** argv)
     }
 
     // Obtain internal property map from the graph
-    auto name_map = get(vertex_name, g);
+    property_map< graph_type, vertex_name_t >::type name_map
+        = get(vertex_name, g);
     read_graph_file(file_in, name_in, g, name_map);
 
     // Create storage for last modified times

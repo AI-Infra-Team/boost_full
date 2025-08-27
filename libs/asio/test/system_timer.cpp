@@ -2,7 +2,7 @@
 // system_timer.cpp
 // ~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,15 +21,27 @@
 // Test that header file is self-contained.
 #include <boost/asio/system_timer.hpp>
 
-#include <functional>
+#include "unit_test.hpp"
+
+#if defined(BOOST_ASIO_HAS_STD_CHRONO)
+
 #include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/detail/thread.hpp>
-#include "unit_test.hpp"
 
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <boost/bind/bind.hpp>
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <functional>
+#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
+
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+namespace bindns = boost;
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
 namespace bindns = std;
+#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
 
 void increment(int* count)
 {
@@ -225,9 +237,11 @@ struct timer_handler
 {
   timer_handler() {}
   void operator()(const boost::system::error_code&) {}
+#if defined(BOOST_ASIO_HAS_MOVE)
   timer_handler(timer_handler&&) {}
 private:
   timer_handler(const timer_handler&);
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 };
 
 void system_timer_cancel_test()
@@ -276,18 +290,18 @@ struct custom_allocation_timer_handler
       typedef allocator<U> other;
     };
 
-    explicit allocator(int* count) noexcept
+    explicit allocator(int* count) BOOST_ASIO_NOEXCEPT
       : count_(count)
     {
     }
 
-    allocator(const allocator& other) noexcept
+    allocator(const allocator& other) BOOST_ASIO_NOEXCEPT
       : count_(other.count_)
     {
     }
 
     template <typename U>
-    allocator(const allocator<U>& other) noexcept
+    allocator(const allocator<U>& other) BOOST_ASIO_NOEXCEPT
       : count_(other.count_)
     {
     }
@@ -324,7 +338,7 @@ struct custom_allocation_timer_handler
 
   typedef allocator<int> allocator_type;
 
-  allocator_type get_allocator() const noexcept
+  allocator_type get_allocator() const BOOST_ASIO_NOEXCEPT
   {
     return allocator_type(count_);
   }
@@ -392,6 +406,7 @@ void system_timer_thread_test()
   BOOST_ASIO_CHECK(count == 1);
 }
 
+#if defined(BOOST_ASIO_HAS_MOVE)
 boost::asio::system_timer make_timer(boost::asio::io_context& ioc, int* count)
 {
   boost::asio::system_timer t(ioc);
@@ -412,9 +427,11 @@ io_context_system_timer make_convertible_timer(boost::asio::io_context& ioc, int
   t.async_wait(bindns::bind(increment, count));
   return t;
 }
+#endif
 
 void system_timer_move_test()
 {
+#if defined(BOOST_ASIO_HAS_MOVE)
   boost::asio::io_context io_context1;
   boost::asio::io_context io_context2;
   int count = 0;
@@ -448,6 +465,7 @@ void system_timer_move_test()
   io_context1.run();
 
   BOOST_ASIO_CHECK(count == 4);
+#endif // defined(BOOST_ASIO_HAS_MOVE)
 }
 
 void system_timer_op_cancel_test()
@@ -498,3 +516,10 @@ BOOST_ASIO_TEST_SUITE
   BOOST_ASIO_TEST_CASE(system_timer_move_test)
   BOOST_ASIO_TEST_CASE(system_timer_op_cancel_test)
 )
+#else // defined(BOOST_ASIO_HAS_STD_CHRONO)
+BOOST_ASIO_TEST_SUITE
+(
+  "system_timer",
+  BOOST_ASIO_TEST_CASE(null_test)
+)
+#endif // defined(BOOST_ASIO_HAS_STD_CHRONO)

@@ -7,7 +7,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/lightweight_test_trait.hpp>
 #include <boost/histogram/detail/relaxed_equal.hpp>
-#include "ostream.hpp"
+#include "std_ostream.hpp"
 
 using namespace boost::histogram::detail;
 

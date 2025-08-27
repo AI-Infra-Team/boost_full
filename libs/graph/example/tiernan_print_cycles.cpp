@@ -28,7 +28,9 @@ template < typename OutputStream > struct cycle_printer
     {
         // Get the property map containing the vertex indices
         // so we can print them.
-        auto indices = get(vertex_index, g);
+        typedef
+            typename property_map< Graph, vertex_index_t >::const_type IndexMap;
+        IndexMap indices = get(vertex_index, g);
 
         // Iterate over path printing each vertex that forms the cycle.
         typename Path::const_iterator i, end = p.end();

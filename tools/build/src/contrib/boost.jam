@@ -5,7 +5,7 @@
 
 # Boost library support module.
 #
-# This module allows to use the boost library from B2 projects. The
+# This module allows to use the boost library from boost-build projects. The
 # location of a boost source tree or the path to a pre-built version of the
 # library can be configured from either site-config.jam or user-config.jam. If
 # no location is configured the module looks for a BOOST_ROOT environment
@@ -48,7 +48,6 @@
 # find the correct pre-built library.
 #
 
-import args ;
 import common ;
 import modules ;
 import numbers ;
@@ -59,7 +58,10 @@ import toolset ;
 
 .boost.auto_config = [ property-set.create <layout>system ] ;
 
-.debug-configuration = [ args.get-arg debug-configuration ] ;
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
 
 # Configuration of the boost library to use.
 #
@@ -235,7 +237,6 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std thread              : BOOST_THREAD_DYN_DLL  ;
     boost_lib_std timer               : BOOST_TIMER_DYN_DLL  ;
     boost_lib_std unit_test_framework : BOOST_TEST_DYN_LINK  ;
-    boost_lib_std url                 : BOOST_URL_DYN_LINK  ;
     boost_lib_std wave                : BOOST_WAVE_DYN_LINK  ;
     boost_lib_std wserialization      : BOOST_SERIALIZATION_DYN_LINK ;
 }

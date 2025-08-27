@@ -10,16 +10,15 @@
 #ifndef BOOST_JSON_NULL_RESOURCE_HPP
 #define BOOST_JSON_NULL_RESOURCE_HPP
 
-#include <boost/container/pmr/memory_resource.hpp>
 #include <boost/json/detail/config.hpp>
+#include <boost/json/memory_resource.hpp>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 /** Return a pointer to the null resource.
 
-    This memory resource always throws the exception @ref std::bad_alloc in
-    calls to `allocate`.
+    This memory resource always throws the exception
+    `std::bad_alloc` in calls to `allocate`.
 
     @par Complexity
     Constant.
@@ -28,10 +27,9 @@ namespace json {
     No-throw guarantee.
 */
 BOOST_JSON_DECL
-boost::container::pmr::memory_resource*
+memory_resource*
 get_null_resource() noexcept;
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

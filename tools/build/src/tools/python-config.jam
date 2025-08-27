@@ -4,7 +4,6 @@
 
 # Automatic configuration for Python tools and librries. To use, just import this module.
 
-import args ;
 import os ;
 import toolset : using ;
 
@@ -18,7 +17,7 @@ if [ os.name ] = NT
 
         if $(python-path)
         {
-            [ args.get-arg debug-configuration ]
+            if --debug-configuration in [ modules.peek : ARGV ]
             {
                 ECHO "notice:" using python ":" $(python-version) ":" $(python-path) ;
             }

@@ -33,6 +33,5 @@
   <xsl:include href="relative-href.xsl"/>
   <xsl:include href="callout.xsl"/>
   <xsl:include href="html-base.xsl"/>
-  <xsl:include href="sections.xsl"/>
 
 </xsl:stylesheet>

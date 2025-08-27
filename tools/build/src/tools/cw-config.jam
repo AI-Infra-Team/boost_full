@@ -4,7 +4,6 @@
 
 # Automatic configuration for CodeWarrior toolset. To use, just import this module.
 
-import args ;
 import os ;
 import toolset : using ;
 
@@ -25,7 +24,7 @@ if [ os.name ] = NT
 
         if $(cw-path)
         {
-            if [ args.get-arg debug-configuration ]
+            if --debug-configuration in [ modules.peek : ARGV ]
             {
                 ECHO "notice:" using cw ":" $(cw-version) ":" "$(cw-path)\\Other Metrowerks Tools\\Command Line Tools\\mwcc.exe" ;
             }

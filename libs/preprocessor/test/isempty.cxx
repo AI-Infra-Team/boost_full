@@ -15,7 +15,7 @@
 
 # include <boost/preprocessor/facilities/empty.hpp>
 # include <boost/preprocessor/facilities/is_empty.hpp>
-# include "test.h"
+# include <libs/preprocessor/test/test.h>
 
 #define DATA
 #define OBJECT OBJECT2

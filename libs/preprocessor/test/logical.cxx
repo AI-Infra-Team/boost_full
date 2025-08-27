@@ -11,7 +11,7 @@
 #
 # include <boost/preprocessor/config/limits.hpp>
 # include <boost/preprocessor/logical.hpp>
-# include "test.h"
+# include <libs/preprocessor/test/test.h>
 
 BEGIN BOOST_PP_NOT(0) == 1 END
 BEGIN BOOST_PP_NOT(2) == 0 END

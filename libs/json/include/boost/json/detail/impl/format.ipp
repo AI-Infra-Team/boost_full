@@ -14,8 +14,7 @@
 #include <boost/json/detail/ryu/ryu.hpp>
 #include <cstring>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 /*  Reference work:
@@ -112,14 +111,13 @@ format_int64(
 
 unsigned
 format_double(
-    char* dest, double d, bool allow_infinity_and_nan) noexcept
+    char* dest, double d) noexcept
 {
     return static_cast<int>(
-        ryu::d2s_buffered_n(d, dest, allow_infinity_and_nan));
+        ryu::d2s_buffered_n(d, dest));
 }
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

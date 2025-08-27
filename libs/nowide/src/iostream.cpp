@@ -1,8 +1,9 @@
-// Copyright (c) 2012 Artyom Beilis (Tonkikh)
-// Copyright (c) 2020-2021 Alexander Grund
+//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2020-2021 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_NOWIDE_SOURCE
 #include <boost/nowide/iostream.hpp>
@@ -72,42 +73,41 @@ namespace nowide {
             {}
 
         protected:
+            // Can't test this on CI so exclude
+            // LCOV_EXCL_START
             bool do_read(wchar_t* buffer, std::size_t num_chars_to_read, std::size_t& num_chars_read) override
             {
-                DWORD size = 0;
-                const auto to_read_size = static_cast<DWORD>(num_chars_to_read);
-                const bool result = ReadConsoleW(handle_, buffer, to_read_size, &size, 0) != 0;
-                num_chars_read = size;
-                return result;
+                DWORD size = 0;                                                                 // LCOV_EXCL_LINE
+                const auto to_read_size = static_cast<DWORD>(num_chars_to_read);                // LCOV_EXCL_LINE
+                const bool result = ReadConsoleW(handle_, buffer, to_read_size, &size, 0) != 0; // LCOV_EXCL_LINE
+                num_chars_read = size;                                                          // LCOV_EXCL_LINE
+                return result;                                                                  // LCOV_EXCL_LINE
             }
+            // LCOV_EXCL_STOP
         };
 
-        winconsole_ostream::winconsole_ostream(const target_stream target,
-                                               const bool isBuffered,
-                                               winconsole_ostream* tieStream) :
-            std::ostream(nullptr)
+        winconsole_ostream::winconsole_ostream(int fd, winconsole_ostream* tieStream) : std::ostream(0)
         {
-            const HANDLE h = GetStdHandle(target == target_stream::output ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
-
+            HANDLE h = 0;
+            switch(fd)
+            {
+            case 1: h = GetStdHandle(STD_OUTPUT_HANDLE); break;
+            case 2: h = GetStdHandle(STD_ERROR_HANDLE); break;
+            }
             if(is_atty_handle(h))
             {
                 d.reset(new console_output_buffer(h));
-                rdbuf(d.get());
+                std::ostream::rdbuf(d.get());
             } else
             {
-                switch(target)
-                {
-                case target_stream::error: rdbuf(std::cerr.rdbuf()); break;
-                case target_stream::log: rdbuf(std::clog.rdbuf()); break;
-                case target_stream::output: rdbuf(std::cout.rdbuf()); break;
-                }
+                std::ostream::rdbuf(fd == 1 ? std::cout.rdbuf() : std::cerr.rdbuf());
+                assert(rdbuf());
             }
-            assert(rdbuf());
-
             if(tieStream)
+            {
                 tie(tieStream);
-            if(!isBuffered)
-                setf(ios_base::unitbuf);
+                setf(ios_base::unitbuf); // If tieStream is set, this is cerr -> set unbuffered
+            }
         }
         winconsole_ostream::~winconsole_ostream()
         {
@@ -139,7 +139,7 @@ namespace nowide {
 
     } // namespace detail
 
-// Make sure those are initialized as early as possible
+    // Make sure those are initialized as early as possible
 #ifdef BOOST_MSVC
 #pragma warning(disable : 4073)
 #pragma init_seg(lib)
@@ -149,11 +149,10 @@ namespace nowide {
 #else
 #define BOOST_NOWIDE_INIT_PRIORITY
 #endif
-    using target_stream = detail::winconsole_ostream::target_stream;
-    detail::winconsole_ostream cout BOOST_NOWIDE_INIT_PRIORITY(target_stream::output, true, nullptr);
+    detail::winconsole_ostream cout BOOST_NOWIDE_INIT_PRIORITY(1, nullptr);
     detail::winconsole_istream cin BOOST_NOWIDE_INIT_PRIORITY(&cout);
-    detail::winconsole_ostream cerr BOOST_NOWIDE_INIT_PRIORITY(target_stream::error, false, &cout);
-    detail::winconsole_ostream clog BOOST_NOWIDE_INIT_PRIORITY(target_stream::log, true, nullptr);
+    detail::winconsole_ostream cerr BOOST_NOWIDE_INIT_PRIORITY(2, &cout);
+    detail::winconsole_ostream clog BOOST_NOWIDE_INIT_PRIORITY(2, nullptr);
 } // namespace nowide
 } // namespace boost
 

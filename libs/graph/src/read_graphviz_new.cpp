@@ -53,7 +53,6 @@ namespace boost
 
 namespace read_graphviz_detail
 {
-    static const long max_subgraph_nesting_level = 255;
     struct token
     {
         enum token_type
@@ -208,7 +207,7 @@ namespace read_graphviz_detail
 
         tokenizer(const std::string& str) : begin(str.begin()), end(str.end())
         {
-            // std::string end_of_token = "(?=(?:\\W))"; // SEHE: unused?
+            std::string end_of_token = "(?=(?:\\W))";
             std::string whitespace = "(?:\\s+)";
             std::string slash_slash_comment = "(?://.*?$)";
             std::string slash_star_comment = "(?:/\\*.*?\\*/)";
@@ -528,7 +527,6 @@ namespace read_graphviz_detail
         std::map< subgraph_name, subgraph_info > subgraphs;
         std::string current_subgraph_name;
         int sgcounter; // Counter for anonymous subgraphs
-        long sgnesting_level;
         std::set< std::pair< node_name, node_name > >
             existing_edges; // Used for checking in strict graphs
 
@@ -540,7 +538,7 @@ namespace read_graphviz_detail
         subgraph_member_list& current_members() { return current().members; }
 
         parser(const std::string& gr, parser_result& result)
-        : the_tokenizer(gr), lookahead(), r(result), sgcounter(0), sgnesting_level(0)
+        : the_tokenizer(gr), lookahead(), r(result), sgcounter(0)
         {
             current_subgraph_name = "___root___";
             current() = subgraph_info(); // Initialize root graph
@@ -775,18 +773,10 @@ namespace read_graphviz_detail
             bool is_anonymous = true;
             if (first_token.type == token::kw_subgraph)
             {
-                switch (peek().type)
+                if (peek().type == token::identifier)
                 {
-                case token::identifier:
                     name = get().normalized_value;
                     is_anonymous = false;
-                    break;
-                case token::left_brace:
-                    is_anonymous = true;
-                    break;
-                default:
-                    error("Subgraph reference needs a name");
-                    break;
                 }
             }
             if (is_anonymous)
@@ -800,30 +790,25 @@ namespace read_graphviz_detail
                     = current(); // Initialize properties and defaults
                 subgraphs[name].members.clear(); // Except member list
             }
-            if (!is_anonymous && peek().type != token::left_brace)
+            if (first_token.type == token::kw_subgraph
+                && peek().type != token::left_brace)
             {
+                if (is_anonymous)
+                    error("Subgraph reference needs a name");
                 return name;
             }
             subgraph_name old_sg = current_subgraph_name;
-            if (++sgnesting_level > max_subgraph_nesting_level)
-            {
-                error("Exceeded maximum subgraph nesting level");
-            }
             current_subgraph_name = name;
-            if (first_token.type != token::left_brace)
-            {
-                if (peek().type == token::left_brace)
-                    get();
-                else
-                    error("Wanted left brace to start subgraph");
-            }
+            if (peek().type == token::left_brace)
+                get();
+            else
+                error("Wanted left brace to start subgraph");
             parse_stmt_list();
             if (peek().type == token::right_brace)
                 get();
             else
                 error("Wanted right brace to end subgraph");
             current_subgraph_name = old_sg;
-            sgnesting_level -= 1;
             return name;
         }
 
@@ -897,7 +882,6 @@ namespace read_graphviz_detail
                           "port location");
                 }
             }
-            break;
             default:
                 break;
             }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright (C) 2008. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
@@ -66,8 +66,7 @@ def testSORTDuration():
 
     f = open(t.workpath("test.jam"), "w")
     print("data = ", file=f)
-    # high value will cause stack exhaustion in compile_append_chain
-    for i in range(0, 10000):
+    for i in range(0, 20000):
         if i % 2:
             print('"aaa"', file=f)
         else:

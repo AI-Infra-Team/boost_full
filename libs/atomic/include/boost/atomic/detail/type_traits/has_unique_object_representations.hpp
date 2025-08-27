@@ -14,15 +14,17 @@
 #ifndef BOOST_ATOMIC_DETAIL_TYPE_TRAITS_HAS_UNIQUE_OBJECT_REPRESENTATIONS_HPP_INCLUDED_
 #define BOOST_ATOMIC_DETAIL_TYPE_TRAITS_HAS_UNIQUE_OBJECT_REPRESENTATIONS_HPP_INCLUDED_
 
-#include <type_traits>
 #include <boost/atomic/detail/config.hpp>
+#if !defined(BOOST_ATOMIC_DETAIL_NO_CXX11_BASIC_HDR_TYPE_TRAITS)
+#include <type_traits>
+#endif
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
 #if (defined(__cpp_lib_has_unique_object_representations) && __cpp_lib_has_unique_object_representations >= 201606) || \
-    (defined(_CPPLIB_VER) && _CPPLIB_VER >= 650 && defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION >= 141 && defined(_HAS_CXX17) && _HAS_CXX17 != 0)
+    (defined(_CPPLIB_VER) && _CPPLIB_VER >= 650 && defined(_HAS_CXX17) && _HAS_CXX17 != 0)
 
 namespace boost {
 namespace atomics {
@@ -48,6 +50,7 @@ using std::has_unique_object_representations;
 #if defined(BOOST_ATOMIC_DETAIL_HAS_UNIQUE_OBJECT_REPRESENTATIONS)
 
 #include <cstddef>
+#include <boost/atomic/detail/type_traits/integral_constant.hpp>
 
 namespace boost {
 namespace atomics {
@@ -55,7 +58,7 @@ namespace detail {
 
 template< typename T >
 struct has_unique_object_representations :
-    public std::integral_constant< bool, BOOST_ATOMIC_DETAIL_HAS_UNIQUE_OBJECT_REPRESENTATIONS(T) >
+    public atomics::detail::integral_constant< bool, BOOST_ATOMIC_DETAIL_HAS_UNIQUE_OBJECT_REPRESENTATIONS(T) >
 {
 };
 

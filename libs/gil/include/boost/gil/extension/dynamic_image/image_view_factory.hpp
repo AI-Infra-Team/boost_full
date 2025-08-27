@@ -174,7 +174,7 @@ auto flipped_up_down_view(any_image_view<Views...> const& src)
     -> typename dynamic_y_step_type<any_image_view<Views...>>::type
 {
     using result_view_t = typename dynamic_y_step_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::flipped_up_down_view_fn<result_view_t>(), src);
+    return apply_operation(src, detail::flipped_up_down_view_fn<result_view_t>());
 }
 
 /// \ingroup ImageViewTransformationsFlipLR
@@ -185,40 +185,39 @@ auto flipped_left_right_view(any_image_view<Views...> const& src)
     -> typename dynamic_x_step_type<any_image_view<Views...>>::type
 {
     using result_view_t = typename dynamic_x_step_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::flipped_left_right_view_fn<result_view_t>(), src);
+    return apply_operation(src, detail::flipped_left_right_view_fn<result_view_t>());
 }
 
 /// \ingroup ImageViewTransformationsTransposed
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename ...Views>
 inline
-auto transposed_view(any_image_view<Views...> const& src)
+auto transposed_view(const any_image_view<Views...>& src)
     -> typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type
 {
     using result_view_t = typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::tranposed_view_fn<result_view_t>(), src);
+    return apply_operation(src, detail::tranposed_view_fn<result_view_t>());
 }
 
 /// \ingroup ImageViewTransformations90CW
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename ...Views>
 inline
-auto rotated90cw_view(any_image_view<Views...> const& src)
+auto rotated90cw_view(const any_image_view<Views...>& src)
     -> typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type
 {
     using result_view_t = typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::rotated90cw_view_fn<result_view_t>(), src);
+    return apply_operation(src,detail::rotated90cw_view_fn<result_view_t>());
 }
 
 /// \ingroup ImageViewTransformations90CCW
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename ...Views>
 inline
-auto rotated90ccw_view(any_image_view<Views...> const& src)
+auto rotated90ccw_view(const any_image_view<Views...>& src)
     -> typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type
 {
-    using result_view_t = typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::rotated90ccw_view_fn<result_view_t>(), src);
+    return apply_operation(src,detail::rotated90ccw_view_fn<typename dynamic_xy_step_transposed_type<any_image_view<Views...>>::type>());
 }
 
 /// \ingroup ImageViewTransformations180
@@ -228,8 +227,8 @@ inline
 auto rotated180_view(any_image_view<Views...> const& src)
     -> typename dynamic_xy_step_type<any_image_view<Views...>>::type
 {
-    using result_view_t = typename dynamic_xy_step_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::rotated180_view_fn<result_view_t>(), src);
+    using step_type = typename dynamic_xy_step_type<any_image_view<Views...>>::type;
+    return apply_operation(src, detail::rotated180_view_fn<step_type>());
 }
 
 /// \ingroup ImageViewTransformationsSubimage
@@ -243,7 +242,7 @@ auto subimage_view(
     -> any_image_view<Views...>
 {
     using subimage_view_fn = detail::subimage_view_fn<any_image_view<Views...>>;
-    return variant2::visit(subimage_view_fn(topleft, dimensions), src);
+    return apply_operation(src, subimage_view_fn(topleft, dimensions));
 }
 
 /// \ingroup ImageViewTransformationsSubimage
@@ -256,7 +255,7 @@ auto subimage_view(
     -> any_image_view<Views...>
 {
     using subimage_view_fn = detail::subimage_view_fn<any_image_view<Views...>>;
-    return variant2::visit(subimage_view_fn(point_t(x_min, y_min),point_t(width, height)), src);
+    return apply_operation(src, subimage_view_fn(point_t(x_min, y_min),point_t(width, height)));
 }
 
 /// \ingroup ImageViewTransformationsSubsampled
@@ -268,7 +267,7 @@ auto subsampled_view(any_image_view<Views...> const& src, point_t const& step)
 {
     using step_type = typename dynamic_xy_step_type<any_image_view<Views...>>::type;
     using subsampled_view = detail::subsampled_view_fn<step_type>;
-    return variant2::visit(subsampled_view(step), src);
+    return apply_operation(src, subsampled_view(step));
 }
 
 /// \ingroup ImageViewTransformationsSubsampled
@@ -280,7 +279,7 @@ auto subsampled_view(any_image_view<Views...> const& src, std::ptrdiff_t x_step,
 {
     using step_type = typename dynamic_xy_step_type<any_image_view<Views...>>::type;
     using subsampled_view_fn = detail::subsampled_view_fn<step_type>;
-    return variant2::visit(subsampled_view_fn(point_t(x_step, y_step)), src);
+    return apply_operation(src, subsampled_view_fn(point_t(x_step, y_step)));
 }
 
 namespace detail {
@@ -305,21 +304,29 @@ struct nth_channel_view_type<any_image_view<Views...>>
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename ...Views>
 inline
-auto nth_channel_view(any_image_view<Views...> const& src, int n)
+auto nth_channel_view(const any_image_view<Views...>& src, int n)
     -> typename nth_channel_view_type<any_image_view<Views...>>::type
 {
     using result_view_t = typename nth_channel_view_type<any_image_view<Views...>>::type;
-    return variant2::visit(detail::nth_channel_view_fn<result_view_t>(n), src);
+    return apply_operation(src,detail::nth_channel_view_fn<result_view_t>(n));
 }
 
 namespace detail {
+
+template <typename View, typename DstP, typename CC>
+struct get_ccv_type : color_converted_view_type<View, DstP, CC> {};
 
 template <typename Views, typename DstP, typename CC>
 struct views_get_ccv_type
 {
 private:
-   template <typename T>
-    using ccvt = typename color_converted_view_type<T, DstP, CC>::type;
+    // FIXME: Remove class name injection with detail:: qualification
+    // Required as workaround for MP11 issue that treats unqualified metafunction
+    // in the class definition of the same name as the specialization (Peter Dimov):
+    //    invalid template argument for template parameter 'F', expected a class template
+    template <typename T>
+    using ccvt = detail::get_ccv_type<T, DstP, CC>;
+
 public:
     using type = mp11::mp_transform<ccvt, Views>;
 };
@@ -332,7 +339,7 @@ template <typename ...Views, typename DstP, typename CC>
 struct color_converted_view_type<any_image_view<Views...>,DstP,CC>
 {
     //using type = any_image_view<typename detail::views_get_ccv_type<Views, DstP, CC>::type>;
-    using type = typename detail::views_get_ccv_type<any_image_view<Views...>, DstP, CC>::type;
+    using type = detail::views_get_ccv_type<any_image_view<Views...>, DstP, CC>;
 };
 
 /// \ingroup ImageViewTransformationsColorConvert
@@ -340,11 +347,11 @@ struct color_converted_view_type<any_image_view<Views...>,DstP,CC>
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename DstP, typename ...Views, typename CC>
 inline
-auto color_converted_view(any_image_view<Views...> const& src, CC cc)
+auto color_converted_view(const any_image_view<Views...>& src, CC)
     -> typename color_converted_view_type<any_image_view<Views...>, DstP, CC>::type
 {
     using cc_view_t = typename color_converted_view_type<any_image_view<Views...>, DstP, CC>::type;
-    return variant2::visit(detail::color_converted_view_fn<DstP, cc_view_t, CC>(cc), src);
+    return apply_operation(src, detail::color_converted_view_fn<DstP, cc_view_t>());
 }
 
 /// \ingroup ImageViewTransformationsColorConvert
@@ -352,7 +359,7 @@ auto color_converted_view(any_image_view<Views...> const& src, CC cc)
 template <typename ...Views, typename DstP>
 struct color_converted_view_type<any_image_view<Views...>,DstP>
 {
-    using type = typename detail::views_get_ccv_type<any_image_view<Views...>, DstP, default_color_converter>::type;
+    using type = detail::views_get_ccv_type<any_image_view<Views...>, DstP, default_color_converter>;
 };
 
 /// \ingroup ImageViewTransformationsColorConvert
@@ -364,7 +371,7 @@ auto color_converted_view(any_image_view<Views...> const& src)
     -> typename color_converted_view_type<any_image_view<Views...>, DstP>::type
 {
     using cc_view_t = typename color_converted_view_type<any_image_view<Views...>, DstP>::type;
-    return variant2::visit(detail::color_converted_view_fn<DstP, cc_view_t>(), src);
+    return apply_operation(src, detail::color_converted_view_fn<DstP, cc_view_t>());
 }
 
 /// \ingroup ImageViewTransformationsColorConvert
@@ -372,12 +379,12 @@ auto color_converted_view(any_image_view<Views...> const& src)
 ///        These are workarounds for GCC 3.4, which thinks color_converted_view is ambiguous with the same method for templated views (in gil/image_view_factory.hpp)
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename DstP, typename ...Views, typename CC>
-[[deprecated("Use color_converted_view(const any_image_view<Views...>& src, CC) instead.")]]
 inline
-auto any_color_converted_view(const any_image_view<Views...>& src, CC cc)
+auto any_color_converted_view(const any_image_view<Views...>& src, CC)
     -> typename color_converted_view_type<any_image_view<Views...>, DstP, CC>::type
 {
-    return color_converted_view(src, cc);
+    using cc_view_t = typename color_converted_view_type<any_image_view<Views...>, DstP, CC>::type;
+    return apply_operation(src, detail::color_converted_view_fn<DstP, cc_view_t>());
 }
 
 /// \ingroup ImageViewTransformationsColorConvert
@@ -385,12 +392,12 @@ auto any_color_converted_view(const any_image_view<Views...>& src, CC cc)
 ///        These are workarounds for GCC 3.4, which thinks color_converted_view is ambiguous with the same method for templated views (in gil/image_view_factory.hpp)
 /// \tparam Views Models Boost.MP11-compatible list of models of ImageViewConcept
 template <typename DstP, typename ...Views>
-[[deprecated("Use color_converted_view(any_image_view<Views...> const& src) instead.")]]
 inline
 auto any_color_converted_view(const any_image_view<Views...>& src)
     -> typename color_converted_view_type<any_image_view<Views...>, DstP>::type
 {
-    return color_converted_view(src);
+    using cc_view_t = typename color_converted_view_type<any_image_view<Views...>, DstP>::type;
+    return apply_operation(src, detail::color_converted_view_fn<DstP, cc_view_t>());
 }
 
 /// \}

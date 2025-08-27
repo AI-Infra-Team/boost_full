@@ -91,8 +91,5 @@ int main(int, char*[])
 
     BOOST_TEST(map[*find_vertex("Cincinnatti", map)].population == -1);
 
-    // Ensure copy constructor properly initializes base classes.
-    BOOST_TEST_NO_THROW(RoadMap{map});
-
     return boost::report_errors();
 }

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+# Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -50,12 +50,10 @@ test-suite "asio-experimental" :
   [ run channel.cpp : : : $(USE_SELECT) : channel_select ]
   [ run channel_traits.cpp ]
   [ run channel_traits.cpp : : : $(USE_SELECT) : channel_traits_select ]
-  [ run co_composed.cpp ]
-  [ run co_composed.cpp : : : $(USE_SELECT) : co_composed_select ]
   [ run concurrent_channel.cpp ]
   [ run concurrent_channel.cpp : : : $(USE_SELECT) : concurrent_channel_select ]
-  [ run parallel_group.cpp ]
-  [ run parallel_group.cpp : : : $(USE_SELECT) : parallel_group_select ]
+  [ run deferred.cpp ]
+  [ run deferred.cpp : : : $(USE_SELECT) : deferred_select ]
   [ run promise.cpp ]
   [ run promise.cpp : : : $(USE_SELECT) : promise_select ]
   ;

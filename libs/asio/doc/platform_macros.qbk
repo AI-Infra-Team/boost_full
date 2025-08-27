@@ -1,5 +1,5 @@
 [/
- / Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+ / Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
  /
  / Distributed under the Boost Software License, Version 1.0. (See accompanying
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -26,16 +26,23 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_ALIAS_TEMPLATES`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support alias templates on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_ALIAS_TEMPLATES`]
+  ]
+  [
+    [`BOOST_ASIO_HAS_ALIGNED_NEW`]
+    [
+      Support for operator new with alignment argument.
+    ]
+    [`BOOST_ASIO_DISABLE_ALIGNED_NEW`]
   ]
   [
     [`BOOST_ASIO_HAS_ALIGNOF`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support for the alignof operator.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_ALIGNOF`]
   ]
   [
     [`BOOST_ASIO_HAS_BOOST_ALIGN`]
@@ -75,23 +82,9 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_BOOST_CONFIG`]
     [
-      Boost.Config library is available.
+      
     ]
     []
-  ]
-  [
-    [`BOOST_ASIO_HAS_BOOST_CONTEXT_FIBER`]
-    [
-      Boost support for the Context library's fibers.
-    ]
-    [`BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER`]
-  ]
-  [
-    [`BOOST_ASIO_HAS_BOOST_COROUTINE`]
-    [
-      Boost support for the Coroutine library.
-    ]
-    [`BOOST_ASIO_DISABLE_BOOST_COROUTINE`]
   ]
   [
     [`BOOST_ASIO_HAS_BOOST_DATE_TIME`]
@@ -113,13 +106,6 @@ with Boost.Asio's needs.
       Boost regex library.
     ]
     [`BOOST_ASIO_DISABLE_BOOST_REGEX`]
-  ]
-  [
-    [`BOOST_ASIO_HAS_BOOST_SOURCE_LOCATION`]
-    [
-      Boost support for source_location and system errors.
-    ]
-    [`BOOST_ASIO_DISABLE_BOOST_SOURCE_LOCATION`]
   ]
   [
     [`BOOST_ASIO_HAS_BOOST_THROW_EXCEPTION`]
@@ -166,9 +152,9 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_CONSTEXPR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support constexpr on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_CONSTEXPR`]
   ]
   [
     [`BOOST_ASIO_HAS_CO_AWAIT`]
@@ -180,30 +166,30 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_CSTDINT`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the cstdint header.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_CSTDINT`]
   ]
   [
     [`BOOST_ASIO_HAS_CXX11_ALLOCATORS`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the C++11 allocator additions.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_CXX11_ALLOCATORS`]
   ]
   [
     [`BOOST_ASIO_HAS_DECLTYPE`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support automatic type deduction on compilers known to support it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_DECLTYPE`]
   ]
   [
     [`BOOST_ASIO_HAS_DEFAULT_FUNCTION_TEMPLATE_ARGUMENTS`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support default function template arguments on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_DEFAULT_FUNCTION_TEMPLATE_ARGUMENTS`]
   ]
   [
     [`BOOST_ASIO_HAS_DEV_POLL`]
@@ -213,32 +199,18 @@ with Boost.Asio's needs.
     [`BOOST_ASIO_DISABLE_DEV_POLL`]
   ]
   [
-    [`BOOST_ASIO_HAS_ENUM_CLASS`]
-    [
-      Always enabled. Retained for backwards compatibility in user code.
-    ]
-    []
-  ]
-  [
     [`BOOST_ASIO_HAS_EPOLL`]
     [
-      Linux: epoll, eventfd, timerfd and io_uring.
+      Linux: epoll, eventfd and timerfd.
     ]
     [`BOOST_ASIO_DISABLE_EPOLL`]
   ]
   [
     [`BOOST_ASIO_HAS_EVENTFD`]
     [
-      Linux: epoll, eventfd, timerfd and io_uring.
+      Linux: epoll, eventfd and timerfd.
     ]
     [`BOOST_ASIO_DISABLE_EVENTFD`]
-  ]
-  [
-    [`BOOST_ASIO_HAS_FILE`]
-    [
-      Files.
-    ]
-    [`BOOST_ASIO_DISABLE_FILE`]
   ]
   [
     [`BOOST_ASIO_HAS_GETADDRINFO`]
@@ -262,13 +234,6 @@ with Boost.Asio's needs.
     [`BOOST_ASIO_DISABLE_IOCP`]
   ]
   [
-    [`BOOST_ASIO_HAS_IO_URING_AS_DEFAULT`]
-    [
-      Linux: io_uring is used instead of epoll.
-    ]
-    []
-  ]
-  [
     [`BOOST_ASIO_HAS_KQUEUE`]
     [
       Mac OS X, FreeBSD, NetBSD, OpenBSD: kqueue.
@@ -285,9 +250,9 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_MOVE`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support move construction and assignment on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_MOVE`]
   ]
   [
     [`BOOST_ASIO_HAS_MSG_NOSIGNAL`]
@@ -299,30 +264,16 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_NOEXCEPT`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support noexcept on compilers known to allow it.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_NOEXCEPT_FUNCTION_TYPE`]
-    [
-      Support noexcept on function types on compilers known to allow it.
-    ]
-    [`BOOST_ASIO_DISABLE_NOEXCEPT_FUNCTION_TYPE`]
+    [`BOOST_ASIO_DISABLE_NOEXCEPT`]
   ]
   [
     [`BOOST_ASIO_HAS_NULLPTR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the nullptr_t type.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_PIPE`]
-    [
-      Pipes.
-    ]
-    [`BOOST_ASIO_DISABLE_PIPE`]
+    [`BOOST_ASIO_DISABLE_NULLPTR`]
   ]
   [
     [`BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR`]
@@ -341,9 +292,9 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_REF_QUALIFIED_FUNCTIONS`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support ref-qualified functions on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_REF_QUALIFIED_FUNCTIONS`]
   ]
   [
     [`BOOST_ASIO_HAS_RETURN_TYPE_DEDUCTION`]
@@ -388,13 +339,6 @@ with Boost.Asio's needs.
     [`BOOST_ASIO_DISABLE_SIGNAL`]
   ]
   [
-    [`BOOST_ASIO_HAS_SNPRINTF`]
-    [
-      Standard library support for snprintf.
-    ]
-    [`BOOST_ASIO_DISABLE_SNPRINTF`]
-  ]
-  [
     [`BOOST_ASIO_HAS_SOURCE_LOCATION`]
     [
       Standard library has a source_location that we can use.
@@ -411,30 +355,16 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_ADDRESSOF`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for addressof.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_ALIGN`]
-    [
-      Always enabled. Retained for backwards compatibility in user code.
-    ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_ALIGNED_ALLOC`]
-    [
-      Standard library support for aligned allocation.
-    ]
-    [`BOOST_ASIO_DISABLE_STD_ALIGNED_ALLOC`]
+    [`BOOST_ASIO_DISABLE_STD_ADDRESSOF`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_ALLOCATOR_ARG`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for allocator_arg_t.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_ALLOCATOR_ARG`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_ANY`]
@@ -446,37 +376,41 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_ARRAY`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for arrays.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_ARRAY`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_ATOMIC`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for atomic operations.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_ATOMIC`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_CALL_ONCE`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the call_once function.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_CALL_ONCE`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_CHRONO`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for chrono. Some standard libraries (such as the
+      libstdc++ shipped with gcc 4.6) provide monotonic_clock as per early C++0x
+      drafts, rather than the eventually standardised name of steady_clock.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_CHRONO`]
   ]
   [
-    [`BOOST_ASIO_HAS_STD_CONCEPTS`]
+    [`BOOST_ASIO_HAS_STD_CHRONO_MONOTONIC_CLOCK`]
     [
-      Support concepts on compilers known to allow them.
+      Standard library support for chrono. Some standard libraries (such as the
+      libstdc++ shipped with gcc 4.6) provide monotonic_clock as per early C++0x
+      drafts, rather than the eventually standardised name of steady_clock.
     ]
-    [`BOOST_ASIO_DISABLE_STD_CONCEPTS`]
+    []
   ]
   [
     [`BOOST_ASIO_HAS_STD_COROUTINE`]
@@ -488,9 +422,9 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_EXCEPTION_PTR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for std::exception_ptr and std::current_exception.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_EXCEPTION_PTR`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_EXPERIMENTAL_SOURCE_LOCATION`]
@@ -509,30 +443,23 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_FUNCTION`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the function class.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_FUNCTION`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_FUTURE`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for futures.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_FUTURE`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_HASH`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for std::hash.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_INDEX_SEQUENCE`]
-    [
-      Standard library support for std::index_sequence.
-    ]
-    [`BOOST_ASIO_DISABLE_STD_INDEX_SEQUENCE`]
+    [`BOOST_ASIO_DISABLE_STD_HASH`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_INVOKE_RESULT`]
@@ -544,37 +471,37 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_IOSTREAM_MOVE`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for iostream move construction and assignment.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_IOSTREAM_MOVE`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_MUTEX_AND_CONDVAR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the mutex and condition variable classes.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_MUTEX_AND_CONDVAR`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_NESTED_EXCEPTION`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for std::nested_exception.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_NESTED_EXCEPTION`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_REFERENCE_WRAPPER`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the reference_wrapper class.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_REFERENCE_WRAPPER`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_SHARED_PTR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for shared_ptr and weak_ptr.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_SHARED_PTR`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_STRING_VIEW`]
@@ -586,44 +513,23 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_STD_SYSTEM_ERROR`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for system errors.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_SYSTEM_ERROR`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_THREAD`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for the thread class.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_TO_ADDRESS`]
-    [
-      Standard library support for std::to_address.
-    ]
-    [`BOOST_ASIO_DISABLE_STD_TO_ADDRESS`]
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_TUPLE`]
-    [
-      Always enabled. Retained for backwards compatibility in user code.
-    ]
-    []
+    [`BOOST_ASIO_DISABLE_STD_THREAD`]
   ]
   [
     [`BOOST_ASIO_HAS_STD_TYPE_TRAITS`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Standard library support for type traits.
     ]
-    []
-  ]
-  [
-    [`BOOST_ASIO_HAS_STD_VARIANT`]
-    [
-      Standard library support for std::variant.
-    ]
-    [`BOOST_ASIO_DISABLE_STD_VARIANT`]
+    [`BOOST_ASIO_DISABLE_STD_TYPE_TRAITS`]
   ]
   [
     [`BOOST_ASIO_HAS_STRING_VIEW`]
@@ -642,14 +548,14 @@ with Boost.Asio's needs.
   [
     [`BOOST_ASIO_HAS_THREAD_KEYWORD_EXTENSION`]
     [
-      Support for the __thread keyword extension, or equivalent.
+      Support for the __thread keyword extension.
     ]
     [`BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION`]
   ]
   [
     [`BOOST_ASIO_HAS_TIMERFD`]
     [
-      Linux: epoll, eventfd, timerfd and io_uring.
+      Linux: epoll, eventfd and timerfd.
     ]
     []
   ]
@@ -663,13 +569,6 @@ with Boost.Asio's needs.
     []
   ]
   [
-    [`BOOST_ASIO_HAS_USER_DEFINED_LITERALS`]
-    [
-      Always enabled. Retained for backwards compatibility in user code.
-    ]
-    []
-  ]
-  [
     [`BOOST_ASIO_HAS_VARIABLE_TEMPLATES`]
     [
       Support template variables on compilers known to allow it.
@@ -677,18 +576,11 @@ with Boost.Asio's needs.
     [`BOOST_ASIO_DISABLE_VARIABLE_TEMPLATES`]
   ]
   [
-    [`BOOST_ASIO_HAS_VARIADIC_LAMBDA_CAPTURES`]
-    [
-      Support for capturing parameter packs in lambdas.
-    ]
-    [`BOOST_ASIO_DISABLE_VARIADIC_LAMBDA_CAPTURES`]
-  ]
-  [
     [`BOOST_ASIO_HAS_VARIADIC_TEMPLATES`]
     [
-      Always enabled. Retained for backwards compatibility in user code.
+      Support variadic templates on compilers known to allow it.
     ]
-    []
+    [`BOOST_ASIO_DISABLE_VARIADIC_TEMPLATES`]
   ]
   [
     [`BOOST_ASIO_HAS_WINDOWS_OBJECT_HANDLE`]

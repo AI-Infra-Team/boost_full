@@ -2,12 +2,11 @@
 //
 // R-tree initial packing
 //
-// Copyright (c) 2011-2023 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2011-2017 Adam Wulkiewicz, Lodz, Poland.
 // Copyright (c) 2020 Caian Benedicto, Campinas, Brazil.
 //
-// This file was modified by Oracle on 2019-2023.
-// Modifications copyright (c) 2019-2023 Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2019-2021.
+// Modifications copyright (c) 2019-2021 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 //
 // Use, modification and distribution is subject to the Boost Software License,
@@ -19,19 +18,15 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <boost/geometry/algorithms/centroid.hpp>
 #include <boost/geometry/algorithms/detail/expand_by_epsilon.hpp>
 #include <boost/geometry/algorithms/expand.hpp>
 
-#include <boost/geometry/index/detail/algorithms/bounds.hpp>
 #include <boost/geometry/index/detail/algorithms/content.hpp>
-#include <boost/geometry/index/detail/algorithms/is_valid.hpp>
+#include <boost/geometry/index/detail/algorithms/bounds.hpp>
 #include <boost/geometry/index/detail/algorithms/nth_element.hpp>
 #include <boost/geometry/index/detail/rtree/node/node_elements.hpp>
 #include <boost/geometry/index/detail/rtree/node/subtree_destroyer.hpp>
 #include <boost/geometry/index/parameters.hpp>
-
-#include <boost/geometry/util/constexpr.hpp>
 
 namespace boost { namespace geometry { namespace index { namespace detail { namespace rtree {
 
@@ -42,10 +37,10 @@ struct biggest_edge
 {
     BOOST_STATIC_ASSERT(0 < Dimension);
     template <typename Box>
-    static inline void apply(Box const& box, coordinate_type_t<Box> & length, std::size_t & dim_index)
+    static inline void apply(Box const& box, typename coordinate_type<Box>::type & length, std::size_t & dim_index)
     {
         biggest_edge<Dimension-1>::apply(box, length, dim_index);
-        coordinate_type_t<Box> curr
+        typename coordinate_type<Box>::type curr
             = geometry::get<max_corner, Dimension-1>(box) - geometry::get<min_corner, Dimension-1>(box);
         if ( length < curr )
         {
@@ -59,7 +54,7 @@ template <>
 struct biggest_edge<1>
 {
     template <typename Box>
-    static inline void apply(Box const& box, coordinate_type_t<Box> & length, std::size_t & dim_index)
+    static inline void apply(Box const& box, typename coordinate_type<Box>::type & length, std::size_t & dim_index)
     {
         dim_index = 0;
         length = geometry::get<max_corner, 0>(box) - geometry::get<min_corner, 0>(box);
@@ -80,28 +75,23 @@ template <std::size_t I, std::size_t Dimension>
 struct nth_element_and_half_boxes
 {
     template <typename EIt, typename Box>
-    static inline void apply(EIt first, EIt median, EIt last, Box const& box,
-                             Box & left, Box & right, std::size_t dim_index)
+    static inline void apply(EIt first, EIt median, EIt last, Box const& box, Box & left, Box & right, std::size_t dim_index)
     {
-        if (I == dim_index)
+        if ( I == dim_index )
         {
             index::detail::nth_element(first, median, last, point_entries_comparer<I>());
 
             geometry::convert(box, left);
             geometry::convert(box, right);
-            auto const mi = geometry::get<min_corner, I>(box);
-            auto const ma = geometry::get<max_corner, I>(box);
-            auto const center = mi + (ma - mi) / 2;
-            geometry::set<max_corner, I>(left, center);
-            geometry::set<min_corner, I>(right, center);
+            typename coordinate_type<Box>::type edge_len
+                = geometry::get<max_corner, I>(box) - geometry::get<min_corner, I>(box);
+            typename coordinate_type<Box>::type median
+                = geometry::get<min_corner, I>(box) + edge_len / 2;
+            geometry::set<max_corner, I>(left, median);
+            geometry::set<min_corner, I>(right, median);
         }
         else
-        {
-            nth_element_and_half_boxes
-                <
-                    I + 1, Dimension
-                >::apply(first, median, last, box, left, right, dim_index);
-        }
+            nth_element_and_half_boxes<I+1, Dimension>::apply(first, median, last, box, left, right, dim_index);
     }
 };
 
@@ -195,7 +185,7 @@ public:
                        TmpAlloc const& temp_allocator)
     {
         typedef typename std::iterator_traits<InIt>::difference_type diff_type;
-
+            
         diff_type diff = std::distance(first, last);
         if ( diff <= 0 )
             return node_pointer(0);
@@ -211,7 +201,7 @@ public:
         entries.reserve(values_count);
 
         auto const& strategy = index::detail::get_strategy(parameters);
-
+        
         expandable_box<box_type, strategy_type> hint_box(strategy);
         for ( ; first != last ; ++first )
         {
@@ -333,7 +323,7 @@ private:
             {
                 // NOTE: push_back() must be called at the end in order to support move_iterator.
                 //       The iterator is dereferenced 2x (no temporary reference) to support
-                //       non-true reference types and move_iterator without std::forward<>.
+                //       non-true reference types and move_iterator without boost::forward<>.
                 elements_box.expand(translator(*(first->second)));
                 rtree::elements(l).push_back(*(first->second));                                             // MAY THROW (A?,C)
             }
@@ -345,10 +335,11 @@ private:
             // NOTE: this is done only if the Indexable is a different kind of Geometry
             //   than the bounds (only Box for now). Spatial predicates are checked
             //   the same way for Geometry of the same kind.
-            if BOOST_GEOMETRY_CONSTEXPR (! index::detail::is_bounding_geometry
-                                            <
-                                                typename indexable_type<translator_type>::type
-                                            >::value)
+            if ( BOOST_GEOMETRY_CONDITION((
+                    ! index::detail::is_bounding_geometry
+                        <
+                            typename indexable_type<translator_type>::type
+                        >::value )) )
             {
                 elements_box.expand_by_epsilon();
             }
@@ -373,7 +364,7 @@ private:
         rtree::elements(in).reserve(nodes_count);                                                           // MAY THROW (A)
         // calculate values box and copy values
         expandable_box<box_type, strategy_type> elements_box(detail::get_strategy(parameters));
-
+        
         per_level_packets(first, last, hint_box, values_count, subtree_counts, next_subtree_counts,
                           rtree::elements(in), elements_box,
                           parameters, translator, allocators);
@@ -418,7 +409,7 @@ private:
             elements_box.expand(el.first);
             return;
         }
-
+        
         size_type median_count = calculate_median_count(values_count, subtree_counts);
         EIt median = first + median_count;
 
@@ -428,7 +419,7 @@ private:
         box_type left, right;
         pack_utils::nth_element_and_half_boxes<0, dimension>
             ::apply(first, median, last, hint_box, left, right, greatest_dim_index);
-
+        
         per_level_packets(first, median, left,
                           median_count, subtree_counts, next_subtree_counts,
                           elements, elements_box,

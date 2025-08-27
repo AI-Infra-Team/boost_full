@@ -45,7 +45,11 @@ template
     typename Point,
     typename PointOfSegment,
     typename CalculationType,
-    typename CSTag = tag_cast_t<cs_tag_t<Point>, spherical_tag>
+    typename CSTag = typename tag_cast
+                        <
+                            typename cs_tag<Point>::type,
+                            spherical_tag
+                        >::type
 >
 struct winding_base_type
 {
@@ -57,24 +61,20 @@ struct winding_base_type
 template <typename Point, typename PointOfSegment, typename CalculationType>
 struct winding_base_type<Point, PointOfSegment, CalculationType, cartesian_tag>
 {
-    using type = within::detail::cartesian_winding_base
-        <
-            typename strategy::side::services::default_strategy
-                <
-                    cs_tag_t<Point>
-                >::type,
-            CalculationType
-        >;
+    typedef within::cartesian_winding<void, void, CalculationType> type;
 };
 
 template <typename Point, typename PointOfSegment, typename CalculationType>
 struct winding_base_type<Point, PointOfSegment, CalculationType, spherical_tag>
 {
-    using type = within::detail::spherical_winding_base
+    typedef within::detail::spherical_winding_base
         <
-            typename strategy::side::services::default_strategy<cs_tag_t<Point>>::type,
+            typename strategy::side::services::default_strategy
+                <
+                    typename cs_tag<Point>::type
+                >::type,
             CalculationType
-        >;
+        > type;
 };
 
 

@@ -3,8 +3,8 @@
 
 // Copyright (c) 2020 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2020-2022.
-// Modifications copyright (c) 2020-2022 Oracle and/or its affiliates.
+// This file was modified by Oracle on 2020.
+// Modifications copyright (c) 2020 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -103,7 +103,7 @@ Border setup_piece_border(Ring& ring, Ring& original,
 
     typedef typename bg::point_type<Ring>::type point_type;
 
-    bg::strategies::buffer::cartesian<> strategy;
+    bg::strategies::relate::cartesian<> strategy;
 
     border.get_properties_of_border(false, point_type(), strategy);
 
@@ -152,29 +152,26 @@ void test_rectangle_properties()
 }
 
 template <typename Point, typename Border, typename Mapper>
-void test_point(std::string const& wkt, bool expected_outside,
-                bool expected_on_offsetted, bool expected_on_edge, bool expected_on_origin,
-                Border const& border,
+void test_point(std::string const& wkt, bool expected, Border const& border,
                 Mapper& mapper, std::string const& color)
 {
     typename Border::state_type state;
     Point point;
     bg::read_wkt(wkt, point);
     border.point_on_piece(point, false, false, state);
-    BOOST_CHECK(expected_outside == (state.count > 0));
-    BOOST_CHECK(expected_on_offsetted == (state.count_on_offsetted > 0));
-    BOOST_CHECK(expected_on_edge == (state.count_on_edge > 0));
-    BOOST_CHECK(expected_on_origin == (state.count_on_origin > 0));
+    bool const on_piece = state.code() == 1;
+    BOOST_CHECK_MESSAGE(on_piece == expected,
+                        " expected: " << expected
+                        << " detected: " << on_piece
+                        << " wkt: " << wkt);
 
 #ifdef TEST_WITH_SVG
     std::string style = "fill:" + color + ";stroke:rgb(0,0,0);stroke-width:1";
     mapper.map(point, style);
 
+    // Mark on-piece as T or F
     std::ostringstream out;
-    out << (state.is_inside() ? "I" : "")
-        << (state.is_on_boundary() ? "B" : "")
-        << " " << state.count
-        << " " << state.count_on_offsetted << ":" << state.count_on_edge << ":" << state.count_on_origin;
+    out << (on_piece ? "T" : "F");
     mapper.text(point, out.str(), "fill:rgb(0,0,0);font-family='Arial';font-size:9px;", 10, -10);
 #else
     boost::ignore_unused(mapper, color);
@@ -221,27 +218,27 @@ void test_rectangle_point_on_piece_a()
 #endif
 
     // Points inside
-    test_point<Point>("POINT(1.5 2.5)", false, false, false, false, border, mapper, "red");
+    test_point<Point>("POINT(1.5 2.5)", true, border, mapper, "red");
 
     // Points outside
-    test_point<Point>("POINT(0.5 2.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(2.5 2.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(1.5 1.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(1.5 3.5)", true, false, false, false, border, mapper, "green");
+    test_point<Point>("POINT(0.5 2.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(2.5 2.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(1.5 1.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(1.5 3.5)", false, border, mapper, "green");
 
     // Points on the original (should be INSIDE)
-    test_point<Point>("POINT(1.0 2.0)", false, false, true, true, border, mapper, "orange");
-    test_point<Point>("POINT(1.5 2.0)", false, false, false, true, border, mapper, "orange");
-    test_point<Point>("POINT(2.0 2.0)", false, false, true, true, border, mapper, "orange");
+    test_point<Point>("POINT(1.0 2.0)", true, border, mapper, "orange");
+    test_point<Point>("POINT(1.5 2.0)", true, border, mapper, "orange");
+    test_point<Point>("POINT(2.0 2.0)", true, border, mapper, "orange");
 
     // Points on the offsetted ring (should be OUTSIDE)
-    test_point<Point>("POINT(1.0 3.0)", false, true, true, false, border, mapper, "blue");
-    test_point<Point>("POINT(1.5 3.0)", false, true, false, false, border, mapper, "blue");
-    test_point<Point>("POINT(2.0 3.0)", false, true, true, false, border, mapper, "blue");
+    test_point<Point>("POINT(1.0 3.0)", false, border, mapper, "blue");
+    test_point<Point>("POINT(1.5 3.0)", false, border, mapper, "blue");
+    test_point<Point>("POINT(2.0 3.0)", false, border, mapper, "blue");
 
-    // Points on the edge, that is between original and offsetted ring (should be INSIDE)
-    test_point<Point>("POINT(1.0 2.5)", false, false, true, false, border, mapper, "cyan");
-    test_point<Point>("POINT(2.0 2.5)", false, false, true, false, border, mapper, "cyan");
+    // Points on between original and offsetted ring (should be INSIDE)
+    test_point<Point>("POINT(1.0 2.5)", true, border, mapper, "cyan");
+    test_point<Point>("POINT(2.0 2.5)", true, border, mapper, "cyan");
 }
 
 template <typename Point>
@@ -265,27 +262,27 @@ void test_rectangle_point_on_piece_c()
     // Piece labeled as 'c' : from (2,1) to (3,2)
 
     // Points inside
-    test_point<Point>("POINT(2.5 1.5)", false, false, false, false, border, mapper, "red");
+    test_point<Point>("POINT(2.5 1.5)", true, border, mapper, "red");
 
     // Points outside
-    test_point<Point>("POINT(1.5 1.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(3.5 1.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(2.5 0.5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(2.5 2.5)", true, false, false, false, border, mapper, "green");
+    test_point<Point>("POINT(1.5 1.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(3.5 1.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(2.5 0.5)", false, border, mapper, "green");
+    test_point<Point>("POINT(2.5 2.5)", false, border, mapper, "green");
 
     // Points on the original (should be INSIDE)
-    test_point<Point>("POINT(2.0 1.0)", false, false, true, true, border, mapper, "orange");
-    test_point<Point>("POINT(2.0 1.5)", false, false, false, true, border, mapper, "orange");
-    test_point<Point>("POINT(2.0 2.0)", false, false, true, true, border, mapper, "orange");
+    test_point<Point>("POINT(2.0 1.0)", true, border, mapper, "orange");
+    test_point<Point>("POINT(2.0 1.5)", true, border, mapper, "orange");
+    test_point<Point>("POINT(2.0 2.0)", true, border, mapper, "orange");
 
     // Points on the offsetted ring (should be OUTSIDE)
-    test_point<Point>("POINT(3.0 1.0)", false, true, true, false, border, mapper, "blue");
-    test_point<Point>("POINT(3.0 1.5)", false, true, false, false, border, mapper, "blue");
-    test_point<Point>("POINT(3.0 2.0)", false, true, true, false, border, mapper, "blue");
+    test_point<Point>("POINT(3.0 1.0)", false, border, mapper, "blue");
+    test_point<Point>("POINT(3.0 1.5)", false, border, mapper, "blue");
+    test_point<Point>("POINT(3.0 2.0)", false, border, mapper, "blue");
 
     // Points on between original and offsetted ring (should be INSIDE)
-    test_point<Point>("POINT(2.5 2.0)", false, false, true, false, border, mapper, "cyan");
-    test_point<Point>("POINT(2.5 1.0)", false, false, true, false, border, mapper, "cyan");
+    test_point<Point>("POINT(2.5 2.0)", true, border, mapper, "cyan");
+    test_point<Point>("POINT(2.5 1.0)", true, border, mapper, "cyan");
 }
 
 template <typename Point>
@@ -307,27 +304,27 @@ void test_diamond_point_on_piece_a()
 #endif
 
     // Points inside
-    test_point<Point>("POINT(2 4)", false, false, false, false, border, mapper, "red");
+    test_point<Point>("POINT(2 4)", true, border, mapper, "red");
 
     // Points outside
-    test_point<Point>("POINT(1 3)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(1 5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(3 3)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(3 5)", true, false, false, false, border, mapper, "green");
+    test_point<Point>("POINT(1 3)", false, border, mapper, "green");
+    test_point<Point>("POINT(1 5)", false, border, mapper, "green");
+    test_point<Point>("POINT(3 3)", false, border, mapper, "green");
+    test_point<Point>("POINT(3 5)", false, border, mapper, "green");
 
     // Points on the original (should be INSIDE)
-    test_point<Point>("POINT(2 3)", false, false, true, true, border, mapper, "orange");
-    test_point<Point>("POINT(2.5 3.5)", false, false, false, true, border, mapper, "orange");
-    test_point<Point>("POINT(3 4)", false, false, true, true, border, mapper, "orange");
+    test_point<Point>("POINT(2 3)", true, border, mapper, "orange");
+    test_point<Point>("POINT(2.5 3.5)", true, border, mapper, "orange");
+    test_point<Point>("POINT(3 4)", true, border, mapper, "orange");
 
     // Points on the offsetted ring (should be OUTSIDE)
-    test_point<Point>("POINT(1 4)", false, true, true, false, border, mapper, "blue");
-    test_point<Point>("POINT(1.5 4.5)", false, true, false, false, border, mapper, "blue");
-    test_point<Point>("POINT(2 5)", false, true, true, false, border, mapper, "blue");
+    test_point<Point>("POINT(1 4)", false, border, mapper, "blue");
+    test_point<Point>("POINT(1.5 4.5)", false, border, mapper, "blue");
+    test_point<Point>("POINT(2 5)", false, border, mapper, "blue");
 
     // Points on between original and offsetted ring (should be INSIDE)
-    test_point<Point>("POINT(1.5 3.5)", false, false, true, false, border, mapper, "cyan");
-    test_point<Point>("POINT(2.5 4.5)", false, false, true, false, border, mapper, "cyan");
+    test_point<Point>("POINT(1.5 3.5)", true, border, mapper, "cyan");
+    test_point<Point>("POINT(2.5 4.5)", true, border, mapper, "cyan");
 }
 
 template <typename Point>
@@ -349,27 +346,27 @@ void test_diamond_point_on_piece_c()
 #endif
 
     // Points inside
-    test_point<Point>("POINT(4 4)", false, false, false, false, border, mapper, "red");
+    test_point<Point>("POINT(4 4)", true, border, mapper, "red");
 
     // Points outside
-    test_point<Point>("POINT(3 3)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(3 5)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(5 3)", true, false, false, false, border, mapper, "green");
-    test_point<Point>("POINT(5 5)", true, false, false, false, border, mapper, "green");
+    test_point<Point>("POINT(3 3)", false, border, mapper, "green");
+    test_point<Point>("POINT(3 5)", false, border, mapper, "green");
+    test_point<Point>("POINT(5 3)", false, border, mapper, "green");
+    test_point<Point>("POINT(5 5)", false, border, mapper, "green");
 
     // Points on the original (should be INSIDE)
-    test_point<Point>("POINT(3 4)", false, false, true, true, border, mapper, "orange");
-    test_point<Point>("POINT(3.5 3.5)", false, false, false, true, border, mapper, "orange");
-    test_point<Point>("POINT(4 3)", false, false, true, true, border, mapper, "orange");
+    test_point<Point>("POINT(3 4)", true, border, mapper, "orange");
+    test_point<Point>("POINT(3.5 3.5)", true, border, mapper, "orange");
+    test_point<Point>("POINT(4 3)", true, border, mapper, "orange");
 
     // Points on the offsetted ring (should be OUTSIDE)
-    test_point<Point>("POINT(4 5)", false, true, true, false, border, mapper, "blue");
-    test_point<Point>("POINT(4.5 4.5)", false, true, false, false, border, mapper, "blue");
-    test_point<Point>("POINT(5 4)", false, true, true, false, border, mapper, "blue");
+    test_point<Point>("POINT(4 5)", false, border, mapper, "blue");
+    test_point<Point>("POINT(4.5 4.5)", false, border, mapper, "blue");
+    test_point<Point>("POINT(5 4)", false, border, mapper, "blue");
 
     // Points on between original and offsetted ring (should be INSIDE)
-    test_point<Point>("POINT(3.5 4.5)", false, false, true, false, border, mapper, "cyan");
-    test_point<Point>("POINT(4.5 3.5)", false, false, true, false, border, mapper, "cyan");
+    test_point<Point>("POINT(3.5 4.5)", true, border, mapper, "cyan");
+    test_point<Point>("POINT(4.5 3.5)", true, border, mapper, "cyan");
 }
 
 int test_main(int, char* [])

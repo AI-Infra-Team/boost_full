@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (!fs::is_regular_file(p))
+    if (!fs::is_regular(p))
     {
         std::cout << "not a regular file: " << argv[1] << std::endl;
         return 1;

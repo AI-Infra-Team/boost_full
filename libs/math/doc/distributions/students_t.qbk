@@ -17,13 +17,13 @@
       typedef Policy   policy_type;
 
       // Constructor:
-      BOOST_MATH_GPU_ENABLED students_t_distribution(const RealType& v);
+      students_t_distribution(const RealType& v);
 
       // Accessor:
-      BOOST_MATH_GPU_ENABLED RealType degrees_of_freedom()const;
+      RealType degrees_of_freedom()const;
 
       // degrees of freedom estimation:
-      BOOST_MATH_GPU_ENABLED static RealType find_degrees_of_freedom(
+      static RealType find_degrees_of_freedom(
          RealType difference_from_mean,
          RealType alpha,
          RealType beta,
@@ -62,7 +62,7 @@ illustrates how the PDF varies with the degrees of freedom [nu]:
 
 [h4 Member Functions]
 
-   BOOST_MATH_GPU_ENABLED students_t_distribution(const RealType& v);
+   students_t_distribution(const RealType& v);
 
 Constructs a Student's t-distribution with /v/ degrees of freedom.
 
@@ -71,11 +71,11 @@ otherwise calls __domain_error.  Note that
 non-integral degrees of freedom are supported,
 and are meaningful under certain circumstances.
 
-   BOOST_MATH_GPU_ENABLED RealType degrees_of_freedom()const;
+   RealType degrees_of_freedom()const;
 
 returns the number of degrees of freedom of this distribution.
 
-   BOOST_MATH_GPU_ENABLED static RealType find_degrees_of_freedom(
+   static RealType find_degrees_of_freedom(
       RealType difference_from_mean,
       RealType alpha,
       RealType beta,
@@ -110,8 +110,6 @@ NIST Engineering Statistics Handbook].
 
 All the [link math_toolkit.dist_ref.nmp usual non-member accessor functions] that are generic to all
 distributions are supported: __usual_accessors.
-For this distribution all non-member accessor functions are marked with `BOOST_MATH_GPU_ENABLED` and can
-be run on both host and device.
 
 The domain of the random variable is \[-[infin], +[infin]\].
 

@@ -9,11 +9,10 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <boost/interprocess/detail/workaround.hpp>
-#if BOOST_CXX_VERSION >= 201103L
 //[doc_multi_index
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/container/string.hpp>
+#include <boost/interprocess/containers/string.hpp>
 
 //<-
 //Shield against external warnings
@@ -33,7 +32,7 @@ using namespace boost::interprocess;
 namespace bmi = boost::multi_index;
 
 typedef managed_shared_memory::allocator<char>::type              char_allocator;
-typedef boost::container::basic_string<char, std::char_traits<char>, char_allocator>shm_string;
+typedef basic_string<char, std::char_traits<char>, char_allocator>shm_string;
 
 //Data to insert in shared memory
 struct employee
@@ -75,15 +74,32 @@ int main ()
    //Remove shared memory on construction and destruction
    struct shm_remove
    {
+   //<-
+   #if 1
       shm_remove() { shared_memory_object::remove(test::get_process_id_name()); }
       ~shm_remove(){ shared_memory_object::remove(test::get_process_id_name()); }
+   #else
+   //->
+      shm_remove() { shared_memory_object::remove("MySharedMemory"); }
+      ~shm_remove(){ shared_memory_object::remove("MySharedMemory"); }
+   //<-
+   #endif
+   //->
    } remover;
    //<-
    (void)remover;
    //->
 
    //Create shared memory
+   //<-
+   #if 1
    managed_shared_memory segment(create_only,test::get_process_id_name(), 65536);
+   #else
+   //->
+   managed_shared_memory segment(create_only,"MySharedMemory", 65536);
+   //<-
+   #endif
+   //->
 
    //Construct the multi_index in shared memory
    employee_set *es = segment.construct<employee_set>
@@ -100,11 +116,3 @@ int main ()
 }
 //]
 
-#else ////#if BOOST_CXX_VERSION >= 201103L
-
-int main()
-{
-   return 0;
-}
-
-#endif   //#if BOOST_CXX_VERSION >= 201103L

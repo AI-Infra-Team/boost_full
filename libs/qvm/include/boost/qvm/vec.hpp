@@ -1,9 +1,10 @@
 #ifndef BOOST_QVM_VEC_HPP_INCLUDED
 #define BOOST_QVM_VEC_HPP_INCLUDED
 
-// Copyright 2008-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/// Copyright (c) 2008-2021 Emil Dotchevski and Reverge Studios, Inc.
+
+/// Distributed under the Boost Software License, Version 1.0. (See accompanying
+/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/qvm/detail/vec_assign.hpp>
 #include <boost/qvm/assert.hpp>
@@ -16,11 +17,7 @@ struct
 vec
     {
     T a[D];
-    template <class R
-#if __cplusplus >= 201103L
-        , class = typename enable_if<is_vec<R> >::type
-#endif
-    >
+    template <class R>
     operator R() const
         {
         R r;
@@ -42,7 +39,7 @@ vec_traits< vec<T,Dim> >
 
     template <int I>
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type
     read_element( this_vector const & x )
         {
@@ -53,7 +50,7 @@ vec_traits< vec<T,Dim> >
 
     template <int I>
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type &
     write_element( this_vector & x )
         {
@@ -63,7 +60,7 @@ vec_traits< vec<T,Dim> >
         }
 
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type
     read_element_idx( int i, this_vector const & x )
         {
@@ -73,7 +70,7 @@ vec_traits< vec<T,Dim> >
         }
 
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type &
     write_element_idx( int i, this_vector & x )
         {

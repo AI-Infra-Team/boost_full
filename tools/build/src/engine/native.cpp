@@ -12,9 +12,9 @@
 
 
 void declare_native_rule( char const * module, char const * rule,
-    char const * * args, function_builtin_t f, int32_t version )
+    char const * * args, LIST * (*f)( FRAME *, int32_t ), int32_t version )
 {
-    OBJECT * module_obj = module ? object_new( module ) : 0 ;
+    OBJECT * const module_obj = module ? object_new( module ) : 0 ;
     module_t * m = bindmodule( module_obj );
     if ( module_obj )
         object_free( module_obj );

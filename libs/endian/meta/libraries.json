@@ -13,5 +13,5 @@
         "Math",
         "Miscellaneous"
     ],
-    "cxxstd": "11"
+    "cxxstd": "03"
 }

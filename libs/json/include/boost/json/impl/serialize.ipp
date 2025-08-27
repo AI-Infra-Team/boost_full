@@ -14,44 +14,9 @@
 #include <boost/json/serializer.hpp>
 #include <ostream>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
-namespace {
-
-int serialize_xalloc = std::ios::xalloc();
-
-enum class serialize_stream_flags : long
-{
-    allow_infinity_and_nan = 1,
-};
-
-std::underlying_type<serialize_stream_flags>::type
-to_bitmask( serialize_options const& opts )
-{
-    using E = serialize_stream_flags;
-    using I = std::underlying_type<E>::type;
-    return (opts.allow_infinity_and_nan
-        ? static_cast<I>(E::allow_infinity_and_nan) : 0);
-}
-
-serialize_options
-get_stream_flags( std::ostream& os )
-{
-    auto const flags = os.iword(serialize_xalloc);
-
-    serialize_options opts;
-    using E = serialize_stream_flags;
-    using I = std::underlying_type<E>::type;
-    opts.allow_infinity_and_nan =
-        flags & static_cast<I>(E::allow_infinity_and_nan);
-    return opts;
-}
-
-} // namespace
-
-namespace detail {
-
+static
 void
 serialize_impl(
     std::string& s,
@@ -76,8 +41,6 @@ serialize_impl(
         s.size() >= len * 2);
     std::memcpy(&s[0],
         sv.data(), sv.size());
-    auto const lim =
-        s.max_size() / 2;
     for(;;)
     {
         sv = sr.read(
@@ -86,46 +49,29 @@ serialize_impl(
         len += sv.size();
         if(sr.done())
             break;
-        // growth factor 2x
-        if(s.size() < lim)
-            s.resize(s.size() * 2);
-        else
-            s.resize(2 * lim);
+        s.resize(
+            s.capacity() + 1);
     }
     s.resize(len);
 }
 
-} // namespace detail
-
 std::string
 serialize(
-    value const& jv,
-    serialize_options const& opts)
+    value const& jv)
 {
-    unsigned char buf[256];
-    serializer sr(
-        storage_ptr(),
-        buf,
-        sizeof(buf),
-        opts);
-    sr.reset(&jv);
     std::string s;
+    serializer sr;
+    sr.reset(&jv);
     serialize_impl(s, sr);
     return s;
 }
 
 std::string
 serialize(
-    array const& arr,
-    serialize_options const& opts)
+    array const& arr)
 {
-    unsigned char buf[256];
-    serializer sr(
-        storage_ptr(),
-        buf,
-        sizeof(buf),
-        opts);
     std::string s;
+    serializer sr;
     sr.reset(&arr);
     serialize_impl(s, sr);
     return s;
@@ -133,16 +79,10 @@ serialize(
 
 std::string
 serialize(
-    object const& obj,
-    serialize_options const& opts)
+    object const& obj)
 {
-    unsigned char buf[256];
-    serializer sr(
-        storage_ptr(),
-        buf,
-        sizeof(buf),
-        opts);
     std::string s;
+    serializer sr;
     sr.reset(&obj);
     serialize_impl(s, sr);
     return s;
@@ -150,25 +90,22 @@ serialize(
 
 std::string
 serialize(
-    string const& str,
-    serialize_options const& opts)
+    string const& str)
 {
-    return serialize( str.subview(), opts );
+    std::string s;
+    serializer sr;
+    sr.reset(&str);
+    serialize_impl(s, sr);
+    return s;
 }
 
 // this is here for key_value_pair::key()
 std::string
 serialize(
-    string_view sv,
-    serialize_options const& opts)
+    string_view sv)
 {
-    unsigned char buf[256];
-    serializer sr(
-        storage_ptr(),
-        buf,
-        sizeof(buf),
-        opts);
     std::string s;
+    serializer sr;
     sr.reset(sv);
     serialize_impl(s, sr);
     return s;
@@ -176,14 +113,14 @@ serialize(
 
 //----------------------------------------------------------
 
-// tag::example_operator_lt_lt[]
+//[example_operator_lt__lt_
 // Serialize a value into an output stream
 
 std::ostream&
 operator<<( std::ostream& os, value const& jv )
 {
     // Create a serializer
-    serializer sr( get_stream_flags(os) );
+    serializer sr;
 
     // Set the serializer up for our value
     sr.reset( &jv );
@@ -200,7 +137,7 @@ operator<<( std::ostream& os, value const& jv )
 
     return os;
 }
-// end::example_operator_lt_lt[]
+//]
 
 static
 void
@@ -221,7 +158,7 @@ operator<<(
     std::ostream& os,
     array const& arr)
 {
-    serializer sr( get_stream_flags(os) );
+    serializer sr;
     sr.reset(&arr);
     to_ostream(os, sr);
     return os;
@@ -232,7 +169,7 @@ operator<<(
     std::ostream& os,
     object const& obj)
 {
-    serializer sr( get_stream_flags(os) );
+    serializer sr;
     sr.reset(&obj);
     to_ostream(os, sr);
     return os;
@@ -243,20 +180,12 @@ operator<<(
     std::ostream& os,
     string const& str)
 {
-    serializer sr( get_stream_flags(os) );
+    serializer sr;
     sr.reset(&str);
     to_ostream(os, sr);
     return os;
 }
 
-std::ostream&
-operator<<( std::ostream& os, serialize_options const& opts )
-{
-    os.iword(serialize_xalloc) = to_bitmask(opts);
-    return os;
-}
-
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

@@ -2,9 +2,8 @@
 
 // Copyright (c) 2013-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2021-2024.
-// Modifications copyright (c) 2021-2024, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2021.
+// Modifications copyright (c) 2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -105,6 +104,8 @@ int main()
             multi_polygon, multi_polygon
         >::type strategy;
 
+    using rescale_policy_type = typename bg::rescale_policy_type<pt>::type;
+
     try
     {
 
@@ -125,7 +126,10 @@ int main()
         bg::correct(p);
         mp.push_back(p);
 
-        bg::detail::overlay::has_self_intersections(mp, strategy);
+        rescale_policy_type robust_policy
+            = bg::get_rescale_policy<rescale_policy_type>(mp, strategy);
+
+        bg::detail::overlay::has_self_intersections(mp, strategy, robust_policy);
 
         std::ostringstream out;
         out << "original " << poly_list.size();
@@ -170,9 +174,12 @@ int main()
 
 #ifdef CHECK_SELF_INTERSECTIONS
 
+        rescale_policy_type robust_policy_i
+            = bg::get_rescale_policy<rescale_policy_type>(mp_i, strategy);
+
         try
         {
-            boost::geometry::detail::overlay::has_self_intersections(mp_i, strategy);
+            boost::geometry::detail::overlay::has_self_intersections(mp_i, strategy, robust_policy_i);
         }
         catch(...)
         {
@@ -182,7 +189,7 @@ int main()
             std::cout << boost::geometry::wkt(mp_i) << std::endl;
             try
             {
-                boost::geometry::detail::overlay::has_self_intersections(mp_i, strategy);
+                boost::geometry::detail::overlay::has_self_intersections(mp_i, strategy, robust_policy_i);
             }
             catch(...)
             {
@@ -190,9 +197,12 @@ int main()
             break;
         }
 
+        rescale_policy_type robust_policy_d
+            = bg::get_rescale_policy<rescale_policy_type>(mp_d, strategy);
+
         try
         {
-            boost::geometry::detail::overlay::has_self_intersections(mp_d, strategy);
+            boost::geometry::detail::overlay::has_self_intersections(mp_d, strategy, robust_policy_d);
         }
         catch(...)
         {
@@ -203,9 +213,12 @@ int main()
             break;
         }
 
+        rescale_policy_type robust_policy_e
+            = bg::get_rescale_policy<rescale_policy_type>(mp_e, strategy);
+
         try
         {
-            boost::geometry::detail::overlay::has_self_intersections(mp_e, strategy);
+            boost::geometry::detail::overlay::has_self_intersections(mp_e, strategy, robust_policy_e);
         }
         catch(...)
         {

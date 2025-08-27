@@ -2,9 +2,9 @@
 
 // Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2014-2024.
-// Modifications copyright (c) 2014-2024, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2014, 2020.
+// Modifications copyright (c) 2014-2020, Oracle and/or its affiliates.
+
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -22,8 +22,6 @@
 #include <boost/geometry/core/tags.hpp>
 #include <boost/geometry/geometries/concepts/check.hpp>
 
-#include <boost/geometry/algorithms/detail/covered_by/implementation.hpp>
-
 // TODO: those headers probably may be removed
 #include <boost/geometry/algorithms/detail/overlay/get_ring.hpp>
 #include <boost/geometry/algorithms/detail/overlay/get_turns.hpp>
@@ -35,6 +33,7 @@
 
 #include <boost/geometry/algorithms/detail/intersection/interface.hpp>
 
+#include <boost/geometry/algorithms/covered_by.hpp>
 #include <boost/geometry/algorithms/envelope.hpp>
 #include <boost/geometry/algorithms/num_points.hpp>
 
@@ -53,21 +52,33 @@ struct intersection_multi_linestring_multi_linestring_point
     template
     <
         typename MultiLinestring1, typename MultiLinestring2,
+        typename RobustPolicy,
         typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(MultiLinestring1 const& ml1,
             MultiLinestring2 const& ml2,
+            RobustPolicy const& robust_policy,
             OutputIterator out,
             Strategy const& strategy)
     {
         // Note, this loop is quadratic w.r.t. number of linestrings per input.
         // Future Enhancement: first do the sections of each, then intersect.
-        for (auto it1 = boost::begin(ml1); it1 != boost::end(ml1); ++it1)
+        for (typename boost::range_iterator
+                <
+                    MultiLinestring1 const
+                >::type it1 = boost::begin(ml1);
+            it1 != boost::end(ml1);
+            ++it1)
         {
-            for (auto it2 = boost::begin(ml2); it2 != boost::end(ml2); ++it2)
+            for (typename boost::range_iterator
+                    <
+                        MultiLinestring2 const
+                    >::type it2 = boost::begin(ml2);
+                it2 != boost::end(ml2);
+                ++it2)
             {
                 out = intersection_linestring_linestring_point<PointOut>
-                      ::apply(*it1, *it2, out, strategy);
+                      ::apply(*it1, *it2, robust_policy, out, strategy);
             }
         }
 
@@ -82,17 +93,24 @@ struct intersection_linestring_multi_linestring_point
     template
     <
         typename Linestring, typename MultiLinestring,
+        typename RobustPolicy,
         typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(Linestring const& linestring,
             MultiLinestring const& ml,
+            RobustPolicy const& robust_policy,
             OutputIterator out,
             Strategy const& strategy)
     {
-        for (auto it = boost::begin(ml); it != boost::end(ml); ++it)
+        for (typename boost::range_iterator
+                <
+                    MultiLinestring const
+                >::type it = boost::begin(ml);
+            it != boost::end(ml);
+            ++it)
         {
             out = intersection_linestring_linestring_point<PointOut>
-                  ::apply(linestring, *it, out, strategy);
+                  ::apply(linestring, *it, robust_policy, out, strategy);
         }
 
         return out;
@@ -114,18 +132,25 @@ struct intersection_of_multi_linestring_with_areal
     template
     <
         typename MultiLinestring, typename Areal,
+        typename RobustPolicy,
         typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(MultiLinestring const& ml, Areal const& areal,
+            RobustPolicy const& robust_policy,
             OutputIterator out,
             Strategy const& strategy)
     {
-        for (auto it = boost::begin(ml); it != boost::end(ml); ++it)
+        for (typename boost::range_iterator
+                <
+                    MultiLinestring const
+                >::type it = boost::begin(ml);
+            it != boost::end(ml);
+            ++it)
         {
             out = intersection_of_linestring_with_areal
                 <
                     ReverseAreal, LineStringOut, OverlayType, FollowIsolatedPoints
-                >::apply(*it, areal, out, strategy);
+                >::apply(*it, areal, robust_policy, out, strategy);
         }
 
         return out;
@@ -146,16 +171,18 @@ struct intersection_of_areal_with_multi_linestring
     template
     <
         typename Areal, typename MultiLinestring,
+        typename RobustPolicy,
         typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(Areal const& areal, MultiLinestring const& ml,
+            RobustPolicy const& robust_policy,
             OutputIterator out,
             Strategy const& strategy)
     {
         return intersection_of_multi_linestring_with_areal
             <
                 ReverseAreal, LineStringOut, OverlayType, FollowIsolatedPoints
-            >::apply(ml, areal, out, strategy);
+            >::apply(ml, areal, robust_policy, out, strategy);
     }
 };
 
@@ -167,17 +194,22 @@ struct clip_multi_linestring
     template
     <
         typename MultiLinestring, typename Box,
+        typename RobustPolicy,
         typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(MultiLinestring const& multi_linestring,
             Box const& box,
+            RobustPolicy const& robust_policy,
             OutputIterator out, Strategy const& )
     {
-        strategy::intersection::liang_barsky<Box, point_type_t<LinestringOut>> lb_strategy;
-        for (auto it = boost::begin(multi_linestring); it != boost::end(multi_linestring); ++it)
+        typedef typename point_type<LinestringOut>::type point_type;
+        strategy::intersection::liang_barsky<Box, point_type> lb_strategy;
+        for (typename boost::range_iterator<MultiLinestring const>::type it
+            = boost::begin(multi_linestring);
+            it != boost::end(multi_linestring); ++it)
         {
             out = detail::intersection::clip_range_with_box
-                <LinestringOut>(box, *it, out, lb_strategy);
+                <LinestringOut>(box, *it, robust_policy, out, lb_strategy);
         }
         return out;
     }
@@ -493,40 +525,6 @@ struct intersection_insert
                 // TODO: in general the result of difference should depend on the first argument
                 //       but this specialization calls L/A in reality so the first argument is linear.
                 //       So expect only L for difference?
-                std::conditional_t
-                    <
-                        (OverlayType == overlay_intersection),
-                        point_tag,
-                        void
-                    >,
-                linestring_tag
-            >
-{};
-
-template
-<
-    typename Linestring, typename MultiPolygon,
-    typename TupledOut,
-    overlay_type OverlayType,
-    bool ReverseMultiLinestring, bool ReverseMultiPolygon
->
-struct intersection_insert
-    <
-        Linestring, MultiPolygon,
-        TupledOut,
-        OverlayType,
-        ReverseMultiLinestring, ReverseMultiPolygon,
-        linestring_tag, multi_polygon_tag, detail::tupled_output_tag,
-        linear_tag, areal_tag, detail::tupled_output_tag
-    > : detail::intersection::intersection_of_linestring_with_areal
-            <
-                ReverseMultiPolygon, TupledOut, OverlayType, true
-            >
-      , detail::expect_output
-            <
-                Linestring, MultiPolygon, TupledOut,
-                // NOTE: points can be the result only in case of intersection.
-                // TODO: union should require L and A
                 std::conditional_t
                     <
                         (OverlayType == overlay_intersection),

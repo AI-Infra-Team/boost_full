@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <limits>
-#include "ostream.hpp"
+#include "std_ostream.hpp"
 
 namespace boost {
 namespace histogram {

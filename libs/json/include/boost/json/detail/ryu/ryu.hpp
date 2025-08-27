@@ -24,20 +24,17 @@
 
 #include <boost/json/detail/config.hpp>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 namespace ryu {
 
 BOOST_JSON_DECL
-int d2s_buffered_n(
-    double f, char* result, bool allow_infinity_and_nan = true) noexcept;
+int d2s_buffered_n(double f, char* result) noexcept;
 
 } // ryu
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

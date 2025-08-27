@@ -20,16 +20,11 @@ include(BoostMessage)
 #   COMPILE_DEFINITIONS defs...
 #   COMPILE_OPTIONS opts...
 #   COMPILE_FEATURES features...
-#   INCLUDE_DIRECTORIES dirs...
 # )
 
 function(boost_test_jamfile)
 
-  cmake_parse_arguments(_
-    ""
-    "FILE;PREFIX"
-    "LIBRARIES;LINK_LIBRARIES;COMPILE_DEFINITIONS;COMPILE_OPTIONS;COMPILE_FEATURES;INCLUDE_DIRECTORIES"
-    ${ARGN})
+  cmake_parse_arguments(_ "" "FILE;PREFIX" "LIBRARIES;LINK_LIBRARIES;COMPILE_DEFINITIONS;COMPILE_OPTIONS;COMPILE_FEATURES" ${ARGN})
 
   if(__UNPARSED_ARGUMENTS)
     message(AUTHOR_WARNING "boost_test_jamfile: extra arguments ignored: ${__UNPARSED_ARGUMENTS}")
@@ -53,34 +48,21 @@ function(boost_test_jamfile)
   set(types "compile|compile-fail|link|link-fail|run|run-fail")
 
   foreach(line IN LISTS data)
-    # Extract type and remaining part, (silently) ignore any other line
-    if(line MATCHES "^[ \t]*(${types})([ \t].*|$)")
-      set(type ${CMAKE_MATCH_1})
-      set(args ${CMAKE_MATCH_2}) # This starts with a space
 
-      if(args MATCHES "^[ \t]+([^ \t]+)[ \t]*(;[ \t]*)?$")
-        # Single source, e.g. 'run foo.c ;'
-        # Semicolon is optional to support e.g. 'run mytest.cpp\n : : : something ;' (ignore 'something')
-        set(sources ${CMAKE_MATCH_1})
-      elseif(args MATCHES "^(([ \t]+[a-zA-Z0-9_]+\.cpp)+)[ \t]*(;[ \t]*)?$")
-        # Multiple sources with restricted names to avoid false positives, e.g. 'run foo.cpp bar.cpp ;'
-        # Again with optional semicolon
-        string(STRIP "${CMAKE_MATCH_1}" sources)
-        # Convert space-separated list into CMake list
-        string(REGEX REPLACE "\.cpp[ \t]+" ".cpp;" sources "${sources}")
-      else()
-        boost_message(VERBOSE "boost_test_jamfile: Jamfile line ignored: ${line}")
-        continue()
-      endif()
+    if(line MATCHES "^[ \t]*(${types})[ \t]+([^ \t]+)[ \t]*(\;[ \t]*)?$")
 
-      boost_test(PREFIX "${__PREFIX}" TYPE "${type}"
-        SOURCES ${sources}
+      boost_test(PREFIX "${__PREFIX}" TYPE "${CMAKE_MATCH_1}"
+        SOURCES "${CMAKE_MATCH_2}"
         LINK_LIBRARIES ${__LIBRARIES} ${__LINK_LIBRARIES}
         COMPILE_DEFINITIONS ${__COMPILE_DEFINITIONS}
         COMPILE_OPTIONS ${__COMPILE_OPTIONS}
         COMPILE_FEATURES ${__COMPILE_FEATURES}
-        INCLUDE_DIRECTORIES ${__INCLUDE_DIRECTORIES}
       )
+
+    elseif(line MATCHES "^[ \t]*(${types})([ \t]|$)")
+
+      boost_message(VERBOSE "boost_test_jamfile: Jamfile line ignored: ${line}")
+
     endif()
 
   endforeach()

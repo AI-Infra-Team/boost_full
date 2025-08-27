@@ -19,30 +19,30 @@
       typedef RealType  value_type;
       typedef Policy    policy_type;
       // Constructor from two shape parameters, alpha & beta:
-      BOOST_MATH_GPU_ENABLED beta_distribution(RealType a, RealType b);
+      beta_distribution(RealType a, RealType b);
       
       // Parameter accessors:
-      BOOST_MATH_GPU_ENABLED RealType alpha() const;
-      BOOST_MATH_GPU_ENABLED RealType beta() const;
+      RealType alpha() const;
+      RealType beta() const;
       
       // Parameter estimators of alpha or beta from mean and variance.
-      BOOST_MATH_GPU_ENABLED static RealType find_alpha(
+      static RealType find_alpha(
         RealType mean, // Expected value of mean.
         RealType variance); // Expected value of variance.
       
-      BOOST_MATH_GPU_ENABLED static RealType find_beta(
+      static RealType find_beta(
         RealType mean, // Expected value of mean.
         RealType variance); // Expected value of variance.
   
       // Parameter estimators from
       // either alpha or beta, and x and probability.
       
-      BOOST_MATH_GPU_ENABLED static RealType find_alpha(
+      static RealType find_alpha(
         RealType beta, // from beta.
         RealType x, //  x.
         RealType probability); // cdf
       
-      BOOST_MATH_GPU_ENABLED static RealType find_beta(
+      static RealType find_beta(
         RealType alpha, // alpha.
         RealType x, // probability x.
         RealType probability); // probability cdf.
@@ -98,7 +98,7 @@ whose apex is away from the centre (where x = half).
 
 [h5 Constructor]
 
-   BOOST_MATH_GPU_ENABLED beta_distribution(RealType alpha, RealType beta);
+   beta_distribution(RealType alpha, RealType beta);
 
 Constructs a beta distribution with shape parameters /alpha/ and /beta/.
 
@@ -117,11 +117,11 @@ in the graph above).
 
 [h5 Parameter Accessors]
 
-   BOOST_MATH_GPU_ENABLED RealType alpha() const;
+   RealType alpha() const;
    
 Returns the parameter /alpha/ from which this distribution was constructed.
    
-   BOOST_MATH_GPU_ENABLED RealType beta() const;
+   RealType beta() const;
    
 Returns the parameter /beta/ from which this distribution was constructed.
 
@@ -182,8 +182,6 @@ Returns the value of [beta] that gives:
 
 All the [link math_toolkit.dist_ref.nmp usual non-member accessor functions]
 that are generic to all distributions are supported: __usual_accessors.
-For this distribution all non-member accessor functions are marked with `BOOST_MATH_GPU_ENABLED` and can
-be run on both host and device.
 
 The formulae for calculating these are shown in the table below, and at
 [@http://mathworld.wolfram.com/BetaDistribution.html Wolfram Mathworld].

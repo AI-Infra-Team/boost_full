@@ -1,6 +1,6 @@
 // Boost.Geometry
 
-// Copyright (c) 2017-2022 Oracle and/or its affiliates.
+// Copyright (c) 2017-2020 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -12,7 +12,8 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_OVERLAY_RANGE_IN_GEOMETRY_HPP
 
 
-#include <boost/geometry/algorithms/detail/covered_by/implementation.hpp>
+#include <boost/geometry/algorithms/covered_by.hpp>
+#include <boost/geometry/core/access.hpp>
 #include <boost/geometry/core/tags.hpp>
 #include <boost/geometry/iterators/point_iterator.hpp>
 
@@ -29,11 +30,11 @@ namespace detail { namespace overlay
 template
 <
     typename Geometry,
-    typename Tag = geometry::tag_t<Geometry>
+    typename Tag = typename geometry::tag<Geometry>::type
 >
 struct points_range
 {
-    using iterator_type = geometry::point_iterator<Geometry const>;
+    typedef geometry::point_iterator<Geometry const> iterator_type;
 
     explicit points_range(Geometry const& geometry)
         : m_geometry(geometry)
@@ -55,8 +56,8 @@ struct points_range
 template <typename Box>
 struct points_range<Box, box_tag>
 {
-    using point_type = geometry::point_type_t<Box>;
-    using iterator_type = const point_type *;
+    typedef typename geometry::point_type<Box>::type point_type;
+    typedef const point_type * iterator_type;
 
     explicit points_range(Box const& box)
     {
@@ -80,7 +81,7 @@ struct points_range<Box, box_tag>
 template
 <
     typename Geometry,
-    typename Tag = geometry::tag_t<Geometry>
+    typename Tag = typename geometry::tag<Geometry>::type
 >
 struct point_in_geometry_helper
 {
@@ -106,14 +107,14 @@ struct point_in_geometry_helper<Box, box_tag>
 // This function returns
 // when it finds a point of geometry1 inside or outside geometry2
 template <typename Geometry1, typename Geometry2, typename Strategy>
-inline int range_in_geometry(Geometry1 const& geometry1,
+static inline int range_in_geometry(Geometry1 const& geometry1,
                                     Geometry2 const& geometry2,
                                     Strategy const& strategy,
                                     bool skip_first = false)
 {
     int result = 0;
     points_range<Geometry1> points(geometry1);
-    using iterator_type = typename points_range<Geometry1>::iterator_type;
+    typedef typename points_range<Geometry1>::iterator_type iterator_type;
     iterator_type const end = points.end();
     iterator_type it = points.begin();
     if (it == end)
@@ -153,7 +154,7 @@ inline int range_in_geometry(Point1 const& first_point1,
         // check points of geometry1 until point inside/outside is found
         // NOTE: skip first point because it should be already tested above
         result = range_in_geometry(geometry1, geometry2, strategy, true);
-    }
+    }    
     return result;
 }
 

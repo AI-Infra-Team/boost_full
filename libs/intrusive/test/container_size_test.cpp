@@ -21,6 +21,7 @@
 #include <boost/intrusive/splay_set.hpp>
 #include <boost/intrusive/treap_set.hpp>
 #include <boost/intrusive/unordered_set.hpp>
+#include <boost/static_assert.hpp>
 #include "itestvalue.hpp"
 
 using namespace boost::intrusive;

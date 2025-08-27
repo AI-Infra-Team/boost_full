@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2021 Alexander Grund
+//  Copyright (c) 2019-2021 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_NOWIDE_TEST_NO_MAIN
 #include "file_test_helpers.hpp"
@@ -9,7 +10,6 @@
 #include <boost/nowide/cstdio.hpp>
 #include "test.hpp"
 #include <algorithm>
-#include <iostream>
 #include <limits>
 #include <numeric>
 #include <random>
@@ -76,16 +76,9 @@ namespace nowide {
             return result;
         }
 
-        static std::minstd_rand make_rand_engine()
-        {
-            const auto seed = std::random_device{}();
-            std::cout << "RNG seed: " << seed << std::endl;
-            return std::minstd_rand(seed);
-        }
-
         std::string create_random_data(size_t num_chars, data_type type)
         {
-            static std::minstd_rand rng = make_rand_engine();
+            static std::minstd_rand rng(std::random_device{}());
             std::string result(num_chars, '\0');
             if(type == data_type::binary)
             {

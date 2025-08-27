@@ -1,6 +1,6 @@
 // Boost.Geometry
 
-// Copyright (c) 2021-2022, Oracle and/or its affiliates.
+// Copyright (c) 2021, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -12,7 +12,11 @@
 
 
 #include <boost/geometry/strategies/buffer/services.hpp>
-#include <boost/geometry/strategies/distance/cartesian.hpp>
+#include <boost/geometry/strategies/distance/detail.hpp>
+#include <boost/geometry/strategies/relate/cartesian.hpp>
+
+#include <boost/geometry/strategies/cartesian/distance_projected_point.hpp>
+#include <boost/geometry/strategies/cartesian/distance_pythagoras.hpp>
 
 
 namespace boost { namespace geometry
@@ -23,8 +27,21 @@ namespace strategies { namespace buffer
 
 template <typename CalculationType = void>
 struct cartesian
-    : public strategies::distance::cartesian<CalculationType>
-{};
+    : public strategies::relate::cartesian<CalculationType>
+{
+    // Additional strategies for simplify()
+
+    template <typename Geometry1, typename Geometry2>
+    static auto distance(Geometry1 const&, Geometry2 const&,
+                         distance::detail::enable_if_ps_t<Geometry1, Geometry2> * = nullptr)
+    {
+        return strategy::distance::projected_point
+            <
+                CalculationType,
+                strategy::distance::pythagoras<CalculationType>
+            >();
+    }
+};
 
 
 namespace services

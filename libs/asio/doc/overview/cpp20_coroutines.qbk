@@ -1,5 +1,5 @@
 [/
- / Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+ / Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
  /
  / Distributed under the Boost Software License, Version 1.0. (See accompanying
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -25,8 +25,8 @@ keyword, as shown in the following example:
       char data[1024];
       for (;;)
       {
-        std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data));
-        co_await async_write(socket, boost::asio::buffer(data, n));
+        std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data), boost::asio::use_awaitable);
+        co_await async_write(socket, boost::asio::buffer(data, n), boost::asio::use_awaitable);
       }
     }
     catch (std::exception& e)
@@ -56,20 +56,13 @@ boost_asio.reference.detached `boost::asio::detached`], which is used to explici
 the result of an asynchronous operation.
 
 In this example the body of the coroutine is implemented in the `echo`
-function. When an asynchronous operation is called without explicitly specifying
-a completion token, the default completion token [link boost_asio.reference.deferred
-`deferred`] is used. This causes the operation's initiating function to return
-a deferred asynchronous operation object that may be used with the `co_await`
-keyword:
-
-  std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data));
-
-Alternatively, we can specify the `use_awaitable` completion token:
+function. When the `use_awaitable` completion token is passed to an
+asynchronous operation, the operation's initiating function returns an
+`awaitable` that may be used with the `co_await` keyword:
 
   std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data), boost::asio::use_awaitable);
 
-With either of those completion tokens, when an asynchronous operation's handler
-signature has the form:
+Where an asynchronous operation's handler signature has the form:
 
   void handler(boost::system::error_code ec, result_type result);
 
@@ -88,10 +81,11 @@ passed back to the coroutine as a `system_error` exception.
 [heading Error Handling]
 
 To perform explicit error handling, rather than the default exception-throwing
-behaviour, use the [link boost_asio.reference.as_tuple `as_tuple`] or
-[link boost_asio.reference.redirect_error `redirect_error`] completion token adapters.
+behaviour, use the [link boost_asio.reference.experimental__as_tuple
+`experimental::as_tuple`] or [link boost_asio.reference.redirect_error
+`redirect_error`] completion token adapters.
 
-The `as_tuple` completion token adapter packages the completion
+The `experimental::as_tuple` completion token adapter packages the completion
 handler arguments into a single tuple, which is then returned as the result of
 the awaited operation. For example:
 
@@ -101,27 +95,8 @@ the awaited operation. For example:
     for (;;)
     {
       std::tuple<boost::system::error_code, std::size_t> result =
-        co_await socket.async_read_some(
-          boost::asio::buffer(data), boost::asio::as_tuple);
-      if (!std::get<0>(result))
-      {
-        // success
-      }
-
-      // ...
-    }
-  }
-
-or if explicitly specifying the `use_awaitable` completion token:
-
-  boost::asio::awaitable<void> echo(tcp::socket socket)
-  {
-    char data[1024];
-    for (;;)
-    {
-      std::tuple<boost::system::error_code, std::size_t> result =
         co_await socket.async_read_some(boost::asio::buffer(data),
-          boost::asio::as_tuple(boost::asio::use_awaitable));
+          boost::asio::experimental::as_tuple(boost::asio::use_awaitable));
       if (!std::get<0>(result))
       {
         // success
@@ -138,8 +113,8 @@ The result can also be captured directly into a structured binding:
     char data[1024];
     for (;;)
     {
-      auto [ec, n] = co_await socket.async_read_some(
-          boost::asio::buffer(data), boost::asio::as_tuple);
+      auto [ec, n] = co_await socket.async_read_some(boost::asio::buffer(data),
+          boost::asio::experimental::as_tuple(boost::asio::use_awaitable));
       if (!ec)
       {
         // success
@@ -158,8 +133,8 @@ capture the error into a supplied `error_code` variable:
     for (;;)
     {
       boost::system::error_code ec;
-      std::size_t n = co_await socket.async_read_some(
-          boost::asio::buffer(data), boost::asio::redirect_error(ec));
+      std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data),
+          boost::asio::redirect_error(boost::asio::use_awaitable, ec));
       if (!ec)
       {
         // success
@@ -246,65 +221,19 @@ namespace into scope:
 
   using namespace boost::asio::experimental::awaitable_operators;
 
-Note: To use these operators we must explicitly specify the `use_awaitable`
-completion token.
-
-[heading Lightweight Coroutines Implementing Asynchonous Operations]
-
-The `co_composed` template facilitates a lightweight implementation of
-user-defined asynchronous operations using C++20 coroutines. The following
-example illustrates a simple asynchronous operation that implements an echo
-protocol in terms of a coroutine:
-
-  template <typename CompletionToken>
-  auto async_echo(tcp::socket& socket,
-      CompletionToken&& token)
-  {
-    return boost::asio::async_initiate<
-      CompletionToken, void(boost::system::error_code)>(
-        boost::asio::co_composed<
-          void(boost::system::error_code)>(
-            [](auto state, tcp::socket& socket) -> void
-            {
-              try
-              {
-                state.throw_if_cancelled(true);
-                state.reset_cancellation_state(
-                  boost::asio::enable_terminal_cancellation());
-
-                for (;;)
-                {
-                  char data[1024];
-                  std::size_t n =
-                    co_await socket.async_read_some(
-                      boost::asio::buffer(data));
-
-                  co_await boost::asio::async_write(socket,
-                      boost::asio::buffer(data, n));
-                }
-              }
-              catch (const boost::system::system_error& e)
-              {
-                co_return {e.code()};
-              }
-            }, socket),
-        token, std::ref(socket));
-  }
-
 [heading See Also]
 
 [link boost_asio.reference.co_spawn co_spawn],
 [link boost_asio.reference.detached detached],
-[link boost_asio.reference.as_tuple as_tuple],
 [link boost_asio.reference.redirect_error redirect_error],
 [link boost_asio.reference.awaitable awaitable],
 [link boost_asio.reference.use_awaitable_t use_awaitable_t],
 [link boost_asio.reference.use_awaitable use_awaitable],
 [link boost_asio.reference.this_coro__executor this_coro::executor],
-[link boost_asio.reference.co_composed co_composed],
+[link boost_asio.reference.experimental__coro experimental::coro],
 [link boost_asio.examples.cpp17_examples.coroutines_ts_support Coroutines examples],
-[link boost_asio.overview.composition.coro Resumable C++20 Coroutines],
-[link boost_asio.overview.composition.spawn Stackful Coroutines],
-[link boost_asio.overview.composition.coroutine Stackless Coroutines].
+[link boost_asio.overview.core.coro Resumable C++20 Coroutines],
+[link boost_asio.overview.core.spawn Stackful Coroutines],
+[link boost_asio.overview.core.coroutine Stackless Coroutines].
 
 [endsect]

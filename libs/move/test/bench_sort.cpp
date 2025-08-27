@@ -18,7 +18,6 @@
 #include <boost/config.hpp>
 #include <boost/move/unique_ptr.hpp>
 #include <boost/move/detail/nsec_clock.hpp>
-#include <boost/move/detail/force_ptr.hpp>
 #include <cstdlib>
 
 using boost::move_detail::cpu_timer;
@@ -69,21 +68,21 @@ template<class T, class Compare>
 void adaptive_sort_buffered(T *elements, std::size_t element_count, Compare comp, std::size_t BufLen)
 {
    boost::movelib::unique_ptr<char[]> mem(new char[sizeof(T)*BufLen]);
-   boost::movelib::adaptive_sort(elements, elements + element_count, comp, boost::move_detail::force_ptr<T*>(mem.get()), BufLen);
+   boost::movelib::adaptive_sort(elements, elements + element_count, comp, reinterpret_cast<T*>(mem.get()), BufLen);
 }
 
 template<class T, class Compare>
 void std_like_adaptive_stable_sort_buffered(T *elements, std::size_t element_count, Compare comp, std::size_t BufLen)
 {
    boost::movelib::unique_ptr<char[]> mem(new char[sizeof(T)*BufLen]);
-   boost::movelib::stable_sort_adaptive_ONlogN2(elements, elements + element_count, comp, boost::move_detail::force_ptr<T*>(mem.get()), BufLen);
+   boost::movelib::stable_sort_adaptive_ONlogN2(elements, elements + element_count, comp, reinterpret_cast<T*>(mem.get()), BufLen);
 }
 
 template<class T, class Compare>
 void merge_sort_buffered(T *elements, std::size_t element_count, Compare comp)
 {
    boost::movelib::unique_ptr<char[]> mem(new char[sizeof(T)*((element_count+1)/2)]);
-   boost::movelib::merge_sort(elements, elements + element_count, comp, boost::move_detail::force_ptr<T*>(mem.get()));
+   boost::movelib::merge_sort(elements, elements + element_count, comp, reinterpret_cast<T*>(mem.get()));
 }
 
 enum AlgoType
@@ -125,7 +124,7 @@ const char *AlgoNames [] = { "MergeSort      "
                            , "HeapSort       "
                            };
 
-BOOST_MOVE_STATIC_ASSERT((sizeof(AlgoNames)/sizeof(*AlgoNames)) == MaxSort);
+BOOST_STATIC_ASSERT((sizeof(AlgoNames)/sizeof(*AlgoNames)) == MaxSort);
 
 template<class T>
 bool measure_algo(T *elements, std::size_t element_count, std::size_t alg, nanosecond_type &prev_clock)

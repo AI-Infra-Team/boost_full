@@ -1,5 +1,5 @@
 [/
- / Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+ / Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
  /
  / Distributed under the Boost Software License, Version 1.0. (See accompanying
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,8 +11,8 @@
 cancellation. For most use cases, consider using a higher level abstraction,
 such as [link boost_asio.reference.experimental__make_parallel_group
 experimental::make_parallel_group] or the [link
-boost_asio.overview.composition.cpp20_coroutines.co_ordinating_parallel_coroutines
-logical operators] for `awaitable`.]
+boost_asio.overview.core.cpp20_coroutines.co_ordinating_parallel_coroutines logical
+operators] for `awaitable`.]
 
 I/O objects, such as sockets and timers, support object-wide cancellation of
 outstanding asynchronous operations via their `close` or `cancel` member
@@ -201,7 +201,7 @@ occur.
 
 Furthermore, a stronger guarantee always satisfies the requirements of a weaker
 guarantee. The `partial` guarantee still satisfies the `terminal` guarantee.
-The `total` guarantee satisfies both `partial` and `terminal`. This means that
+The `total` guarantee satisfies both `partial` and `total`. This means that
 when an operation supports a given cancellation type as its strongest
 guarantee, it should honour cancellation requests for any of the weaker
 guarantees.
@@ -229,8 +229,6 @@ operations, or composed operations, is currently supported by:
 * sockets on POSIX and Windows
 * POSIX descriptors
 * Windows HANDLEs
-* signal sets
-* serial ports
 * SSL streams
 * all Boost.Asio-provided composed operations such as `async_read` and `async_write`
 * compositions based on `async_compose`

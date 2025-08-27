@@ -13,7 +13,7 @@
 #
 # if !BOOST_PP_IS_SELFISH
 #
-# include "iteration.h"
+# include <libs/preprocessor/test/iteration.h>
 #
 # define TEST(n) BEGIN n == n END
 #
@@ -37,7 +37,7 @@
 #
 # endif
 #
-# define BOOST_PP_INDIRECT_SELF "iteration.cpp"
+# define BOOST_PP_INDIRECT_SELF <libs/preprocessor/test/iteration.cpp>
 # include BOOST_PP_INCLUDE_SELF()
 #
 # else

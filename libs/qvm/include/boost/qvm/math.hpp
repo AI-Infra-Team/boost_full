@@ -1,12 +1,13 @@
 #ifndef BOOST_QVM_MATH_HPP_INCLUDED
 #define BOOST_QVM_MATH_HPP_INCLUDED
 
-// Copyright 2008-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/// Copyright (c) 2008-2021 Emil Dotchevski and Reverge Studios, Inc.
+
+/// Distributed under the Boost Software License, Version 1.0. (See accompanying
+/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <math.h>
-#include <boost/qvm/config.hpp>
+#include <boost/qvm/inline.hpp>
 
 namespace boost { namespace qvm {
 

@@ -3,7 +3,6 @@
 // Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2015 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2015 Mateusz Loskot, London, UK.
-// Copyright (c) 2023 Adam Wulkiewicz, Lodz, Poland.
 
 // This file was modified by Oracle on 2014-2021.
 // Modifications copyright (c) 2014-2021 Oracle and/or its affiliates.
@@ -23,8 +22,6 @@
 #define BOOST_GEOMETRY_ALGORITHMS_CONVEX_HULL_INTERFACE_HPP
 
 #include <array>
-
-#include <boost/range/size.hpp>
 
 #include <boost/geometry/algorithms/detail/assign_box_corners.hpp>
 #include <boost/geometry/algorithms/detail/convex_hull/graham_andrew.hpp>
@@ -53,7 +50,7 @@
 #include <boost/geometry/strategies/convex_hull/spherical.hpp>
 #include <boost/geometry/strategies/default_strategy.hpp>
 
-#include <boost/geometry/util/constexpr.hpp>
+#include <boost/geometry/util/condition.hpp>
 #include <boost/geometry/util/range.hpp>
 #include <boost/geometry/util/sequence.hpp>
 #include <boost/geometry/util/type_traits.hpp>
@@ -128,7 +125,7 @@ private:
 
 // TODO: Or just implement point_type<> for GeometryCollection
 //   and enforce the same point_type used in the whole sequence in check().
-template <typename Geometry, typename Tag = tag_t<Geometry>>
+template <typename Geometry, typename Tag = typename tag<Geometry>::type>
 struct default_strategy
 {
     using type = typename strategies::convex_hull::services::default_strategy
@@ -201,7 +198,7 @@ namespace dispatch
 template
 <
     typename Geometry,
-    typename Tag = tag_t<Geometry>
+    typename Tag = typename tag<Geometry>::type
 >
 struct convex_hull
 {
@@ -210,10 +207,10 @@ struct convex_hull
                              OutputGeometry& out,
                              Strategy const& strategy)
     {
-        detail::convex_hull::input_geometry_proxy<Geometry> in_proxy(geometry);
+        detail::convex_hull::input_geometry_proxy<Geometry> in_proxy(geometry);        
         detail::convex_hull::graham_andrew
             <
-                point_type_t<Geometry>
+                typename point_type<Geometry>::type
             >::apply(in_proxy, out, strategy);
     }
 };
@@ -227,20 +224,20 @@ struct convex_hull<Box, box_tag>
     template <typename OutputGeometry, typename Strategy>
     static inline void apply(Box const& box,
                              OutputGeometry& out,
-                             Strategy const& )
+                             Strategy const& strategy)
     {
         static bool const Close
             = geometry::closure<OutputGeometry>::value == closed;
         static bool const Reverse
             = geometry::point_order<OutputGeometry>::value == counterclockwise;
 
-        std::array<point_type_t<OutputGeometry>, 4> arr;
+        std::array<typename point_type<OutputGeometry>::type, 4> arr;
         // TODO: This assigns only 2d cooridnates!
         //       And it is also used in box_view<>!
         geometry::detail::assign_box_corners_oriented<Reverse>(box, arr);
 
         std::move(arr.begin(), arr.end(), range::back_inserter(out));
-        if BOOST_GEOMETRY_CONSTEXPR (Close)
+        if (BOOST_GEOMETRY_CONDITION(Close))
         {
             range::push_back(out, range::front(out));
         }
@@ -258,7 +255,7 @@ struct convex_hull<GeometryCollection, geometry_collection_tag>
     {
         // Assuming that single point_type is used by the GeometryCollection
         using subgeometry_type = typename detail::first_geometry_type<GeometryCollection>::type;
-        using point_type = geometry::point_type_t<subgeometry_type>;
+        using point_type = typename geometry::point_type<subgeometry_type>::type;
         using ring_type = model::ring<point_type, true, false>;
 
         // Calculate box rings once
@@ -304,7 +301,7 @@ private:
 };
 
 
-template <typename OutputGeometry, typename Tag = tag_t<OutputGeometry>>
+template <typename OutputGeometry, typename Tag = typename tag<OutputGeometry>::type>
 struct convex_hull_out
 {
     BOOST_GEOMETRY_STATIC_ASSERT_FALSE("This OutputGeometry is not supported.", OutputGeometry, Tag);
@@ -531,7 +528,7 @@ struct convex_hull<default_strategy>
 
 namespace resolve_dynamic {
 
-template <typename Geometry, typename Tag = tag_t<Geometry>>
+template <typename Geometry, typename Tag = typename tag<Geometry>::type>
 struct convex_hull
 {
     template <typename OutputGeometry, typename Strategy>

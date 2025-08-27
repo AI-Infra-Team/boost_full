@@ -1,9 +1,9 @@
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/config.hpp>
-
+#include <boost/leaf/detail/config.hpp>
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 #include <iostream>
@@ -64,7 +64,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(), info<1>{1} );
+                throw leaf::exception( my_exception(), info<1>{1} );
             },
             []( my_exception const &, info<1> const & x )
             {
@@ -78,7 +78,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( info<1>{1} );
+                throw leaf::exception( info<1>{1} );
             },
             []( info<1> const & x )
             {
@@ -103,7 +103,7 @@ int main()
         BOOST_TEST_EQ(r.value(), 1);
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -131,7 +131,7 @@ int main()
             leaf::result<int> r = leaf::try_handle_some(
                 []() -> leaf::result<int>
                 {
-                    leaf::throw_exception( my_exception(), info<1>{1} );
+                    throw leaf::exception( my_exception(), info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST(r);
@@ -141,7 +141,7 @@ int main()
             leaf::result<int> r = leaf::try_handle_some(
                 []() -> leaf::result<int>
                 {
-                    leaf::throw_exception( info<1>{1} );
+                    throw leaf::exception( info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST(r);
@@ -159,7 +159,7 @@ int main()
         }
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -177,7 +177,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(), info<1>{1} );
+                throw leaf::exception( my_exception(), info<1>{1} );
             },
             []( my_exception const &, info<1> const & x )
             {
@@ -194,7 +194,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( info<1>{1} );
+                throw leaf::exception( info<1>{1} );
             },
             []( info<1> const & x )
             {
@@ -225,7 +225,7 @@ int main()
         BOOST_TEST_EQ(r, 1);
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -256,7 +256,7 @@ int main()
             int r = leaf::try_handle_all(
                 []() -> leaf::result<int>
                 {
-                    leaf::throw_exception( my_exception(), info<1>{1} );
+                    throw leaf::exception( my_exception(), info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST_EQ(r, 1);
@@ -265,7 +265,7 @@ int main()
             int r = leaf::try_handle_all(
                 []() -> leaf::result<int>
                 {
-                    leaf::throw_exception( info<1>{1} );
+                    throw leaf::exception( info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST_EQ(r, 2);
@@ -281,7 +281,7 @@ int main()
         }
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -351,7 +351,7 @@ int main()
         BOOST_TEST_EQ(r, 4);
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -426,7 +426,7 @@ int main()
         BOOST_TEST_EQ(r, 4);
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -497,7 +497,7 @@ int main()
         BOOST_TEST_EQ(r, 5);
     }
 
-    ////////////////////////////////////////
+    ///////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -572,14 +572,14 @@ int main()
         BOOST_TEST_EQ(r, 5);
     }
 
-    ////////////////////////////////////////
+    //////////////////////////////////////
 
     // match_value<> with exceptions, try_handle_some
     {
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(42) );
+                throw leaf::exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 42> m )
             {
@@ -605,7 +605,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(42) );
+                throw leaf::exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 41> m )
             {
@@ -634,14 +634,14 @@ int main()
         BOOST_TEST(!r);
     }
 
-    ////////////////////////////////////////
+    //////////////////////////////////////
 
     // match_value<> with exceptions, try_handle_all
     {
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(42) );
+                throw leaf::exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 42> m )
             {
@@ -673,7 +673,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                leaf::throw_exception( my_exception(42) );
+                throw leaf::exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 41> m )
             {

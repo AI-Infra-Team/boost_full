@@ -12,17 +12,13 @@ on:
 
 env:
   B2_OPTS: -q -j2 warnings-as-errors=on
-  GCC_VERSION: 13
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
-  cancel-in-progress: true
+  GCC_VERSION: 11
 
 jobs:
   cov:
-    runs-on: ubuntu-24.04
+    runs-on: macos-10.15
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
     - name: Fetch Boost superproject
       run: |
         cd ..
@@ -33,8 +29,21 @@ jobs:
         python tools/boostdep/depinst/depinst.py --git_args "--depth 5 --jobs 3" histogram
         mv -f * $GITHUB_WORKSPACE
 
+        # # use hdembinski/serialization due to frequent errors in boostorg/serialization
+        # pushd libs/serialization
+        # git remote add patch https://github.com/HDembinski/serialization.git
+        # git fetch patch
+        # git checkout patch/boost_histogram
+        # popd
+
     - name: Prepare b2
-      run: ./bootstrap.sh
+      run: |
+        ./bootstrap.sh
+        ./b2 headers
+
+        # simulate bundled boost by moving the headers instead of symlinking
+        rm -rf boost/histogram*
+        mv -f libs/histogram/include/boost/* boost
 
     - name: Test cxxstd=latest coverage=on
       run: |
@@ -48,7 +57,7 @@ jobs:
         cd libs/histogram
         GCOV=gcov-${GCC_VERSION} tools/cov.py
 
-    - uses: coverallsapp/github-action@v2
+    - uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: libs/histogram/coverage.info

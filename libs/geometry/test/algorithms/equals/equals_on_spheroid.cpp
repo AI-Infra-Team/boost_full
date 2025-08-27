@@ -1,8 +1,7 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 // Unit test
 
-// Copyright (c) 2015-2025, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// Copyright (c) 2015, Oracle and/or its affiliates.
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -130,7 +129,7 @@ struct test_point_point_with_height
 template <typename P>
 void test_segment_segment(std::string const& header)
 {
-    using seg = bgm::segment<P>;
+    typedef bgm::segment<P> seg;
 
     std::string const str = header + "-";
 
@@ -159,7 +158,7 @@ void test_segment_segment(std::string const& header)
 
 BOOST_AUTO_TEST_CASE( equals_point_point_se )
 {
-    using cs_type = bg::cs::spherical_equatorial<bg::degree>;
+    typedef bg::cs::spherical_equatorial<bg::degree> cs_type;
 
     test_point_point<bgm::point<int, 2, cs_type> >::apply("se");
     test_point_point<bgm::point<double, 2, cs_type> >::apply("se");
@@ -177,36 +176,9 @@ BOOST_AUTO_TEST_CASE( equals_point_point_se )
         >::apply("se");
 }
 
-template <typename T>
-std::string to_string_with_precision(const T value, const int precision = 15)
-{
-    std::ostringstream out;
-    out << std::fixed << std::setprecision(precision) << value;
-    return out.str();
-}
-
-void test_pp_rad(double half_pi)
-{
-    using cs_radian = bg::cs::spherical_equatorial<bg::radian>;
-    using P = bgm::point<double, 2, cs_radian>;
-
-    test_geometry<P, P>("ser_pp_half_pi",
-                        "POINT(" + to_string_with_precision(-half_pi)  + " 0)",
-                        "POINT(" + to_string_with_precision(half_pi)  + " 0)", true);
-}
-
-BOOST_AUTO_TEST_CASE( equals_point_point_radian )
-{
-    test_pp_rad(bg::math::d2r<float>() * 180);
-    // half pi value with less accuracy
-    test_pp_rad(-3.14159265358979);
-    // convert from degrees to radians with constant from epsg 4326 (WGS84)
-    test_pp_rad(0.017453292519943278 * 180);
-}
-
 BOOST_AUTO_TEST_CASE( equals_point_point_with_height_se )
 {
-    using cs_type = bg::cs::spherical_equatorial<bg::degree>;
+    typedef bg::cs::spherical_equatorial<bg::degree> cs_type;
 
     test_point_point<bgm::point<int, 3, cs_type> >::apply("seh");
     test_point_point<bgm::point<double, 3, cs_type> >::apply("seh");
@@ -226,7 +198,7 @@ BOOST_AUTO_TEST_CASE( equals_point_point_with_height_se )
 
 BOOST_AUTO_TEST_CASE( equals_point_point_geo )
 {
-    using cs_type = bg::cs::geographic<bg::degree>;
+    typedef bg::cs::geographic<bg::degree> cs_type;
 
     test_point_point<bgm::point<int, 2, cs_type> >::apply("geo");
     test_point_point<bgm::point<double, 2, cs_type> >::apply("geo");
@@ -246,7 +218,7 @@ BOOST_AUTO_TEST_CASE( equals_point_point_geo )
 
 BOOST_AUTO_TEST_CASE( equals_segment_segment_se )
 {
-    using cs_type = bg::cs::spherical_equatorial<bg::degree>;
+    typedef bg::cs::spherical_equatorial<bg::degree> cs_type;
 
     test_segment_segment<bgm::point<int, 2, cs_type> >("se");
     test_segment_segment<bgm::point<double, 2, cs_type> >("se");
@@ -255,7 +227,7 @@ BOOST_AUTO_TEST_CASE( equals_segment_segment_se )
 
 BOOST_AUTO_TEST_CASE( equals_segment_segment_geo )
 {
-    using cs_type = bg::cs::geographic<bg::degree>;
+    typedef bg::cs::geographic<bg::degree> cs_type;
 
     test_segment_segment<bgm::point<int, 2, cs_type> >("geo");
     test_segment_segment<bgm::point<double, 2, cs_type> >("geo");

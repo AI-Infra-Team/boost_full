@@ -292,7 +292,8 @@ jacobi_theta1tau_imp(RealType z, RealType tau, const Policy& pol, const char *fu
     RealType q_n = 0, last_q_n, delta, result = 0;
 
     if (tau <= 0.0)
-        return policies::raise_domain_error<RealType>(function, "tau must be greater than 0 but got %1%.", tau, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "tau must be greater than 0 but got %1%.", tau, pol);
 
     if (abs(z) == 0.0)
         return result;
@@ -330,7 +331,8 @@ inline RealType
 jacobi_theta1_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "q must be greater than 0 and less than 1 but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "q must be greater than 0 and less than 1 but got %1%.", q, pol);
     }
     return jacobi_theta1tau_imp(z, RealType (-log(q)/constants::pi<RealType>()), pol, function);
 }
@@ -347,7 +349,8 @@ jacobi_theta2tau_imp(RealType z, RealType tau, const Policy& pol, const char *fu
     RealType q_n = 0, last_q_n, delta, result = 0;
 
     if (tau <= 0.0) {
-        return policies::raise_domain_error<RealType>(function, "tau must be greater than 0 but got %1%.", tau, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "tau must be greater than 0 but got %1%.", tau, pol);
     } else if (tau < 1.0 && abs(z) == 0.0) {
         return jacobi_theta4tau(z, 1/tau, pol) / sqrt(tau);
     } else if (tau < 1.0) { // DLMF 20.7.31
@@ -380,7 +383,8 @@ inline RealType
 jacobi_theta2_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "q must be greater than 0 and less than 1 but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "q must be greater than 0 and less than 1 but got %1%.", q, pol);
     }
     return jacobi_theta2tau_imp(z, RealType (-log(q)/constants::pi<RealType>()), pol, function);
 }
@@ -421,7 +425,8 @@ jacobi_theta3tau_imp(RealType z, RealType tau, const Policy& pol, const char *fu
 {
     BOOST_MATH_STD_USING
     if (tau <= 0.0) {
-        return policies::raise_domain_error<RealType>(function, "tau must be greater than 0 but got %1%.", tau, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "tau must be greater than 0 but got %1%.", tau, pol);
     } else if (tau < 1.0 && abs(z) == 0.0) {
         return jacobi_theta3tau(z, RealType(1/tau), pol) / sqrt(tau);
     } else if (tau < 1.0) { // DLMF 20.7.32
@@ -444,7 +449,8 @@ inline RealType
 jacobi_theta3m1_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "q must be greater than 0 and less than 1 but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "q must be greater than 0 and less than 1 but got %1%.", q, pol);
     }
     return jacobi_theta3m1tau_imp(z, RealType (-log(q)/constants::pi<RealType>()), pol);
 }
@@ -456,7 +462,8 @@ inline RealType
 jacobi_theta3_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "q must be greater than 0 and less than 1 but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "q must be greater than 0 and less than 1 but got %1%.", q, pol);
     }
     return jacobi_theta3tau_imp(z, RealType (-log(q)/constants::pi<RealType>()), pol, function);
 }
@@ -499,7 +506,8 @@ jacobi_theta4tau_imp(RealType z, RealType tau, const Policy& pol, const char *fu
 {
     BOOST_MATH_STD_USING
     if (tau <= 0.0) {
-        return policies::raise_domain_error<RealType>(function, "tau must be greater than 0 but got %1%.", tau, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "tau must be greater than 0 but got %1%.", tau, pol);
     } else if (tau < 1.0 && abs(z) == 0.0) {
         return jacobi_theta2tau(z, 1/tau, pol) / sqrt(tau);
     } else if (tau < 1.0) { // DLMF 20.7.33
@@ -524,7 +532,8 @@ inline RealType
 jacobi_theta4m1_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "q must be greater than 0 and less than 1 but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+                "q must be greater than 0 and less than 1 but got %1%.", q, pol);
     }
     return jacobi_theta4m1tau_imp(z, RealType (-log(q)/constants::pi<RealType>()), pol);
 }
@@ -536,7 +545,8 @@ inline RealType
 jacobi_theta4_imp(RealType z, RealType q, const Policy& pol, const char *function) {
     BOOST_MATH_STD_USING
     if (q <= 0.0 || q >= 1.0) {
-        return policies::raise_domain_error<RealType>(function, "|q| must be greater than zero and less than 1, but got %1%.", q, pol);
+        return policies::raise_domain_error<RealType>(function,
+            "|q| must be greater than zero and less than 1, but got %1%.", q, pol);
     }
     return jacobi_theta4tau_imp(z, RealType(-log(q)/constants::pi<RealType>()), pol, function);
 }
@@ -556,7 +566,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta1tau(T z, U tau, con
 
    static const char* function = "boost::math::jacobi_theta1tau<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -577,7 +589,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta1(T z, U q, const Po
 
    static const char* function = "boost::math::jacobi_theta1<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta1_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta1_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -598,7 +612,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta2tau(T z, U tau, con
 
    static const char* function = "boost::math::jacobi_theta2tau<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta2tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta2tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -619,7 +635,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta2(T z, U q, const Po
 
    static const char* function = "boost::math::jacobi_theta2<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta2_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta2_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -641,7 +659,8 @@ inline typename tools::promote_args<T, U>::type jacobi_theta3m1tau(T z, U tau, c
    static const char* function = "boost::math::jacobi_theta3m1tau<%1%>(%1%)";
 
    return policies::checked_narrowing_cast<result_type, Policy>(
-           jacobi_theta3m1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy()), function);
+           jacobi_theta3m1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy()), function);
 }
 
 template <class T, class U>
@@ -662,7 +681,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta3tau(T z, U tau, con
 
    static const char* function = "boost::math::jacobi_theta3tau<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta3tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta3tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -684,7 +705,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta3m1(T z, U q, const 
 
    static const char* function = "boost::math::jacobi_theta3m1<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta3m1_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta3m1_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -705,7 +728,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta3(T z, U q, const Po
 
    static const char* function = "boost::math::jacobi_theta3<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta3_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta3_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -726,7 +751,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta4m1tau(T z, U tau, c
 
    static const char* function = "boost::math::jacobi_theta4m1tau<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta4m1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy()), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta4m1tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy()), function);
 }
 
 template <class T, class U>
@@ -747,7 +774,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta4tau(T z, U tau, con
 
    static const char* function = "boost::math::jacobi_theta4tau<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta4tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta4tau_imp(static_cast<result_type>(z), static_cast<result_type>(tau),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -768,7 +797,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta4m1(T z, U q, const 
 
    static const char* function = "boost::math::jacobi_theta4m1<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta4m1_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta4m1_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>
@@ -789,7 +820,9 @@ inline typename tools::promote_args<T, U>::type jacobi_theta4(T z, U q, const Po
 
    static const char* function = "boost::math::jacobi_theta4<%1%>(%1%)";
 
-   return policies::checked_narrowing_cast<result_type, Policy>(jacobi_theta4_imp(static_cast<result_type>(z), static_cast<result_type>(q), forwarding_policy(), function), function);
+   return policies::checked_narrowing_cast<result_type, Policy>(
+           jacobi_theta4_imp(static_cast<result_type>(z), static_cast<result_type>(q),
+               forwarding_policy(), function), function);
 }
 
 template <class T, class U>

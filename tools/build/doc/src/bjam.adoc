@@ -1,4 +1,4 @@
-[[b2.jam]]
+[[bbv2.jam]]
 = Boost.Jam Documentation
 
 ____
@@ -963,10 +963,9 @@ rule FILE_OPEN ( filename : mode )
 ----
 
 The `FILE_OPEN` rule opens the specified file and returns a file
-descriptor if the _mode_ parameter is either "w" or "r". Note that at
+descriptor. The _mode_ parameter can be either "w" or "r". Note that at
 present, only the `UPDATE_NOW` rule can use the resulting file
-descriptor number. If the _mode_ parameter is "t" this opens the file as a
-text file and returns the contents as a single string.
+descriptor number.
 
 [[jam.language.rules.builtins.utility._update_now__]]
 ===== `UPDATE_NOW`
@@ -1466,7 +1465,7 @@ Craig McPeeters has extended Perforce Jam to solve such problems, and
 that extension was integrated in Boost.Jam.
 
 Any target can be assigned a _semaphore_, by setting a variable called
-`JAM_SEMAPHORE` on that target. The value of the variable is the semaphore
+`SEMAPHORE` on that target. The value of the variable is the semaphore
 name. It must be different from names of any declared target, but is
 arbitrary otherwise.
 

@@ -28,7 +28,6 @@
 #include <boost/interprocess/sync/windows/winapi_mutex_wrapper.hpp>
 #include <boost/interprocess/errors.hpp>
 #include <boost/interprocess/exceptions.hpp>
-#include <boost/interprocess/timed_utils.hpp>
 #include <limits>
 
 namespace boost {
@@ -91,19 +90,19 @@ class winapi_named_mutex
          : m_mtx_wrapper(mtx_wrapper)
       {}
 
-      virtual std::size_t get_data_size() const BOOST_OVERRIDE
+      virtual std::size_t get_data_size() const
       {  return 0u;   }
 
-      virtual const void *buffer_with_init_data_to_file() BOOST_OVERRIDE
+      virtual const void *buffer_with_init_data_to_file()
       {  return 0; }
 
-      virtual const void *buffer_with_final_data_to_file() BOOST_OVERRIDE
+      virtual const void *buffer_with_final_data_to_file()
       {  return 0; }
 
-      virtual void *buffer_to_store_init_data_from_file() BOOST_OVERRIDE
+      virtual void *buffer_to_store_init_data_from_file()
       {  return 0; }
 
-      virtual bool open(create_enum_t, const char *id_name) BOOST_OVERRIDE
+      virtual bool open(create_enum_t, const char *id_name)
       {
          std::string aux_str  = "Global\\bipc.mut.";
          aux_str += id_name;
@@ -113,7 +112,7 @@ class winapi_named_mutex
          return m_mtx_wrapper.open_or_create(aux_str.c_str(), mut_perm);
       }
 
-      virtual bool open(create_enum_t, const wchar_t *id_name) BOOST_OVERRIDE
+      virtual bool open(create_enum_t, const wchar_t *id_name)
       {
          std::wstring aux_str  = L"Global\\bipc.mut.";
          aux_str += id_name;
@@ -123,12 +122,12 @@ class winapi_named_mutex
          return m_mtx_wrapper.open_or_create(aux_str.c_str(), mut_perm);
       }
 
-      virtual void close() BOOST_OVERRIDE
+      virtual void close()
       {
          m_mtx_wrapper.close();
       }
 
-      virtual ~named_mut_callbacks() BOOST_OVERRIDE
+      virtual ~named_mut_callbacks()
       {}
 
       private:

@@ -8,6 +8,8 @@
 
 #include <boost/config.hpp>
 
+#if (__cplusplus >= 201402L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
+
 #include "../example/b2_workarounds.hpp"
 
 #include <boost/dll/smart_library.hpp>
@@ -16,8 +18,8 @@
 #include <boost/core/lightweight_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/variant.hpp>
+#include <boost/function.hpp>
 
-#include <functional>
 #include <iostream>
 
 struct override_class
@@ -49,7 +51,7 @@ int main(int argc, char* argv[])
     ovl(5.0);
     BOOST_TEST(*sp_variable == 5.0);
 
-    std::function<void(int)> f_test = ovl;//test if it binds
+    boost::function<void(int)> f_test = ovl;//test if it binds
     f_test(-2);
     BOOST_TEST(*unscoped_var == -2);
 
@@ -74,3 +76,6 @@ int main(int argc, char* argv[])
     return boost::report_errors();
 }
 
+#else
+int main() {return 0;}
+#endif

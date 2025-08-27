@@ -12,5 +12,5 @@
     "maintainers": [
         "Antony Polukhin <antoshkka -at- gmail.com>"
     ],
-    "cxxstd": "11"
+    "cxxstd": "03"
 }

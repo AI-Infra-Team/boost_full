@@ -233,7 +233,6 @@ public:
     using endpoint_type = typename Protocol::endpoint;
 
 private:
-    using op_state = basic_op_state<Executor>;
     static_assert(
         net::is_executor<Executor>::value || net::execution::is_executor<Executor>::value,
         "Executor type requirements not met");
@@ -248,12 +247,15 @@ private:
 
         op_state read;
         op_state write;
+#if 0
         net::basic_waitable_timer<
             std::chrono::steady_clock,
             net::wait_traits<
                 std::chrono::steady_clock>,
             Executor> timer; // rate timer;
-
+#else
+        net::steady_timer timer;
+#endif
         int waiting = 0;
 
         impl_type(impl_type&&) = default;
@@ -354,22 +356,6 @@ public:
         ! std::is_constructible<RatePolicy, Arg0>::value>::type>
     explicit
     basic_stream(Arg0&& argo, Args&&... args);
-
-
-    /** Constructor
-     *
-     * A constructor that rebinds the executor.
-     *
-     * @tparam Executor_ The new executor
-     * @param other The original socket to be rebound.
-     */
-    template<class Executor_>
-    explicit
-    basic_stream(basic_stream<Protocol, Executor_, RatePolicy> && other);
-
-
-    template<typename, typename, typename>
-    friend class basic_stream;
 #endif
 
     /** Constructor
@@ -450,7 +436,7 @@ public:
         return impl_->policy();
     }
 
-    /** Set the timeout for subsequent logical operations.
+    /** Set the timeout for the next logical operation.
 
         This sets either the read timer, the write timer, or
         both timers to expire after the specified amount of time
@@ -473,7 +459,7 @@ public:
     expires_after(
         net::steady_timer::duration expiry_time);
 
-    /** Set the timeout for subsequent logical operations.
+    /** Set the timeout for the next logical operation.
 
         This sets either the read timer, the write timer, or both
         timers to expire at the specified time point. If a timer
@@ -495,7 +481,7 @@ public:
     void
     expires_at(net::steady_timer::time_point expiry_time);
 
-    /// Disable the timeout for subsequent logical operations.
+    /// Disable the timeout for the next logical operation.
     void
     expires_never();
 
@@ -928,24 +914,10 @@ public:
             error_code ec         // Result of operation
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
-
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_connect operation.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
 
         @see async_connect
     */
@@ -996,25 +968,10 @@ public:
             typename Protocol::endpoint const& endpoint
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
-
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_connect operation.
-
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
     */
     template<
         class EndpointSequence,
@@ -1026,13 +983,9 @@ public:
         ,class = typename std::enable_if<
             net::is_endpoint_sequence<
                 EndpointSequence>::value>::type
-        ,class = typename std::enable_if<
-            !net::is_connect_condition<RangeConnectHandler,
-                decltype(std::declval<const EndpointSequence&>().begin())>::value
-        >::type
     #endif
     >
-    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(
+    BOOST_ASIO_INITFN_RESULT_TYPE(
         RangeConnectHandler,
         void(error_code, typename Protocol::endpoint))
     async_connect(
@@ -1089,13 +1042,11 @@ public:
             typename Protocol::endpoint const& endpoint
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
+
         @par Example
         The following connect condition function object can be used to output
         information about the individual connection attempts:
@@ -1113,17 +1064,6 @@ public:
             }
         };
         @endcode
-
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_connect operation.
     */
     template<
         class EndpointSequence,
@@ -1136,13 +1076,9 @@ public:
         ,class = typename std::enable_if<
             net::is_endpoint_sequence<
                 EndpointSequence>::value>::type
-        ,class = typename std::enable_if<
-            net::is_connect_condition<ConnectCondition,
-                decltype(std::declval<const EndpointSequence&>().begin())>::value
-        >::type
     #endif
     >
-    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(
+    BOOST_ASIO_INITFN_RESULT_TYPE(
         RangeConnectHandler,
         void(error_code, typename Protocol::endpoint))
     async_connect(
@@ -1189,37 +1125,18 @@ public:
             Iterator iterator
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_connect operation.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
     */
     template<
         class Iterator,
         BOOST_ASIO_COMPLETION_TOKEN_FOR(
             void(error_code, Iterator))
             IteratorConnectHandler =
-                net::default_completion_token_t<executor_type>
-    #if ! BOOST_BEAST_DOXYGEN
-        ,class = typename std::enable_if<
-            !net::is_connect_condition<IteratorConnectHandler, Iterator>::value
-        >::type
-    #endif
-    >
-    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(
+                net::default_completion_token_t<executor_type>>
+    BOOST_ASIO_INITFN_RESULT_TYPE(
         IteratorConnectHandler,
         void(error_code, Iterator))
     async_connect(
@@ -1268,23 +1185,10 @@ public:
             Iterator iterator
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_connect operation.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
     */
     template<
         class Iterator,
@@ -1292,14 +1196,8 @@ public:
         BOOST_ASIO_COMPLETION_TOKEN_FOR(
             void(error_code, Iterator))
             IteratorConnectHandler =
-                net::default_completion_token_t<executor_type>
-    #if ! BOOST_BEAST_DOXYGEN
-        ,class = typename std::enable_if<
-            net::is_connect_condition<ConnectCondition, Iterator>::value
-        >::type
-    #endif
-    >
-    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(
+                net::default_completion_token_t<executor_type>>
+    BOOST_ASIO_INITFN_RESULT_TYPE(
         IteratorConnectHandler,
         void(error_code, Iterator))
     async_connect(
@@ -1409,28 +1307,15 @@ public:
             std::size_t bytes_transferred   // Number of bytes read.
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
+
         @note The `async_read_some` operation may not receive all of the requested
         number of bytes. Consider using the function `net::async_read` if you need
         to ensure that the requested amount of data is read before the asynchronous
         operation completes.
-
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_read_some operation.
     */
     template<
         class MutableBufferSequence,
@@ -1545,28 +1430,15 @@ public:
             std::size_t bytes_transferred   // Number of bytes written.
         );
         @endcode
-        If the handler has an associated immediate executor,
-        an immediate completion will be dispatched to it.
-        Otherwise, the handler will not be invoked from within
-        this function. Invocation of the handler will be performed
-        by dispatching to the immediate executor. If no
-        immediate executor is specified, this is equivalent
-        to using `net::post`.
+        Regardless of whether the asynchronous operation completes
+        immediately or not, the handler will not be invoked from within
+        this function. Invocation of the handler will be performed in a
+        manner equivalent to using `net::post`.
+
         @note The `async_write_some` operation may not transmit all of the requested
         number of bytes. Consider using the function `net::async_write` if you need
         to ensure that the requested amount of data is sent before the asynchronous
         operation completes.
-
-        @par Per-Operation Cancellation
-
-        This asynchronous operation supports cancellation for the following
-        net::cancellation_type values:
-
-        @li @c net::cancellation_type::terminal
-        @li @c net::cancellation_type::partial
-        @li @c net::cancellation_type::total
-
-        if they are also supported by the socket's @c async_write_some operation.
     */
     template<
         class ConstBufferSequence,

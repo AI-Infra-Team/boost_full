@@ -222,9 +222,7 @@ private:
     subrange<false>
     make_subrange(std::size_t pos, std::size_t n) const;
 
-#ifndef BOOST_BEAST_DOXYGEN
     friend struct buffers_adaptor_test_hook;
-#endif
 
 };
 

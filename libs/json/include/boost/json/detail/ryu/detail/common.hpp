@@ -25,8 +25,7 @@
 #include <boost/json/detail/config.hpp>
 #include <string.h>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 namespace ryu {
@@ -98,30 +97,6 @@ inline int copy_special_str(char * const result, const bool sign, const bool exp
   return sign + 3;
 }
 
-inline
-int
-copy_special_str_conforming(
-    char* const result, bool sign, bool exponent, bool mantissa)
-{
-  if (mantissa)
-  {
-    memcpy(result, "null", 4);
-    return 4;
-  }
-
-  if (sign)
-    result[0] = '-';
-
-  if (exponent)
-  {
-    memcpy(result + sign, "1e99999", 7);
-    return sign + 7;
-  }
-
-  memcpy(result + sign, "0E0", 3);
-  return sign + 3;
-}
-
 inline uint32_t float_to_bits(const float f) {
   uint32_t bits = 0;
   memcpy(&bits, &f, sizeof(float));
@@ -138,7 +113,6 @@ inline uint64_t double_to_bits(const double d) {
 } // ryu
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

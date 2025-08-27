@@ -26,7 +26,7 @@ jobs:
       image: ${{ matrix.docker-img }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
 
     - name: build
       run: |
@@ -39,7 +39,6 @@ jobs:
           --builddir=build \
           cxx.name=${{ matrix.cxx }} \
           cxxflags=-std=${{ matrix.std }} \
-          cppflags=-std=${{ matrix.std }} \
           -j`nproc`
     - name: test
       run: |
@@ -48,6 +47,5 @@ jobs:
           --builddir=build \
           cxx.name=${{ matrix.cxx }} \
           cxxflags=-std=${{ matrix.std }} \
-          cppflags=-std=${{ matrix.std }} \
           -j`nproc` \
           test.report

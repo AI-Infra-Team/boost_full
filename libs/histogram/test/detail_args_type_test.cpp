@@ -7,7 +7,7 @@
 #include <boost/core/lightweight_test_trait.hpp>
 #include <boost/histogram/detail/args_type.hpp>
 #include <tuple>
-#include "ostream.hpp"
+#include "std_ostream.hpp"
 
 namespace dtl = boost::histogram::detail;
 

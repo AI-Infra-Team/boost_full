@@ -44,7 +44,7 @@ struct ex1_type
 {
 
     net::execution_context &
-    query(net::execution::context_t) const noexcept
+    query(net::execution::context_t c) const noexcept
     { return *reinterpret_cast<net::execution_context *>(&ex1ctx); }
 
     net::execution::blocking_t
@@ -52,23 +52,23 @@ struct ex1_type
     { return net::execution::blocking; };
 
     net::execution::outstanding_work_t
-    query(net::execution::outstanding_work_t) const noexcept
+    query(net::execution::outstanding_work_t w) const noexcept
     { return net::execution::outstanding_work; }
 
     ex1_type
-    require(net::execution::blocking_t::possibly_t) const
+    require(net::execution::blocking_t::possibly_t b) const
     { return *this; }
 
     ex1_type
-    require(net::execution::blocking_t::never_t) const
+    require(net::execution::blocking_t::never_t b) const
     { return *this; };
 
     ex1_type
-    prefer(net::execution::outstanding_work_t::untracked_t) const
+    prefer(net::execution::outstanding_work_t::untracked_t w) const
     { return *this; };
 
     ex1_type
-    prefer(net::execution::outstanding_work_t::tracked_t) const
+    prefer(net::execution::outstanding_work_t::tracked_t w) const
     { return *this; };
 
     template<class F>
@@ -107,11 +107,6 @@ struct nested_alloc
     struct allocator_type
     {
     };
-
-    allocator_type get_allocator() const noexcept
-    {
-        return allocator_type{};
-    }
 };
 
 struct intrusive_alloc
@@ -119,21 +114,11 @@ struct intrusive_alloc
     struct allocator_type
     {
     };
-
-    allocator_type get_allocator() const noexcept
-    {
-        return allocator_type{};
-    }
 };
 
 struct no_ex
 {
     using executor_type = net::system_executor;
-
-    executor_type get_executor() const noexcept
-    {
-        return executor_type{};
-    }
 };
 
 struct nested_ex
@@ -141,11 +126,6 @@ struct nested_ex
     struct executor_type
     {
     };
-
-    executor_type get_executor() const noexcept
-    {
-        return executor_type{};
-    }
 };
 
 struct intrusive_ex
@@ -153,11 +133,6 @@ struct intrusive_ex
     struct executor_type
     {
     };
-
-    executor_type get_executor() const noexcept
-    {
-        return executor_type{};
-    }
 };
 
 template<class E, class A>
@@ -596,7 +571,7 @@ public:
                     ioc1.get_executor());
             op->complete(false);
             delete op;
-            BEAST_EXPECT(ioc1.run() == 1);
+            BEAST_EXPECT(ioc1.run() == 0);
             BEAST_EXPECT(ioc2.run() == 1);
         }
         {

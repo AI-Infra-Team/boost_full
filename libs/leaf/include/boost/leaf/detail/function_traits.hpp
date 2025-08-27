@@ -1,17 +1,27 @@
 #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
+/// Distributed under the Boost Software License, Version 1.0. (See accompanying
+/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_LEAF_ENABLE_WARNINGS ///
+#   if defined(_MSC_VER) ///
+#       pragma warning(push,1) ///
+#   elif defined(__clang__) ///
+#       pragma clang system_header ///
+#   elif (__GNUC__*100+__GNUC_MINOR__>301) ///
+#       pragma GCC system_header ///
+#   endif ///
+#endif ///
 
 #include <boost/leaf/detail/mp11.hpp>
-
 #include <tuple>
 
 namespace boost { namespace leaf {
 
-namespace detail
+namespace leaf_detail
 {
     template <class T> struct remove_noexcept { using type = T; };
     template <class R, class... A>  struct remove_noexcept<R(*)(A...) noexcept> { using type = R(*)(A...); };
@@ -96,4 +106,8 @@ namespace detail
 
 } }
 
-#endif // BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
+#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
+#pragma warning(pop) ///
+#endif ///
+
+#endif

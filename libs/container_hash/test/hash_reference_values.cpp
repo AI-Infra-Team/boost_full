@@ -2,8 +2,6 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#define _SILENCE_NONFLOATING_COMPLEX_DEPRECATION_WARNING
-
 #include <boost/config/pragma_message.hpp>
 
 #if defined(__GNUC__) && !defined(__clang__) && __cplusplus < 201100L
@@ -15,14 +13,6 @@ int main() {}
 
 #if defined(__clang__)
 # pragma clang diagnostic ignored "-Wlong-long"
-#endif
-
-#if defined(__GNUC__)
-# pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-
-#if defined(_MSC_VER)
-# pragma warning(disable: 4127) // conditional expression is constant
 #endif
 
 #include <boost/container_hash/hash.hpp>
@@ -113,7 +103,7 @@ int main()
     BOOST_TEST_EQ( hv(1ULL), 1 );
     BOOST_TEST_EQ( hv(65535ULL), 65535 );
 #if SIZE_MAX == 4294967295U
-    BOOST_TEST_EQ( hv((unsigned long long)-1), 2578835074U );
+    BOOST_TEST_EQ( hv((unsigned long long)-1), 3221225537U );
 #else
     BOOST_TEST_EQ( hv((unsigned long long)-1), (std::size_t)-1 );
 #endif
@@ -145,7 +135,7 @@ int main()
 
 #else
 
-    BOOST_TEST_EQ( hv((uint128)-1), 10400452472442790415ULL );
+    BOOST_TEST_EQ( hv((uint128)-1), 13835058055282163777ULL );
 
 #endif
 
@@ -162,8 +152,23 @@ int main()
     BOOST_TEST_EQ( hv(-1e-38f), 2154619886U );
     BOOST_TEST_EQ( hv(1e+38f), 2123789977U );
     BOOST_TEST_EQ( hv(-1e+38f), 4271273625U );
+
+#if !defined(__GLIBCXX__)
+
     BOOST_TEST_EQ( hv(std::numeric_limits<float>::infinity()), 2139095040U );
     BOOST_TEST_EQ( hv(-std::numeric_limits<float>::infinity()), 4286578688U );
+
+#elif SIZE_MAX == 4294967295U
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<float>::infinity()), 4294967295U );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<float>::infinity()), 4294967294U );
+
+#else
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<float>::infinity()), 18446744073709551615ULL );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<float>::infinity()), 18446744073709551614ULL );
+
+#endif
 
     // double
     BOOST_TEST_EQ( hv(0.0), 0 );
@@ -171,16 +176,26 @@ int main()
 
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(1.0), 2619008688U );
-    BOOST_TEST_EQ( hv(-1.0), 146497060U );
-    BOOST_TEST_EQ( hv(3.14), 101651732U );
-    BOOST_TEST_EQ( hv(-3.14), 210858151U );
-    BOOST_TEST_EQ( hv(1e-308), 3911789313U );
-    BOOST_TEST_EQ( hv(-1e-308), 1812507313U );
-    BOOST_TEST_EQ( hv(1e+308), 987802568U );
-    BOOST_TEST_EQ( hv(-1e+308), 1639042439U );
-    BOOST_TEST_EQ( hv(std::numeric_limits<double>::infinity()), 3227645345U );
-    BOOST_TEST_EQ( hv(-std::numeric_limits<double>::infinity()), 2247339177U );
+    BOOST_TEST_EQ( hv(1.0), 1072693248U );
+    BOOST_TEST_EQ( hv(-1.0), 3220176896U );
+    BOOST_TEST_EQ( hv(3.14), 2660156064U );
+    BOOST_TEST_EQ( hv(-3.14), 512672416U );
+    BOOST_TEST_EQ( hv(1e-308), 1553872728U );
+    BOOST_TEST_EQ( hv(-1e-308), 3701356376U );
+    BOOST_TEST_EQ( hv(1e+308), 2577739707U );
+    BOOST_TEST_EQ( hv(-1e+308), 430256059U );
+
+#if !defined(__GLIBCXX__)
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<double>::infinity()), 2146435072U );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<double>::infinity()), 4293918720U );
+
+#else
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<double>::infinity()), 4294967295U );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<double>::infinity()), 4294967294U );
+
+#endif
 
 #else
 
@@ -192,8 +207,18 @@ int main()
     BOOST_TEST_EQ( hv(-1e-308), 9225396059387848914ULL );
     BOOST_TEST_EQ( hv(1e+308), 9214871658872686752ULL );
     BOOST_TEST_EQ( hv(-1e+308), 18438243695727462560ULL );
+
+#if !defined(__GLIBCXX__)
+
     BOOST_TEST_EQ( hv(std::numeric_limits<double>::infinity()), 9218868437227405312ULL );
     BOOST_TEST_EQ( hv(-std::numeric_limits<double>::infinity()), 18442240474082181120ULL );
+
+#else
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<double>::infinity()), 18446744073709551615ULL );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<double>::infinity()), 18446744073709551614ULL );
+
+#endif
 
 #endif
 
@@ -201,62 +226,69 @@ int main()
     BOOST_TEST_EQ( hv(0.0L), 0 );
     BOOST_TEST_EQ( hv(-0.0L), 0 );
 
-    std::size_t const ldbits = sizeof( long double ) * CHAR_BIT;
+#if defined(_WIN32) && !defined(__GNUC__) // Under MS ABI, long double == double
 
 #if SIZE_MAX == 4294967295U
 
-    if( ldbits == 64 )
-    {
-        BOOST_TEST_EQ( hv(1.0L), hv(1.0) );
-        BOOST_TEST_EQ( hv(-1.0L), hv(-1.0) );
-        BOOST_TEST_EQ( hv(3.14L), hv(3.14) );
-        BOOST_TEST_EQ( hv(-3.14L), hv(-3.14) );
-        BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), hv(std::numeric_limits<double>::infinity()) );
-        BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), hv(-std::numeric_limits<double>::infinity()) );
-    }
-    else
-    {
-        // ldbits == 96
-
-        BOOST_TEST_EQ( hv(1.0L), 3632050780U );
-        BOOST_TEST_EQ( hv(-1.0L), 3632083548U );
-        BOOST_TEST_EQ( hv(3.14L), 1742026549U );
-        BOOST_TEST_EQ( hv(-3.14L), 1742059317U );
-        BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 3632067164U );
-        BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 3632099932U );
-    }
+    BOOST_TEST_EQ( hv(1.0L), 1072693248U );
+    BOOST_TEST_EQ( hv(-1.0L), 3220176896U );
+    BOOST_TEST_EQ( hv(3.14L), 2660156064U );
+    BOOST_TEST_EQ( hv(-3.14L), 512672416U );
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 2146435072U );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 4293918720U );
 
 #else
 
-    if( ldbits == 64 )
-    {
-        BOOST_TEST_EQ( hv(1.0L), 4607182418800017408ULL );
-        BOOST_TEST_EQ( hv(-1.0L), 13830554455654793216ULL );
-        BOOST_TEST_EQ( hv(3.14L), 4614253070214989087ULL );
-        BOOST_TEST_EQ( hv(-3.14L), 13837625107069764895ULL );
-        BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 9218868437227405312ULL );
-        BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 18442240474082181120ULL );
-    }
-    else if( ldbits == 128 && std::numeric_limits<long double>::digits == 64 )
-    {
-        BOOST_TEST_EQ( hv(1.0L), 18308860000934227808ULL );
-        BOOST_TEST_EQ( hv(-1.0L), 18308860000934260576ULL );
-        BOOST_TEST_EQ( hv(3.14L), 13482288377848558187ULL );
-        BOOST_TEST_EQ( hv(-3.14L), 13482288377848590955ULL );
-        BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 18308860000934244192ULL );
-        BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 18308860000934276960ULL );
-    }
-    else
-    {
-        // ldbits == 128 && std::numeric_limits<long double>::digits == 113
+    BOOST_TEST_EQ( hv(1.0L), 4607182418800017408ULL );
+    BOOST_TEST_EQ( hv(-1.0L), 13830554455654793216ULL );
+    BOOST_TEST_EQ( hv(3.14L), 4614253070214989087ULL );
+    BOOST_TEST_EQ( hv(-3.14L), 13837625107069764895ULL );
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 9218868437227405312ULL );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 18442240474082181120ULL );
 
-        BOOST_TEST_EQ( hv(1.0L), 4611404543450677248ULL );
-        BOOST_TEST_EQ( hv(-1.0L), 13834776580305453056ULL );
-        BOOST_TEST_EQ( hv(3.14L), 5967435363179612952ULL );
-        BOOST_TEST_EQ( hv(-3.14L), 15190807400034388760ULL );
-        BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 9223090561878065152ULL );
-        BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 18446462598732840960ULL );
-    }
+#endif
+
+#else
+
+#if SIZE_MAX == 4294967295U
+
+    BOOST_TEST_EQ( hv(1.0L), 2684370943U );
+    BOOST_TEST_EQ( hv(-1.0L), 2684403711U );
+    BOOST_TEST_EQ( hv(3.14L), 83002659U );
+    BOOST_TEST_EQ( hv(-3.14L), 82969891U );
+
+#if !defined(__GLIBCXX__)
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 0xA0007FFFu );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 0xA000FFFFu );
+
+#else
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 4294967295U );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 4294967294U );
+
+#endif
+
+#else
+
+    BOOST_TEST_EQ( hv(1.0L), 11529215046068486143ULL );
+    BOOST_TEST_EQ( hv(-1.0L), 11529215046068518911ULL );
+    BOOST_TEST_EQ( hv(3.14L), 12059468778148142067ULL );
+    BOOST_TEST_EQ( hv(-3.14L), 12059468778147191795ULL );
+
+#if !defined(__GLIBCXX__)
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 11529215046068502527ULL );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 11529215046068535295ULL );
+
+#else
+
+    BOOST_TEST_EQ( hv(std::numeric_limits<long double>::infinity()), 18446744073709551615ULL );
+    BOOST_TEST_EQ( hv(-std::numeric_limits<long double>::infinity()), 18446744073709551614ULL );
+
+#endif
+
+#endif
 
 #endif
 
@@ -268,15 +300,15 @@ int main()
 
 #if SIZE_MAX == 4294967295U
 
-        BOOST_TEST_EQ( hv(a1), 1684164658U );
-        BOOST_TEST_EQ( hv(a2), 3385628684U );
-        BOOST_TEST_EQ( hv(a3), 354805152U );
+        BOOST_TEST_EQ( hv(a1), 3864292196U );
+        BOOST_TEST_EQ( hv(a2), 2842917718U );
+        BOOST_TEST_EQ( hv(a3), 325752138U );
 
 #else
 
-        BOOST_TEST_EQ( hv(a1), 11915877628236072130ULL );
-        BOOST_TEST_EQ( hv(a2), 17303869719317669699ULL );
-        BOOST_TEST_EQ( hv(a3), 14973878137098559850ULL );
+        BOOST_TEST_EQ( hv(a1), 3864292196ULL );
+        BOOST_TEST_EQ( hv(a2), 14642545639667855512ULL );
+        BOOST_TEST_EQ( hv(a3), 17867750819888810972ULL );
 
 #endif
     }
@@ -284,19 +316,19 @@ int main()
     // string
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::string()), 1868390524U );
-    BOOST_TEST_EQ( hv(std::string("abc")), 3674866719U );
-    BOOST_TEST_EQ( hv(std::string("\0", 1)), 1965885047U );
-    BOOST_TEST_EQ( hv(std::string("\0\0", 2)), 54340706U );
-    BOOST_TEST_EQ( hv(std::string("\0\0\0", 3)), 688730713U );
+    BOOST_TEST_EQ( hv(std::string()), 0 );
+    BOOST_TEST_EQ( hv(std::string("abc")), 1849538372U );
+    BOOST_TEST_EQ( hv(std::string("\0", 1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::string("\0\0", 2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::string("\0\0\0", 3)), 325752138U );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::string()), 2060355526954642342ULL );
-    BOOST_TEST_EQ( hv(std::string("abc")), 2539195663733406973ULL );
-    BOOST_TEST_EQ( hv(std::string("\0", 1)), 18432168439372857722ULL );
-    BOOST_TEST_EQ( hv(std::string("\0\0", 2)), 6494115972580589074ULL );
-    BOOST_TEST_EQ( hv(std::string("\0\0\0", 3)), 4419026507380069870ULL );
+    BOOST_TEST_EQ( hv(std::string()), 0 );
+    BOOST_TEST_EQ( hv(std::string("abc")), 6420922261882292859ULL );
+    BOOST_TEST_EQ( hv(std::string("\0", 1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::string("\0\0", 2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::string("\0\0\0", 3)), 17867750819888810972ULL );
 
 #endif
 
@@ -307,18 +339,17 @@ int main()
     // complex<int>
     BOOST_TEST_EQ( hv(std::complex<int>(0, 0)), 0U );
     BOOST_TEST_EQ( hv(std::complex<int>(+1, 0)), 1U );
+    BOOST_TEST_EQ( hv(std::complex<int>(0, +1)), 65U );
 
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::complex<int>(0, +1)), 2261973619U );
     BOOST_TEST_EQ( hv(std::complex<int>(-1, 0)), 4294967295U );
-    BOOST_TEST_EQ( hv(std::complex<int>(0, -1)), 2578835075U );
+    BOOST_TEST_EQ( hv(std::complex<int>(0, -1)), 3221225536U );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::complex<int>(0, +1)), 4326460912318144697U );
     BOOST_TEST_EQ( hv(std::complex<int>(-1, 0)), 18446744073709551615ULL );
-    BOOST_TEST_EQ( hv(std::complex<int>(0, -1)), 10400452472442790416ULL );
+    BOOST_TEST_EQ( hv(std::complex<int>(0, -1)), 13835058055282163776ULL );
 
 #endif
 
@@ -329,13 +360,13 @@ int main()
 
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, +1.0f)), 1867597054U );
-    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, -1.0f)), 1969397420U );
+    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, +1.0f)), 3495952384U );
+    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, -1.0f)), 2959081472U );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, +1.0f)), 15274800114361806457ULL );
-    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, -1.0f)), 4238815378092176215ULL );
+    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, +1.0f)), 67920461824ULL );
+    BOOST_TEST_EQ( hv(std::complex<float>(0.0f, -1.0f)), 209117511680ULL );
 
 #endif
 
@@ -344,49 +375,49 @@ int main()
 
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::complex<double>(+1.0, 0.0)), 2619008688U );
-    BOOST_TEST_EQ( hv(std::complex<double>(-1.0, 0.0)), 146497060U );
-    BOOST_TEST_EQ( hv(std::complex<double>(0.0, +1.0)), 22395692U );
-    BOOST_TEST_EQ( hv(std::complex<double>(0.0, -1.0)), 1449221192U );
+    BOOST_TEST_EQ( hv(std::complex<double>(+1.0, 0.0)), 1072693248U );
+    BOOST_TEST_EQ( hv(std::complex<double>(-1.0, 0.0)), 3220176896U );
+    BOOST_TEST_EQ( hv(std::complex<double>(0.0, +1.0)), 873201664U );
+    BOOST_TEST_EQ( hv(std::complex<double>(0.0, -1.0)), 2483814400U );
 
 #else
 
     BOOST_TEST_EQ( hv(std::complex<double>(+1.0, 0.0)), 4607182418800017408ULL );
     BOOST_TEST_EQ( hv(std::complex<double>(-1.0, 0.0)), 13830554455654793216ULL );
-    BOOST_TEST_EQ( hv(std::complex<double>(0.0, +1.0)), 837908647691372762ULL );
-    BOOST_TEST_EQ( hv(std::complex<double>(0.0, -1.0)), 3605795203555706515ULL );
+    BOOST_TEST_EQ( hv(std::complex<double>(0.0, +1.0)), 3750372589692780544ULL );
+    BOOST_TEST_EQ( hv(std::complex<double>(0.0, -1.0)), 10667901617333862400ULL );
 
 #endif
 
     // pair
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::make_pair(0, 0)), 3385628684U );
-    BOOST_TEST_EQ( hv(std::make_pair(1, 2)), 1013020961U );
-    BOOST_TEST_EQ( hv(std::make_pair(-1, -2)), 1207763712U );
+    BOOST_TEST_EQ( hv(std::make_pair(0, 0)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::make_pair(1, 2)), 2507434894U );
+    BOOST_TEST_EQ( hv(std::make_pair(-1, -2)), 1874100199 );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::make_pair(0, 0)), 17303869719317669699ULL );
-    BOOST_TEST_EQ( hv(std::make_pair(1, 2)), 3509426265802930590ULL );
-    BOOST_TEST_EQ( hv(std::make_pair(-1, -2)), 9712138927275741808ULL );
+    BOOST_TEST_EQ( hv(std::make_pair(0, 0)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::make_pair(1, 2)), 3370697991563800380ULL );
+    BOOST_TEST_EQ( hv(std::make_pair(-1, -2)), 4139767141999124554ULL );
 
 #endif
 
     // vector<char>
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::vector<char>(0)), 1868390524U );
-    BOOST_TEST_EQ( hv(std::vector<char>(1)), 1965885047U );
-    BOOST_TEST_EQ( hv(std::vector<char>(2)), 54340706U );
-    BOOST_TEST_EQ( hv(std::vector<char>(3)), 688730713U );
+    BOOST_TEST_EQ( hv(std::vector<char>(0)), 0 );
+    BOOST_TEST_EQ( hv(std::vector<char>(1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::vector<char>(2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::vector<char>(3)), 325752138U );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::vector<char>(0)), 2060355526954642342ULL );
-    BOOST_TEST_EQ( hv(std::vector<char>(1)), 18432168439372857722ULL );
-    BOOST_TEST_EQ( hv(std::vector<char>(2)), 6494115972580589074ULL );
-    BOOST_TEST_EQ( hv(std::vector<char>(3)), 4419026507380069870ULL );
+    BOOST_TEST_EQ( hv(std::vector<char>(0)), 0 );
+    BOOST_TEST_EQ( hv(std::vector<char>(1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::vector<char>(2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::vector<char>(3)), 17867750819888810972ULL );
 
 #endif
 
@@ -394,16 +425,16 @@ int main()
 #if SIZE_MAX == 4294967295U
 
     BOOST_TEST_EQ( hv(std::vector<int>(0)), 0 );
-    BOOST_TEST_EQ( hv(std::vector<int>(1)), 1684164658U );
-    BOOST_TEST_EQ( hv(std::vector<int>(2)), 3385628684U );
-    BOOST_TEST_EQ( hv(std::vector<int>(3)), 354805152U );
+    BOOST_TEST_EQ( hv(std::vector<int>(1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::vector<int>(2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::vector<int>(3)), 325752138U );
 
 #else
 
     BOOST_TEST_EQ( hv(std::vector<int>(0)), 0 );
-    BOOST_TEST_EQ( hv(std::vector<int>(1)), 11915877628236072130ULL );
-    BOOST_TEST_EQ( hv(std::vector<int>(2)), 17303869719317669699ULL );
-    BOOST_TEST_EQ( hv(std::vector<int>(3)), 14973878137098559850ULL );
+    BOOST_TEST_EQ( hv(std::vector<int>(1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::vector<int>(2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::vector<int>(3)), 17867750819888810972ULL );
 
 #endif
 
@@ -411,33 +442,33 @@ int main()
 #if SIZE_MAX == 4294967295U
 
     BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(0)), 0 );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(1)), 1684164658U );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(2)), 3385628684U );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(3)), 354805152U );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(3)), 325752138U );
 
 #else
 
     BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(0)), 0 );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(1)), 11915877628236072130ULL );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(2)), 17303869719317669699ULL );
-    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(3)), 14973878137098559850ULL );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::vector<std::vector<int> >(3)), 17867750819888810972ULL );
 
 #endif
 
     // list<char>
 #if SIZE_MAX == 4294967295U
 
-    BOOST_TEST_EQ( hv(std::list<char>(0)), 1868390524U );
-    BOOST_TEST_EQ( hv(std::list<char>(1)), 1965885047U );
-    BOOST_TEST_EQ( hv(std::list<char>(2)), 54340706U );
-    BOOST_TEST_EQ( hv(std::list<char>(3)), 688730713U );
+    BOOST_TEST_EQ( hv(std::list<char>(0)), 0 );
+    BOOST_TEST_EQ( hv(std::list<char>(1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::list<char>(2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::list<char>(3)), 325752138U );
 
 #else
 
-    BOOST_TEST_EQ( hv(std::list<char>(0)), 2060355526954642342ULL );
-    BOOST_TEST_EQ( hv(std::list<char>(1)), 18432168439372857722ULL );
-    BOOST_TEST_EQ( hv(std::list<char>(2)), 6494115972580589074ULL );
-    BOOST_TEST_EQ( hv(std::list<char>(3)), 4419026507380069870ULL );
+    BOOST_TEST_EQ( hv(std::list<char>(0)), 0 );
+    BOOST_TEST_EQ( hv(std::list<char>(1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::list<char>(2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::list<char>(3)), 17867750819888810972ULL );
 
 #endif
 
@@ -445,16 +476,16 @@ int main()
 #if SIZE_MAX == 4294967295U
 
     BOOST_TEST_EQ( hv(std::list<int>(0)), 0 );
-    BOOST_TEST_EQ( hv(std::list<int>(1)), 1684164658U );
-    BOOST_TEST_EQ( hv(std::list<int>(2)), 3385628684U );
-    BOOST_TEST_EQ( hv(std::list<int>(3)), 354805152U );
+    BOOST_TEST_EQ( hv(std::list<int>(1)), 3864292196U );
+    BOOST_TEST_EQ( hv(std::list<int>(2)), 2842917718U );
+    BOOST_TEST_EQ( hv(std::list<int>(3)), 325752138U );
 
 #else
 
     BOOST_TEST_EQ( hv(std::list<int>(0)), 0 );
-    BOOST_TEST_EQ( hv(std::list<int>(1)), 11915877628236072130ULL );
-    BOOST_TEST_EQ( hv(std::list<int>(2)), 17303869719317669699ULL );
-    BOOST_TEST_EQ( hv(std::list<int>(3)), 14973878137098559850ULL );
+    BOOST_TEST_EQ( hv(std::list<int>(1)), 3864292196ULL );
+    BOOST_TEST_EQ( hv(std::list<int>(2)), 14642545639667855512ULL );
+    BOOST_TEST_EQ( hv(std::list<int>(3)), 17867750819888810972ULL );
 
 #endif
 

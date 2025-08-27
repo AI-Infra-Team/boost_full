@@ -24,8 +24,7 @@
 # endif
 #endif
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 #ifdef BOOST_JSON_USE_SSE2
@@ -132,7 +131,7 @@ count_valid<false>(
             continue;
         }
         // validate utf-8
-        uint16_t first = classify_utf8(c);
+        uint16_t first = classify_utf8(c & 0x7F);
         uint8_t len = first & 0xFF;
         if(BOOST_JSON_UNLIKELY(end - p < len))
             break;
@@ -181,7 +180,7 @@ count_valid<false>(
             continue;
         }
         // validate utf-8
-        uint16_t first = classify_utf8(c);
+        uint16_t first = classify_utf8(c & 0x7F);
         uint8_t len = first & 0xFF;
         if(BOOST_JSON_UNLIKELY(end - p < len))
             break;
@@ -327,7 +326,6 @@ inline uint64_t parse_unsigned( uint64_t r, char const * p, std::size_t n ) noex
 #else
         uint32_t v;
         std::memcpy( &v, p, 4 );
-        endian::native_to_little_inplace(v);
 
         v -= 0x30303030;
 
@@ -336,7 +334,11 @@ inline uint64_t parse_unsigned( uint64_t r, char const * p, std::size_t n ) noex
         unsigned w2 = (v >> 16) & 0xFF;
         unsigned w3 = (v >> 24);
 
+#ifdef BOOST_JSON_BIG_ENDIAN
+        r = (((r * 10 + w3) * 10 + w2) * 10 + w1) * 10 + w0;
+#else
         r = (((r * 10 + w0) * 10 + w1) * 10 + w2) * 10 + w3;
+#endif
 #endif
         p += 4;
         n -= 4;
@@ -540,7 +542,6 @@ inline const char* count_whitespace( char const* p, const char* end ) noexcept
 #endif
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

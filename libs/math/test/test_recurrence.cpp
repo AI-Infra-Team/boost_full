@@ -5,14 +5,15 @@
 
 #define BOOST_TEST_MODULE test_recurrences
 
-#include <boost/math/tools/config.hpp>
+#include <boost/config.hpp>
 
 #ifndef BOOST_NO_CXX11_HDR_TUPLE
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/math/tools/recurrence.hpp>
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/test/tools/floating_point_comparison.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+//#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/math/concepts/real_concept.hpp>
 
 #ifdef _MSC_VER
@@ -164,9 +165,7 @@ BOOST_AUTO_TEST_CASE( test_main )
 #endif
 #endif
 #if !defined(TEST) || TEST == 2 || TEST == 3
-   #ifndef BOOST_MATH_NO_MP_TESTS
    test_spots(boost::multiprecision::cpp_bin_float_quad(), "cpp_bin_float_quad");
-   #endif
 #endif
 }
 

@@ -21,7 +21,6 @@
 #include "test_container.hpp"
 #include "generic_assoc_test.hpp"
 #include <typeinfo>
-#include <functional> //std::greater
 #include <boost/intrusive/priority_compare.hpp>
 
 namespace boost{

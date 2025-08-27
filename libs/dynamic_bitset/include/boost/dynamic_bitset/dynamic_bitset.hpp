@@ -293,8 +293,6 @@ public:
     dynamic_bitset& flip(size_type n, size_type len);
     dynamic_bitset& flip(size_type n);
     dynamic_bitset& flip();
-    reference at(size_type n);
-    bool at(size_type n) const;
     bool test(size_type n) const;
     bool test_set(size_type n, bool val = true);
     bool all() const;
@@ -325,7 +323,6 @@ public:
 
     // lookup
     size_type find_first() const;
-    size_type find_first(size_type pos) const;
     size_type find_next(size_type pos) const;
 
 
@@ -730,7 +727,7 @@ dynamic_bitset(dynamic_bitset<Block, Allocator>&& b)
   : m_bits(boost::move(b.m_bits)), m_num_bits(boost::move(b.m_num_bits))
 {
     // Required so that assert(m_check_invariants()); works.
-    assert((b.m_bits = buffer_type(get_allocator())).empty());
+    assert((b.m_bits = buffer_type()).empty());
     b.m_num_bits = 0;
 }
 
@@ -743,7 +740,7 @@ operator=(dynamic_bitset<Block, Allocator>&& b)
     m_bits = boost::move(b.m_bits);
     m_num_bits = boost::move(b.m_num_bits);
     // Required so that assert(m_check_invariants()); works.
-    assert((b.m_bits = buffer_type(get_allocator())).empty());
+    assert((b.m_bits = buffer_type()).empty());
     b.m_num_bits = 0;
     return *this;
 }
@@ -816,7 +813,8 @@ void dynamic_bitset<Block, Allocator>::
 push_back(bool bit)
 {
   const size_type sz = size();
-  resize(sz + 1, bit);
+  resize(sz + 1);
+  set(sz, bit);
 }
 
 template <typename Block, typename Allocator>
@@ -1117,25 +1115,6 @@ bool dynamic_bitset<Block, Allocator>::m_unchecked_test(size_type pos) const
 }
 
 template <typename Block, typename Allocator>
-typename dynamic_bitset<Block, Allocator>::reference
-dynamic_bitset<Block, Allocator>::at(size_type pos)
-{
-    if (pos >= m_num_bits)
-        BOOST_THROW_EXCEPTION(std::out_of_range("boost::dynamic_bitset::at out_of_range"));
-
-    return (*this)[pos];
-}
-
-template <typename Block, typename Allocator>
-bool dynamic_bitset<Block, Allocator>::at(size_type pos) const
-{
-    if (pos >= m_num_bits)
-        BOOST_THROW_EXCEPTION(std::out_of_range("boost::dynamic_bitset::at out_of_range"));
-
-    return (*this)[pos];
-}
-
-template <typename Block, typename Allocator>
 bool dynamic_bitset<Block, Allocator>::test(size_type pos) const
 {
     assert(pos < m_num_bits);
@@ -1326,7 +1305,7 @@ to_ulong() const
 
   // Check for overflows. This may be a performance burden on very
   // large bitsets but is required by the specification, sorry
-  if (find_first(ulong_width) != npos)
+  if (find_next(ulong_width - 1) != npos)
     BOOST_THROW_EXCEPTION(std::overflow_error("boost::dynamic_bitset::to_ulong overflow"));
 
 
@@ -1486,12 +1465,17 @@ dynamic_bitset<Block, Allocator>::find_first() const
     return m_do_find_from(0);
 }
 
+
 template <typename Block, typename Allocator>
 typename dynamic_bitset<Block, Allocator>::size_type
-dynamic_bitset<Block, Allocator>::find_first(size_type pos) const
+dynamic_bitset<Block, Allocator>::find_next(size_type pos) const
 {
+
     const size_type sz = size();
-    if (pos >= sz) return npos;
+    if (pos >= (sz-1) || sz == 0)
+        return npos;
+
+    ++pos;
 
     const size_type blk = block_index(pos);
     const block_width_type ind = bit_index(pos);
@@ -1503,15 +1487,7 @@ dynamic_bitset<Block, Allocator>::find_first(size_type pos) const
         pos + static_cast<size_type>(detail::lowest_bit(fore))
         :
         m_do_find_from(blk + 1);
-}
 
-
-template <typename Block, typename Allocator>
-typename dynamic_bitset<Block, Allocator>::size_type
-dynamic_bitset<Block, Allocator>::find_next(size_type pos) const
-{
-    if (pos == npos) return npos;
-    return find_first(pos + 1);
 }
 
 

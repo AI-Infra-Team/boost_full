@@ -152,16 +152,15 @@ public:
 // reinterpret_cast is implementation-defined. Static cast is not.
 template <typename OutPtr, typename In>
 BOOST_FORCEINLINE
-auto gil_reinterpret_cast(In* p) -> OutPtr
+OutPtr gil_reinterpret_cast(In* p)
 {
     return static_cast<OutPtr>(static_cast<void*>(p));
 }
 
-template <typename OutPtr, typename In>
-BOOST_FORCEINLINE
-auto gil_reinterpret_cast_c(In const* p) -> OutPtr const
+template <typename OutPtr, typename In> BOOST_FORCEINLINE
+const OutPtr gil_reinterpret_cast_c(const In* p)
 {
-    return static_cast<OutPtr const>(static_cast<void const*>(p));
+    return static_cast<const OutPtr>(static_cast<const void*>(p));
 }
 
 namespace detail {
@@ -171,8 +170,8 @@ namespace detail {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class InputIter, class Size, class OutputIter>
-auto _copy_n(InputIter first, Size count, OutputIter result, std::input_iterator_tag)
-    -> std::pair<InputIter, OutputIter>
+std::pair<InputIter, OutputIter> _copy_n(InputIter first, Size count,
+    OutputIter result, std::input_iterator_tag)
 {
    for ( ; count > 0; --count)
    {
@@ -184,23 +183,23 @@ auto _copy_n(InputIter first, Size count, OutputIter result, std::input_iterator
 }
 
 template <class RAIter, class Size, class OutputIter>
-inline auto _copy_n(RAIter first, Size count, OutputIter result, std::random_access_iterator_tag)
-    -> std::pair<RAIter, OutputIter>
+inline std::pair<RAIter, OutputIter>
+_copy_n(RAIter first, Size count, OutputIter result, std::random_access_iterator_tag)
 {
    RAIter last = first + count;
    return std::pair<RAIter, OutputIter>(last, std::copy(first, last, result));
 }
 
 template <class InputIter, class Size, class OutputIter>
-inline auto _copy_n(InputIter first, Size count, OutputIter result)
-    -> std::pair<InputIter, OutputIter>
+inline std::pair<InputIter, OutputIter>
+_copy_n(InputIter first, Size count, OutputIter result)
 {
    return _copy_n(first, count, result, typename std::iterator_traits<InputIter>::iterator_category());
 }
 
 template <class InputIter, class Size, class OutputIter>
-inline auto copy_n(InputIter first, Size count, OutputIter result)
-    -> std::pair<InputIter, OutputIter>
+inline std::pair<InputIter, OutputIter>
+copy_n(InputIter first, Size count, OutputIter result)
 {
     return detail::_copy_n(first, count, result);
 }

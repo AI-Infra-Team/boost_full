@@ -13,7 +13,7 @@ import modules ;
 import os ;
 import toolset ;
 
-project
+project boost/coroutine2/example
     : requirements
       <library>/boost/context//boost_context
       <target-os>linux,<toolset>gcc,<segmented-stacks>on:<cxxflags>-fsplit-stack

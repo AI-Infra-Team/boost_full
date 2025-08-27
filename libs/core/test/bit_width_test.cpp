@@ -24,7 +24,7 @@ int main()
 
         x = 1;
 
-        for( int i = 0; i < 8; ++i, x = static_cast<boost::uint8_t>( x << 1 ) )
+        for( int i = 0; i < 8; ++i, x <<= 1 )
         {
             BOOST_TEST_EQ( boost::core::bit_width( x ), i+1 );
             BOOST_TEST_EQ( boost::core::bit_width( static_cast<boost::uint8_t>( x | ( x >> 1 ) ) ), i+1 );
@@ -39,7 +39,7 @@ int main()
 
         x = 1;
 
-        for( int i = 0; i < 16; ++i, x = static_cast<boost::uint16_t>( x << 1 ) )
+        for( int i = 0; i < 16; ++i, x <<= 1 )
         {
             BOOST_TEST_EQ( boost::core::bit_width( x ), i+1 );
             BOOST_TEST_EQ( boost::core::bit_width( static_cast<boost::uint16_t>( x | ( x >> 1 ) ) ), i+1 );
@@ -87,7 +87,7 @@ int main()
         test_width( static_cast<unsigned short>( x ) );
         test_width( static_cast<unsigned int>( x ) );
         test_width( static_cast<unsigned long>( x ) );
-        test_width( static_cast<boost::ulong_long_type>( x ) );
+        test_width( static_cast<unsigned long long>( x ) );
     }
 
     return boost::report_errors();

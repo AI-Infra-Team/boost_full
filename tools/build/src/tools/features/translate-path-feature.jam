@@ -7,7 +7,7 @@ import feature ;
 
 #| tag::doc[]
 
-[[b2.builtin.features.translate-path]]`translate-path`::
+[[bbv2.builtin.features.translate-path]]`translate-path`::
 Used to introduce custom path feature translation. The value should have the
 form:
 +

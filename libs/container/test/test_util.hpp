@@ -13,7 +13,6 @@
 #define BOOST_CONTAINER_TEST_TEST_UTIL_HPP
 
 #include "test_elem.hpp"
-#include <boost/container/detail/algorithm.hpp> //algo_equal(), algo_lexicographical_compare
 
 // get_range
 
@@ -37,7 +36,6 @@ template <typename Container>
 void get_range(int count, Container &c)
 {
    c.clear();
-   c.reserve(static_cast<std::size_t>(count));
 
    for (int i = 1; i <= count; ++i)
    {
@@ -87,7 +85,8 @@ void print_range(std::ostream& out, Array (&range)[N])
 template <typename C1, typename C2, unsigned N>
 void test_equal_range(const C1& a, const C2 (&b)[N])
 {
-   bool equals = ::boost::container::algo_equal(a.begin(), a.end(), b, b+N);
+   bool equals = boost::algorithm::equal
+      (a.begin(), a.end(), b, b+N);
 
    BOOST_TEST(equals);
 
@@ -104,7 +103,7 @@ void test_equal_range(const C1& a, const C2 (&b)[N])
 template <typename C1, typename C2>
 void test_equal_range(const C1& a, const C2&b)
 {
-   bool equals = boost::container::algo_equal
+   bool equals = boost::algorithm::equal
       (a.begin(), a.end(), b.begin(), b.end());
 
    BOOST_TEST(equals);

@@ -6,10 +6,6 @@
 #define BOOST_CONVERT_TEST_HPP
 
 #include <boost/convert/detail/config.hpp>
-
-#if !defined(BOOST_CONVERT_CXX14)
-#else
-
 #include <boost/make_default.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <string>
@@ -189,5 +185,4 @@ namespace test
     };
 }
 
-#endif
 #endif // BOOST_CONVERT_TEST_HPP

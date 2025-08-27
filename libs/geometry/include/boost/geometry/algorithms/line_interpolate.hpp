@@ -1,8 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2023-2024 Adam Wulkiewicz, Lodz, Poland.
-
-// Copyright (c) 2018-2023 Oracle and/or its affiliates.
+// Copyright (c) 2018-2021 Oracle and/or its affiliates.
 // Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -13,19 +11,21 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_LINE_INTERPOLATE_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_LINE_INTERPOLATE_HPP
 
+#include <iterator>
 #include <type_traits>
 
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
+#include <boost/range/iterator.hpp>
 #include <boost/range/value_type.hpp>
-#include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/algorithms/detail/convert_point_to_point.hpp>
 #include <boost/geometry/algorithms/detail/dummy_geometries.hpp>
 
-#include <boost/geometry/core/exception.hpp>
+#include <boost/geometry/core/cs.hpp>
+#include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/static_assert.hpp>
 #include <boost/geometry/core/tags.hpp>
 
@@ -36,12 +36,6 @@
 #include <boost/geometry/strategies/line_interpolate/cartesian.hpp>
 #include <boost/geometry/strategies/line_interpolate/geographic.hpp>
 #include <boost/geometry/strategies/line_interpolate/spherical.hpp>
-
-#include <boost/geometry/util/constexpr.hpp>
-#include <boost/geometry/util/range.hpp>
-#include <boost/geometry/util/type_traits.hpp>
-
-#include <boost/geometry/views/segment_view.hpp>
 
 namespace boost { namespace geometry
 {
@@ -92,10 +86,11 @@ struct interpolate_range
                              PointLike & pointlike,
                              Strategies const& strategies)
     {
+        typedef typename boost::range_iterator<Range const>::type iterator_t;
         typedef typename boost::range_value<Range const>::type point_t;
 
-        auto it = boost::begin(range);
-        auto const end = boost::end(range);
+        iterator_t it = boost::begin(range);
+        iterator_t end = boost::end(range);
 
         if (it == end) // empty(range)
         {
@@ -114,7 +109,7 @@ struct interpolate_range
         typedef decltype(pp_strategy.apply(
                     std::declval<point_t>(), std::declval<point_t>())) distance_type;
 
-        auto prev = it++;
+        iterator_t prev = it++;
         distance_type repeated_distance = max_distance;
         distance_type prev_distance = 0;
         distance_type current_distance = 0;
@@ -135,16 +130,13 @@ struct interpolate_range
                                p,
                                diff_distance);
                 Policy::apply(p, pointlike);
-                if BOOST_GEOMETRY_CONSTEXPR (util::is_point<PointLike>::value)
+                if (std::is_same<PointLike, point_t>::value)
                 {
                     return;
                 }
-                else // else prevents unreachable code warning
-                {
-                    start_p = p;
-                    prev_distance = repeated_distance;
-                    repeated_distance += max_distance;
-                }
+                start_p = p;
+                prev_distance = repeated_distance;
+                repeated_distance += max_distance;
             }
             prev_distance = current_distance;
             prev = it;
@@ -187,8 +179,8 @@ template
 <
     typename Geometry,
     typename Pointlike,
-    typename Tag1 = tag_t<Geometry>,
-    typename Tag2 = tag_t<Pointlike>
+    typename Tag1 = typename tag<Geometry>::type,
+    typename Tag2 = typename tag<Pointlike>::type
 >
 struct line_interpolate
 {
@@ -264,7 +256,7 @@ struct line_interpolate<Strategy, false>
                              Distance const& max_distance,
                              Pointlike & pointlike,
                              Strategy const& strategy)
-    {
+    {        
         using strategies::line_interpolate::services::strategy_converter;
 
         dispatch::line_interpolate
@@ -283,7 +275,7 @@ struct line_interpolate<default_strategy, false>
                              Distance const& max_distance,
                              Pointlike & pointlike,
                              default_strategy)
-    {
+    {        
         typedef typename strategies::line_interpolate::services::default_strategy
             <
                 Geometry

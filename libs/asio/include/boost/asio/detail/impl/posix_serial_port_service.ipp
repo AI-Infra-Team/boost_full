@@ -2,7 +2,7 @@
 // detail/impl/posix_serial_port_service.ipp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Rep Invariant Systems, Inc. (info@repinvariant.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -49,7 +49,6 @@ boost::system::error_code posix_serial_port_service::open(
   if (is_open(impl))
   {
     ec = boost::asio::error::already_open;
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -57,10 +56,7 @@ boost::system::error_code posix_serial_port_service::open(
   int fd = descriptor_ops::open(device.c_str(),
       O_RDWR | O_NONBLOCK | O_NOCTTY, ec);
   if (fd < 0)
-  {
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
-  }
 
   int s = descriptor_ops::fcntl(fd, F_GETFL, ec);
   if (s >= 0)
@@ -69,7 +65,6 @@ boost::system::error_code posix_serial_port_service::open(
   {
     boost::system::error_code ignored_ec;
     descriptor_ops::close(fd, state, ignored_ec);
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -98,7 +93,6 @@ boost::system::error_code posix_serial_port_service::open(
   {
     boost::system::error_code ignored_ec;
     descriptor_ops::close(fd, state, ignored_ec);
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -109,7 +103,6 @@ boost::system::error_code posix_serial_port_service::open(
     descriptor_ops::close(fd, state, ignored_ec);
   }
 
-  BOOST_ASIO_ERROR_LOCATION(ec);
   return ec;
 }
 
@@ -122,20 +115,13 @@ boost::system::error_code posix_serial_port_service::do_set_option(
   int s = ::tcgetattr(descriptor_service_.native_handle(impl), &ios);
   descriptor_ops::get_last_error(ec, s < 0);
   if (s < 0)
-  {
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
-  }
 
   if (store(option, ios, ec))
-  {
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
-  }
 
   s = ::tcsetattr(descriptor_service_.native_handle(impl), TCSANOW, &ios);
   descriptor_ops::get_last_error(ec, s < 0);
-  BOOST_ASIO_ERROR_LOCATION(ec);
   return ec;
 }
 
@@ -148,14 +134,9 @@ boost::system::error_code posix_serial_port_service::do_get_option(
   int s = ::tcgetattr(descriptor_service_.native_handle(impl), &ios);
   descriptor_ops::get_last_error(ec, s < 0);
   if (s < 0)
-  {
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
-  }
 
-  load(option, ios, ec);
-  BOOST_ASIO_ERROR_LOCATION(ec);
-  return ec;
+  return load(option, ios, ec);
 }
 
 } // namespace detail

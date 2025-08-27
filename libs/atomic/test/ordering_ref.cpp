@@ -1,4 +1,4 @@
-//  Copyright (c) 2020-2025 Andrey Semashev
+//  Copyright (c) 2020 Andrey Semashev
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //  See accompanying file LICENSE_1_0.txt or copy at
@@ -34,14 +34,16 @@
 #include <boost/atomic/atomic_ref.hpp>
 
 #include <cstddef>
-#include <cstdlib>
-#include <chrono>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <boost/config.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_time.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/barrier.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include "test_barrier.hpp"
 
 // Two threads perform the following operations:
 //
@@ -59,7 +61,7 @@ class total_store_order_test
 public:
     total_store_order_test(void);
 
-    void run(std::chrono::steady_clock::duration& timeout);
+    void run(boost::posix_time::time_duration & timeout);
     bool detected_conflict(void) const { return detected_conflict_; }
 
 private:
@@ -78,7 +80,7 @@ private:
     boost::atomic_ref<int> b_;
 
     char pad2_[512];
-    test_barrier barrier_;
+    boost::barrier barrier_;
 
     int vrfyb1_, vrfya2_;
 
@@ -86,8 +88,8 @@ private:
     boost::atomic<int> termination_consensus_;
 
     bool detected_conflict_;
-    std::mutex m_;
-    std::condition_variable c_;
+    boost::mutex m_;
+    boost::condition_variable c_;
 };
 
 template<boost::memory_order store_order, boost::memory_order load_order>
@@ -100,21 +102,18 @@ total_store_order_test<store_order, load_order>::total_store_order_test(void) :
 }
 
 template<boost::memory_order store_order, boost::memory_order load_order>
-void total_store_order_test<store_order, load_order>::run(std::chrono::steady_clock::duration& timeout)
+void total_store_order_test<store_order, load_order>::run(boost::posix_time::time_duration & timeout)
 {
-    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point end = start + timeout;
+    boost::system_time start = boost::get_system_time();
+    boost::system_time end = start + timeout;
 
-    std::thread t1([this]() { this->thread1fn(); });
-    std::thread t2([this]() { this->thread2fn(); });
+    boost::thread t1(boost::bind(&total_store_order_test::thread1fn, this));
+    boost::thread t2(boost::bind(&total_store_order_test::thread2fn, this));
 
     {
-        std::unique_lock< std::mutex > lock(m_);
-        while (!detected_conflict_)
-        {
-            if (c_.wait_until(lock, end) == std::cv_status::timeout)
-                break;
-        }
+        boost::unique_lock< boost::mutex > guard(m_);
+        while (boost::get_system_time() < end && !detected_conflict_)
+            c_.timed_wait(guard, end);
     }
 
     terminate_threads_.store(true, boost::memory_order_relaxed);
@@ -122,26 +121,26 @@ void total_store_order_test<store_order, load_order>::run(std::chrono::steady_cl
     t2.join();
     t1.join();
 
-    std::chrono::steady_clock::duration duration = std::chrono::steady_clock::now() - start;
+    boost::posix_time::time_duration duration = boost::get_system_time() - start;
     if (duration < timeout)
         timeout = duration;
 }
 
+volatile int backoff_dummy;
+
 template<boost::memory_order store_order, boost::memory_order load_order>
 void total_store_order_test<store_order, load_order>::thread1fn(void)
 {
-    BOOST_ATTRIBUTE_UNUSED volatile int backoff_dummy;
-
     while (true)
     {
         a_.store(1, store_order);
         int b = b_.load(load_order);
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         vrfyb1_ = b;
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         check_conflict();
 
@@ -163,10 +162,10 @@ void total_store_order_test<store_order, load_order>::thread1fn(void)
 
         termination_consensus_.fetch_xor(4, boost::memory_order_relaxed);
 
-        unsigned int delay = std::rand() % 10000;
+        unsigned int delay = rand() % 10000;
         a_.store(0, boost::memory_order_relaxed);
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         while (delay--)
             backoff_dummy = delay;
@@ -176,18 +175,16 @@ void total_store_order_test<store_order, load_order>::thread1fn(void)
 template<boost::memory_order store_order, boost::memory_order load_order>
 void total_store_order_test<store_order, load_order>::thread2fn(void)
 {
-    BOOST_ATTRIBUTE_UNUSED volatile int backoff_dummy;
-
     while (true)
     {
         b_.store(1, store_order);
         int a = a_.load(load_order);
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         vrfya2_ = a;
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         check_conflict();
 
@@ -209,10 +206,10 @@ void total_store_order_test<store_order, load_order>::thread2fn(void)
 
         termination_consensus_.fetch_xor(4, boost::memory_order_relaxed);
 
-        unsigned int delay = std::rand() % 10000;
+        unsigned int delay = rand() % 10000;
         b_.store(0, boost::memory_order_relaxed);
 
-        barrier_.arrive_and_wait();
+        barrier_.wait();
 
         while (delay--)
             backoff_dummy = delay;
@@ -224,7 +221,7 @@ void total_store_order_test<store_order, load_order>::check_conflict(void)
 {
     if (vrfyb1_ == 0 && vrfya2_ == 0)
     {
-        std::lock_guard< std::mutex > guard(m_);
+        boost::lock_guard< boost::mutex > guard(m_);
         detected_conflict_ = true;
         terminate_threads_.store(true, boost::memory_order_relaxed);
         c_.notify_all();
@@ -238,7 +235,7 @@ void test_seq_cst(void)
     /* take 10 samples */
     for (std::size_t n = 0; n < 10; n++)
     {
-        std::chrono::steady_clock::duration timeout = std::chrono::seconds(10);
+        boost::posix_time::time_duration timeout(0, 0, 10);
 
         total_store_order_test<boost::memory_order_relaxed, boost::memory_order_relaxed> test;
         test.run(timeout);
@@ -248,10 +245,9 @@ void test_seq_cst(void)
             return;
         }
 
-        std::chrono::microseconds timeout_us = std::chrono::duration_cast< std::chrono::microseconds >(timeout);
-        std::cout << "seq_cst violation with order=relaxed after " << timeout_us.count() << " us\n";
+        std::cout << "seq_cst violation with order=relaxed after " << timeout.total_microseconds() << " us\n";
 
-        sum += timeout_us.count();
+        sum = sum + timeout.total_microseconds();
     }
 
     /* determine maximum likelihood estimate for average time between
@@ -262,10 +258,9 @@ void test_seq_cst(void)
     double avg_race_time_995 = avg_race_time_mle * 2 * 10 / 7.44;
 
     /* 5.298 = 0.995 quantile of exponential distribution */
-    std::chrono::microseconds timeout_us(static_cast< std::chrono::microseconds::rep >(5.298 * avg_race_time_995));
-    std::chrono::steady_clock::duration timeout = timeout_us;
+    boost::posix_time::time_duration timeout = boost::posix_time::microseconds((long)(5.298 * avg_race_time_995));
 
-    std::cout << "run seq_cst for " << timeout_us.count() << " us\n";
+    std::cout << "run seq_cst for " << timeout.total_microseconds() << " us\n";
 
     total_store_order_test<boost::memory_order_seq_cst, boost::memory_order_seq_cst> test;
     test.run(timeout);

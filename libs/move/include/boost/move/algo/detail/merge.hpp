@@ -11,14 +11,15 @@
 #ifndef BOOST_MOVE_MERGE_HPP
 #define BOOST_MOVE_MERGE_HPP
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/move/algo/move.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/move/algo/detail/basic_op.hpp>
 #include <boost/move/detail/iterator_traits.hpp>
 #include <boost/move/detail/destruct_n.hpp>
 #include <boost/move/algo/predicate.hpp>
-#include <boost/move/algo/detail/search.hpp>
 #include <boost/move/detail/iterator_to_raw_pointer.hpp>
-#include <cassert>
+#include <boost/assert.hpp>
 #include <cstddef>
 
 #if defined(BOOST_CLANG) || (defined(BOOST_GCC) && (BOOST_GCC >= 40600))
@@ -29,7 +30,7 @@
 namespace boost {
 namespace movelib {
 
-template<class T, class RandRawIt = T*, class SizeType = typename iter_size<RandRawIt>::type>
+template<class T, class RandRawIt = T*, class SizeType = typename iterator_traits<RandRawIt>::size_type>
 class adaptive_xbuf
 {
    adaptive_xbuf(const adaptive_xbuf &);
@@ -43,12 +44,12 @@ class adaptive_xbuf
    typedef RandRawIt iterator;
    typedef SizeType  size_type;
 
-   inline adaptive_xbuf()
+   adaptive_xbuf()
       : m_ptr(), m_size(0), m_capacity(0)
    {}
 
-   inline adaptive_xbuf(RandRawIt raw_memory, size_type cap)
-      : m_ptr(raw_memory), m_size(0), m_capacity(cap)
+   adaptive_xbuf(RandRawIt raw_memory, size_type capacity)
+      : m_ptr(raw_memory), m_size(0), m_capacity(capacity)
    {}
 
    template<class RandIt>
@@ -57,9 +58,9 @@ class adaptive_xbuf
       typedef typename iterator_traits<RandIt>::difference_type rand_diff_t;
       if(n <= m_size){
          boost::move(first, first+rand_diff_t(n), m_ptr);
-         size_type sz = m_size;
-         while(sz-- != n){
-            m_ptr[sz].~T();
+         size_type size = m_size;
+         while(size-- != n){
+            m_ptr[size].~T();
          }
          m_size = n;
       }
@@ -73,7 +74,7 @@ class adaptive_xbuf
    template<class RandIt>
    void push_back(RandIt first, size_type n)
    {
-      assert(m_capacity - m_size >= n);
+      BOOST_ASSERT(m_capacity - m_size >= n);
       boost::uninitialized_move(first, first+n, m_ptr+m_size);
       m_size += n;
    }
@@ -81,7 +82,7 @@ class adaptive_xbuf
    template<class RandIt>
    iterator add(RandIt it)
    {
-      assert(m_size < m_capacity);
+      BOOST_ASSERT(m_size < m_capacity);
       RandRawIt p_ret = m_ptr + m_size;
       ::new(&*p_ret) T(::boost::move(*it));
       ++m_size;
@@ -102,35 +103,35 @@ class adaptive_xbuf
       }
    }
 
-   inline void set_size(size_type sz)
+   void set_size(size_type size)
    {
-      m_size = sz;
+      m_size = size;
    }
 
-   void shrink_to_fit(size_type const sz)
+   void shrink_to_fit(size_type const size)
    {
-      if(m_size > sz){
-         for(size_type szt_i = sz; szt_i != m_size; ++szt_i){
+      if(m_size > size){
+         for(size_type szt_i = size; szt_i != m_size; ++szt_i){
             m_ptr[szt_i].~T();
          }
-         m_size = sz;
+         m_size = size;
       }
    }
 
-   void initialize_until(size_type const sz, T &t)
+   void initialize_until(size_type const size, T &t)
    {
-      assert(m_size < m_capacity);
-      if(m_size < sz){
-         BOOST_MOVE_TRY
+      BOOST_ASSERT(m_size < m_capacity);
+      if(m_size < size){
+         BOOST_TRY
          {
             ::new((void*)&m_ptr[m_size]) T(::boost::move(t));
             ++m_size;
-            for(; m_size != sz; ++m_size){
+            for(; m_size != size; ++m_size){
                ::new((void*)&m_ptr[m_size]) T(::boost::move(m_ptr[m_size-1]));
             }
             t = ::boost::move(m_ptr[m_size-1]);
          }
-         BOOST_MOVE_CATCH(...)
+         BOOST_CATCH(...)
          {
             while(m_size)
             {
@@ -138,28 +139,28 @@ class adaptive_xbuf
                m_ptr[m_size].~T();
             }
          }
-         BOOST_MOVE_CATCH_END
+         BOOST_CATCH_END
       }
    }
 
    private:
    template<class RIt>
-   inline static bool is_raw_ptr(RIt)
+   static bool is_raw_ptr(RIt)
    {
       return false;
    }
 
-   inline static bool is_raw_ptr(T*)
+   static bool is_raw_ptr(T*)
    {
       return true;
    }
 
    public:
    template<class U>
-   bool supports_aligned_trailing(size_type sz, size_type trail_count) const
+   bool supports_aligned_trailing(size_type size, size_type trail_count) const
    {
       if(this->is_raw_ptr(this->data()) && m_capacity){
-         uintptr_t u_addr_sz = uintptr_t(&*(this->data()+sz));
+         uintptr_t u_addr_sz = uintptr_t(&*(this->data()+size));
          uintptr_t u_addr_cp = uintptr_t(&*(this->data()+this->capacity()));
          u_addr_sz = ((u_addr_sz + sizeof(U)-1)/sizeof(U))*sizeof(U);
          return (u_addr_cp >= u_addr_sz) && ((u_addr_cp - u_addr_sz)/sizeof(U) >= trail_count);
@@ -168,43 +169,43 @@ class adaptive_xbuf
    }
 
    template<class U>
-   inline U *aligned_trailing() const
+   U *aligned_trailing() const
    {
       return this->aligned_trailing<U>(this->size());
    }
 
    template<class U>
-   inline U *aligned_trailing(size_type pos) const
+   U *aligned_trailing(size_type pos) const
    {
       uintptr_t u_addr = uintptr_t(&*(this->data()+pos));
       u_addr = ((u_addr + sizeof(U)-1)/sizeof(U))*sizeof(U);
       return (U*)u_addr;
    }
 
-   inline ~adaptive_xbuf()
+   ~adaptive_xbuf()
    {
       this->clear();
    }
 
-   inline size_type capacity() const
+   size_type capacity() const
    {  return m_capacity;   }
 
-   inline iterator data() const
+   iterator data() const
    {  return m_ptr;   }
 
-   inline iterator begin() const
+   iterator begin() const
    {  return m_ptr;   }
 
-   inline iterator end() const
+   iterator end() const
    {  return m_ptr+m_size;   }
 
-   inline size_type size() const
+   size_type size() const
    {  return m_size;   }
 
-   inline bool empty() const
+   bool empty() const
    {  return !m_size;   }
 
-   inline void clear()
+   void clear()
    {
       this->shrink_to_fit(0u);
    }
@@ -232,9 +233,8 @@ class range_xbuf
    template<class RandIt>
    void move_assign(RandIt first, size_type n)
    {
-      assert(size_type(n) <= size_type(m_cap-m_first));
-      typedef typename iter_difference<RandIt>::type d_type;
-      m_last = Op()(forward_t(), first, first+d_type(n), m_first);
+      BOOST_ASSERT(size_type(n) <= size_type(m_cap-m_first));
+      m_last = Op()(forward_t(), first, first+n, m_first);
    }
 
    ~range_xbuf()
@@ -269,10 +269,10 @@ class range_xbuf
       return pos;
    }
 
-   void set_size(size_type sz)
+   void set_size(size_type size)
    {
       m_last  = m_first;
-      m_last += sz;
+      m_last += size;
    }
 
    private:
@@ -335,7 +335,7 @@ Unsigned gcd(Unsigned x, Unsigned y)
 template<typename RandIt>
 RandIt rotate_gcd(RandIt first, RandIt middle, RandIt last)
 {
-   typedef typename iter_size<RandIt>::type size_type;
+   typedef typename iterator_traits<RandIt>::size_type size_type;
    typedef typename iterator_traits<RandIt>::value_type value_type;
 
    if(first == middle)
@@ -366,6 +366,57 @@ RandIt rotate_gcd(RandIt first, RandIt middle, RandIt last)
    }
    return ret;
 }
+
+template <class RandIt, class T, class Compare>
+RandIt lower_bound
+   (RandIt first, const RandIt last, const T& key, Compare comp)
+{
+   typedef typename iterator_traits
+      <RandIt>::size_type size_type;
+   size_type len = size_type(last - first);
+   RandIt middle;
+
+   while (len) {
+      size_type step = size_type(len >> 1);
+      middle = first;
+      middle += step;
+
+      if (comp(*middle, key)) {
+         first = ++middle;
+         len = size_type(len - (step + 1));
+      }
+      else{
+         len = step;
+      }
+   }
+   return first;
+}
+
+template <class RandIt, class T, class Compare>
+RandIt upper_bound
+   (RandIt first, const RandIt last, const T& key, Compare comp)
+{
+   typedef typename iterator_traits
+      <RandIt>::size_type size_type;
+   size_type len = size_type(last - first);
+   RandIt middle;
+
+   while (len) {
+      size_type step = size_type(len >> 1);
+      middle = first;
+      middle += step;
+
+      if (!comp(key, *middle)) {
+         first = ++middle;
+         len = size_type(len - (step + 1));
+      }
+      else{
+         len = step;
+      }
+   }
+   return first;
+}
+
 
 template<class RandIt, class Compare, class Op>
 void op_merge_left( RandIt buf_first
@@ -479,7 +530,7 @@ void op_buffered_merge
       , Buf &xbuf)
 {
    if(first != middle && middle != last && comp(*middle, middle[-1])){
-      typedef typename iter_size<RandIt>::type   size_type;
+      typedef typename iterator_traits<RandIt>::size_type   size_type;
       size_type const len1 = size_type(middle-first);
       size_type const len2 = size_type(last-middle);
       if(len1 <= len2){
@@ -544,11 +595,11 @@ static const std::size_t MergeBufferlessONLogNRotationThreshold = 16u;
 template <class RandIt, class Compare>
 void merge_bufferless_ONlogN_recursive
    ( RandIt first, RandIt middle, RandIt last
-   , typename iter_size<RandIt>::type len1
-   , typename iter_size<RandIt>::type len2
+   , typename iterator_traits<RandIt>::size_type len1
+   , typename iterator_traits<RandIt>::size_type len2
    , Compare comp)
 {
-   typedef typename iter_size<RandIt>::type size_type;
+   typedef typename iterator_traits<RandIt>::size_type size_type;
 
    while(1) {
       //trivial cases
@@ -611,7 +662,7 @@ void merge_bufferless_ONlogN_recursive
 template<class RandIt, class Compare>
 void merge_bufferless_ONlogN(RandIt first, RandIt middle, RandIt last, Compare comp)
 {
-   typedef typename iter_size<RandIt>::type size_type;
+   typedef typename iterator_traits<RandIt>::size_type size_type;
    merge_bufferless_ONlogN_recursive
       (first, middle, last, size_type(middle - first), size_type(last - middle), comp);
 }
@@ -634,12 +685,12 @@ void op_merge_with_right_placed
    , InputOutIterator dest_first, InputOutIterator r_first, InputOutIterator r_last
    , Compare comp, Op op)
 {
-   assert((last - first) == (r_first - dest_first));
+   BOOST_ASSERT((last - first) == (r_first - dest_first));
    while ( first != last ) {
       if (r_first == r_last) {
          InputOutIterator end = op(forward_t(), first, last, dest_first);
-         assert(end == r_last);
-         boost::movelib::ignore(end);
+         BOOST_ASSERT(end == r_last);
+         boost::ignore_unused(end);
          return;
       }
       else if (comp(*r_first, *first)) {
@@ -671,12 +722,12 @@ void op_merge_with_left_placed
    , BidirIterator const r_first, BidirIterator r_last
    , Compare comp, Op op)
 {
-   assert((dest_last - last) == (r_last - r_first));
+   BOOST_ASSERT((dest_last - last) == (r_last - r_first));
    while( r_first != r_last ) {
       if(first == last) {
          BidirOutIterator res = op(backward_t(), r_first, r_last, dest_last);
-         assert(last == res);
-         boost::movelib::ignore(res);
+         BOOST_ASSERT(last == res);
+         boost::ignore_unused(res);
          return;
       }
       --r_last;
@@ -725,7 +776,7 @@ void uninitialized_merge_with_right_placed
    , InputOutIterator dest_first, InputOutIterator r_first, InputOutIterator r_last
    , Compare comp)
 {
-   assert((last - first) == (r_first - dest_first));
+   BOOST_ASSERT((last - first) == (r_first - dest_first));
    typedef typename iterator_traits<InputOutIterator>::value_type value_type;
    InputOutIterator const original_r_first = r_first;
 
@@ -739,8 +790,8 @@ void uninitialized_merge_with_right_placed
          }
          d.release();
          InputOutIterator end = ::boost::move(first, last, original_r_first);
-         assert(end == r_last);
-         boost::movelib::ignore(end);
+         BOOST_ASSERT(end == r_last);
+         boost::ignore_unused(end);
          return;
       }
       else if (comp(*r_first, *first)) {
@@ -765,10 +816,10 @@ template<typename BidirectionalIterator1, typename BidirectionalIterator2>
    rotate_adaptive(BidirectionalIterator1 first,
       BidirectionalIterator1 middle,
       BidirectionalIterator1 last,
-      typename iter_size<BidirectionalIterator1>::type len1,
-      typename iter_size<BidirectionalIterator1>::type len2,
+      typename iterator_traits<BidirectionalIterator1>::size_type len1,
+      typename iterator_traits<BidirectionalIterator1>::size_type len2,
       BidirectionalIterator2 buffer,
-      typename iter_size<BidirectionalIterator1>::type buffer_size)
+      typename iterator_traits<BidirectionalIterator1>::size_type buffer_size)
 {
    if (len1 > len2 && len2 <= buffer_size)
    {
@@ -803,13 +854,13 @@ template<typename BidirectionalIterator,
    (BidirectionalIterator first,
       BidirectionalIterator middle,
       BidirectionalIterator last,
-      typename  iter_size<BidirectionalIterator>::type len1,
-      typename  iter_size<BidirectionalIterator>::type len2,
+      typename iterator_traits<BidirectionalIterator>::size_type len1,
+      typename iterator_traits<BidirectionalIterator>::size_type len2,
       Pointer buffer,
-      typename  iter_size<BidirectionalIterator>::type buffer_size,
+      typename iterator_traits<BidirectionalIterator>::size_type buffer_size,
       Compare comp)
 {
-   typedef typename  iter_size<BidirectionalIterator>::type size_type;
+   typedef typename iterator_traits<BidirectionalIterator>::size_type size_type;
    //trivial cases
    if (!len2 || !len1) {
       // no-op
@@ -863,10 +914,10 @@ void merge_adaptive_ONlogN(BidirectionalIterator first,
 		                     BidirectionalIterator last,
 		                     Compare comp,
                            RandRawIt uninitialized,
-                           typename  iter_size<BidirectionalIterator>::type uninitialized_len)
+                           typename iterator_traits<BidirectionalIterator>::size_type uninitialized_len)
 {
    typedef typename iterator_traits<BidirectionalIterator>::value_type  value_type;
-   typedef typename  iter_size<BidirectionalIterator>::type   size_type;
+   typedef typename iterator_traits<BidirectionalIterator>::size_type   size_type;
 
    if (first == middle || middle == last)
       return;

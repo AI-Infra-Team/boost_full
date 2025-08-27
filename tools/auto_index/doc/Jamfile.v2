@@ -7,7 +7,6 @@ using auto-index ;
 import modules ;
 
 path-constant images_location : html ;
-path-constant here : . ;
 
 xml auto_index : auto_index.qbk ;
 
@@ -15,6 +14,11 @@ boostbook standalone
     :
         auto_index
     :
+        # Path for links to Boost:
+        <xsl:param>boost.root=../../../..
+        # Path for libraries index:
+        <xsl:param>boost.libraries=$(boost-root)/libs/libraries.htm
+        
         # Some general style settings:
         <xsl:param>table.footnote.number.format=1
         <xsl:param>footnote.number.format=1
@@ -73,8 +77,10 @@ boostbook standalone
         <xsl:param>index.on.type=1 # = 1 For the native stylesheets to generate multiple different indexes.
         # PDF native index support is probably better for PDFs as then you actually get page numbers.
 
-        <auto-index-script>$(here)/autoindex.idx
-        <auto-index-prefix>$(here)/../../.. 
+        <auto-index-script>autoindex.idx # Specifies the name of the script to load for mylibrary. 
     ;
 
 install pdf-install : standalone : <install-type>PDF <location>. <name>auto_index.pdf ;
+
+
+

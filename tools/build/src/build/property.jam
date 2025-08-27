@@ -14,7 +14,6 @@ import string ;
 import sequence ;
 import set ;
 import utility ;
-import args ;
 
 
 # Refines 'properties' by overriding any non-free and non-conditional properties
@@ -85,10 +84,6 @@ rule evaluate-conditionals-in-context ( properties * : context * )
             {
                 indirect += $(p) ;
             }
-            else if $(p) = <build>no
-            {
-                return <build>no ;
-            }
             else
             {
                 result += $(p) ;
@@ -130,10 +125,6 @@ rule evaluate-conditionals-in-context ( properties * : context * )
                     properties += $(s[2]) ;
                 }
             }
-            if <build>no = $(properties[-1])
-            {
-                return <build>no ;
-            }
         }
         for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
         {
@@ -147,14 +138,13 @@ rule evaluate-conditionals-in-context ( properties * : context * )
                 local location = [ $(p).location ] ;
                 local project-id = [ project.attribute $(m) id ] ;
                 project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-                new =
+                properties +=
                     [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
             }
-            if <build>no in $(new)
+            else
             {
-                return <build>no ;
+                properties += $(new) ;
             }
-            properties += $(new) ;
         }
     }
     return $(result) ;
@@ -281,9 +271,7 @@ local rule identity ( string )
 }
 
 
-args.add-arg abbreviate-paths : --abbreviate-paths
-    : "Compresses target paths by abbreviating each component." ;
-if [ args.get-arg abbreviate-paths ]
+if --abbreviate-paths in [ modules.peek : ARGV ]
 {
     .abbrev = abbreviate-dashed ;
 }
@@ -776,12 +764,6 @@ rule translate-dependencies ( specification * : project-id : location )
         }
     }
     return $(result) ;
-}
-
-rule str ( property )
-{
-    local value = [ utility.str $(property:G=) ] ;
-    return $(property:G)$(value) ;
 }
 
 

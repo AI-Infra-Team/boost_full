@@ -60,7 +60,7 @@
 #include <boost/type_traits/has_multiplies.hpp>
 #include <boost/type_traits/has_multiplies_assign.hpp>
 #include <boost/type_traits/has_negate.hpp>
-#if !defined(BOOST_BORLANDC) && (!(defined(__CUDACC__) && (__CUDACC_VER_MAJOR__ < 11)) || defined(__CUDA__))
+#if !defined(BOOST_BORLANDC) && !defined(__CUDACC__)
 #include <boost/type_traits/has_new_operator.hpp>
 #endif
 #include <boost/type_traits/has_not_equal_to.hpp>
@@ -131,7 +131,6 @@
 #include <boost/type_traits/is_scoped_enum.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/type_traits/is_stateless.hpp>
-#include <boost/type_traits/is_swappable.hpp>
 #include <boost/type_traits/is_trivially_copyable.hpp>
 #include <boost/type_traits/is_union.hpp>
 #include <boost/type_traits/is_unscoped_enum.hpp>

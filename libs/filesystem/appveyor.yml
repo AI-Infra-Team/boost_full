@@ -1,5 +1,5 @@
 # Copyright 2016, 2017 Peter Dimov
-# Copyright 2019-2025 Andrey Semashev
+# Copyright 2019 - 2021 Andrey Semashev
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
 
@@ -15,51 +15,59 @@ branches:
 
 environment:
   matrix:
+    - TOOLSET: msvc-9.0,msvc-10.0,msvc-11.0,msvc-12.0
+      ADDRMD: 32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.0
       ADDRMD: 32,64
       EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.1
-      CXXSTD: 14,17,latest
+      CXXSTD: 14,17
       ADDRMD: 32,64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - TOOLSET: msvc-14.2
       ADDRMD: 32,64
-      CXXSTD: 14,17,20,latest
+      CXXSTD: 14,17
       THREADING: single,multi
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    - TOOLSET: msvc-14.3
-      ADDRMD: 32,64
-      CXXSTD: 14,17,20,latest
-      THREADING: single,multi
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     - TOOLSET: clang-win
       ADDRMD: 32
-      CXXSTD: 14,17,latest
+      CXXSTD: 14,17
       ENV_SCRIPT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: clang-win
       ADDRMD: 64
-      CXXSTD: 14,17,latest
+      CXXSTD: 14,17
       ENV_SCRIPT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: gcc
-      CXXSTD: 11,14,1z
+      CXXSTD: 03,11,14,1z
       ADDPATH: C:\cygwin\bin;
       THREADING: single,multi
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
-      CXXSTD: 11,14,1z
+      CXXSTD: 03,11,14,1z
       ADDPATH: C:\cygwin64\bin;
       EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
-      CXXSTD: 11,14,17
+      CXXSTD: 03,11,14,1z
+      ADDPATH: C:\mingw\bin;
+      EXTRA_TESTS: 1
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - TOOLSET: gcc
+      CXXSTD: 03,11,14,1z
+      ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+      EXTRA_TESTS: 1
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - TOOLSET: gcc
+      CXXSTD: 03,11,14,17
       ADDPATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;
       THREADING: single,multi
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
-      CXXSTD: 11,14,17,2a
+      CXXSTD: 03,11,14,17,2a
       ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
       THREADING: single,multi
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015

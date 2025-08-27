@@ -2,8 +2,8 @@
 // experimental/coro/cancel.cpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2021-2023 Klemens D. Morgenstern
-//                         (klemens dot morgenstern at gmx dot net)
+// Copyright (c) 2021 Klemens D. Morgenstern
+//                    (klemens dot morgenstern at gmx dot net)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,6 @@
 // Test that header file is self-contained.
 #include <boost/asio/experimental/coro.hpp>
 #include <iostream>
-#include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/this_coro.hpp>
@@ -27,6 +26,7 @@ using namespace boost::asio::experimental;
 namespace this_coro = boost::asio::this_coro;
 
 namespace coro {
+
 
 auto coro_simple_cancel_impl(boost::asio::io_context& ) noexcept
   -> boost::asio::experimental::coro<void() noexcept, boost::system::error_code>

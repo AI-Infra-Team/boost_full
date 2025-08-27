@@ -61,8 +61,10 @@ int main(int, char*[])
     const int V = 5;
     Graph g(V);
 
-    auto id = get(&VertexProperties::index, g);
-    auto name = get(&EdgeProperties::name, g);
+    property_map< Graph, std::size_t VertexProperties::* >::type id
+        = get(&VertexProperties::index, g);
+    property_map< Graph, std::string EdgeProperties::* >::type name
+        = get(&EdgeProperties::name, g);
 
     boost::graph_traits< Graph >::vertex_iterator vi, viend;
     int vnum = 0;

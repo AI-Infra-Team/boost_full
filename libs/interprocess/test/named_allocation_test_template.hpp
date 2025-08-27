@@ -27,7 +27,6 @@
 #include <new>
 #include <set>
 #include <vector>
-#include <typeinfo>
 
 // local
 #include "get_process_id_name.hpp"
@@ -437,7 +436,7 @@ bool test_named_allocation()
 
    const int memsize = 163840;
    const char *const shMemName = test::get_process_id_name();
-   BOOST_INTERPROCESS_TRY
+   BOOST_TRY
    {
       //A shared memory with rbtree best fit algorithm
       typedef basic_managed_shared_memory
@@ -455,14 +454,14 @@ bool test_named_allocation()
          return false;
       }
    }
-   BOOST_INTERPROCESS_CATCH(...){
+   BOOST_CATCH(...){
       shared_memory_object::remove(shMemName);
-      BOOST_INTERPROCESS_RETHROW
-   } BOOST_INTERPROCESS_CATCH_END
+      BOOST_RETHROW
+   } BOOST_CATCH_END
    shared_memory_object::remove(shMemName);
 
    //Now test it with wchar_t
-   BOOST_INTERPROCESS_TRY
+   BOOST_TRY
    {
       //A shared memory with simple sequential fit algorithm
       typedef basic_managed_shared_memory
@@ -480,10 +479,10 @@ bool test_named_allocation()
          return false;
       }
    }
-   BOOST_INTERPROCESS_CATCH(...){
+   BOOST_CATCH(...){
       shared_memory_object::remove(shMemName);
-      BOOST_INTERPROCESS_RETHROW
-   } BOOST_INTERPROCESS_CATCH_END
+      BOOST_RETHROW
+   } BOOST_CATCH_END
    shared_memory_object::remove(shMemName);
 
    return true;

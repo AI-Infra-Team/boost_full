@@ -1,11 +1,10 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014-2025, Oracle and/or its affiliates.
+// Copyright (c) 2014-2015, Oracle and/or its affiliates.
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 #include <iostream>
@@ -27,12 +26,11 @@
 #include <boost/geometry/geometries/multi_linestring.hpp>
 #include <boost/geometry/algorithms/difference.hpp>
 
-using point_type = bg::model::point<double,2,bg::cs::cartesian>;
-using segment_type = bg::model::segment<point_type>;
-using linestring_type = bg::model::linestring<point_type>;
-using multi_linestring_type = bg::model::multi_linestring<linestring_type>;
-using L = linestring_type;
-using ML = multi_linestring_type;
+typedef bg::model::point<double,2,bg::cs::cartesian>  point_type;
+typedef bg::model::segment<point_type>                segment_type;
+typedef bg::model::linestring<point_type>             linestring_type;
+typedef bg::model::multi_linestring<linestring_type>  multi_linestring_type;
+
 
 
 //===========================================================================
@@ -48,7 +46,10 @@ BOOST_AUTO_TEST_CASE( test_difference_linestring_linestring )
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<L, L, ML>;
+    typedef linestring_type L;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<L, L, ML> tester;
 
     tester::apply
         (from_wkt<L>("LINESTRING(0 0,1 1,2 1,3 2)"),
@@ -512,6 +513,11 @@ BOOST_AUTO_TEST_CASE( test_difference_linestring_linestring )
 
     {
         ut_settings settings{1e-10};
+#if ! defined(BOOST_GEOMETRY_USE_RESCALING) && ! defined(BOOST_GEOMETRY_TEST_FAILURES)
+        // Cases failing without rescaling when first linestring is reversed
+        settings.test_reverse_normal = false;
+        settings.test_reverse_reverse = false;
+#endif
 
         tester::apply
             (from_wkt<L>("LINESTRING(8 1, 4 .4,2 8)"),
@@ -564,7 +570,10 @@ BOOST_AUTO_TEST_CASE( test_difference_linestring_multilinestring )
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<L, ML, ML>;
+    typedef linestring_type L;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<L, ML, ML> tester;
 
     // disjoint linestrings
     tester::apply
@@ -785,7 +794,10 @@ BOOST_AUTO_TEST_CASE( test_difference_multilinestring_linestring )
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<ML, L, ML>;
+    typedef linestring_type L;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<ML, L, ML> tester;
 
     // disjoint linestrings
     tester::apply
@@ -867,7 +879,9 @@ BOOST_AUTO_TEST_CASE( test_difference_multilinestring_multilinestring )
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<ML, ML, ML>;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<ML, ML, ML> tester;
 
     // disjoint linestrings
     tester::apply
@@ -1090,6 +1104,10 @@ BOOST_AUTO_TEST_CASE( test_difference_multilinestring_multilinestring )
 
     {
         ut_settings settings{1e-10};
+#if ! defined(BOOST_GEOMETRY_USE_RESCALING) && ! defined(BOOST_GEOMETRY_TEST_FAILURES)
+        // Case failing without rescaling for some orders
+        settings.test_normal_normal = false;
+#endif
 
         tester::apply
             (from_wkt<ML>("MULTILINESTRING((1 5, -4.3 -.1), (0 6, 8.6 6, 189.7654 5, 1 3, 6 3, 3 5, 6 2.232432, 0 4), (-6 5, 1 2.232432), (3 -1032.34324, 9 0, 189.7654 1, -1.4 3, 3 189.7654, +.3 10.0002, 1 5, 6 3, 5 1, 9 1, 10.0002 -1032.34324, -0.7654 0, 5 3, 3 4), (2.232432 2.232432, 8.6 +.4, 0.0 2.232432, 4 0, -8.8 10.0002), (1 0, 6 6, 7 2, -0 8.4), (-0.7654 3, +.6 8, 4 -1032.34324, 1 6, 0 4), (0 7, 2 1, 8 -7, 7 -.7, -1032.34324 9), (5 0, 10.0002 4, 8 7, 3 3, -8.1 5))"),
@@ -1102,7 +1120,11 @@ BOOST_AUTO_TEST_CASE( test_difference_multilinestring_multilinestring )
 
     {
         ut_settings settings{1e-10};
-
+#if ! defined(BOOST_GEOMETRY_USE_RESCALING) && ! defined(BOOST_GEOMETRY_TEST_FAILURES)
+        // Case failing without rescaling for some orders
+        settings.test_normal_normal = false;
+        settings.test_normal_reverse = false;
+#endif
         tester::apply
             (from_wkt<ML>("MULTILINESTRING((-.4 2, 2.232432 3, 6 9, 8 189.7654, -1032.34324 5.4, 2.232432 9), (-1032.34324 3, 8 -1.6), (0 -.2, 8 1, -.5 7, 6 +.2))"),
              from_wkt<ML>("MULTILINESTRING((-8 1, 4.8 6, 2 +.5), (10.0002 2,9 -1032.34324, .3 8, 0 5, 8 1, 4 .4, 2 8), (6 7, +.1 7, 0 -.5))"),
@@ -1151,13 +1173,15 @@ BOOST_AUTO_TEST_CASE( test_difference_ml_ml_degenerate )
 {
 #ifdef BOOST_GEOMETRY_TEST_DEBUG
     std::cout << std::endl << std::endl << std::endl;
-    std::cout << "*** MULTILINESTRING / MULTILINESTRING DIFFERENCE"
+    std::cout << "*** MULTILINESTRING / MULTILINESTRING DIFFERENCE" 
               << " (DEGENERATE) ***"
               << std::endl;
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<ML, ML, ML>;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<ML, ML, ML> tester;
 
     // the following test cases concern linestrings with duplicate
     // points and possibly linestrings with zero length.
@@ -1236,13 +1260,15 @@ BOOST_AUTO_TEST_CASE( test_difference_ml_ml_spikes )
 {
 #ifdef BOOST_GEOMETRY_TEST_DEBUG
     std::cout << std::endl << std::endl << std::endl;
-    std::cout << "*** MULTILINESTRING / MULTILINESTRING DIFFERENCE"
+    std::cout << "*** MULTILINESTRING / MULTILINESTRING DIFFERENCE" 
               << " (WITH SPIKES) ***"
               << std::endl;
     std::cout << std::endl;
 #endif
 
-    using tester = test_difference_of_geometries<ML, ML, ML>;
+    typedef multi_linestring_type ML;
+
+    typedef test_difference_of_geometries<ML, ML, ML> tester;
 
     // the following test cases concern linestrings with spikes
 
@@ -1432,14 +1458,14 @@ BOOST_AUTO_TEST_CASE( test_difference_ml_ml_spikes )
 
 BOOST_AUTO_TEST_CASE( test_difference_ls_mls_geo_rad )
 {
-    using pt = bg::model::point<double, 2, bg::cs::geographic<bg::radian>>;
-    using ls = bg::model::linestring<pt>;
-    using mls = bg::model::multi_linestring<ls>;
+    typedef bg::model::point<double, 2, bg::cs::geographic<bg::radian> > pt;
+    typedef bg::model::linestring<pt> ls;
+    typedef bg::model::multi_linestring<ls> mls;
 
     bg::srs::spheroid<double> sph_wgs84(6378137.0, 6356752.3142451793);
     boost::geometry::strategy::intersection::geographic_segments<> wgs84(sph_wgs84);
 
-    ls g1 = from_wkt<ls>("LINESTRING(0 0,-3.14159265358979 0)");
+    ls g1 = from_wkt<ls>("LINESTRING(0 0, -3.14159265358979 0)");
     mls g2 = from_wkt<mls>("MULTILINESTRING((-2.1467549799530232 -0.12217304763960295,"
                                             "-2.5481807079117185 -0.90757121103705041,"
                                             "-2.6529004630313784 0.85521133347722067,"

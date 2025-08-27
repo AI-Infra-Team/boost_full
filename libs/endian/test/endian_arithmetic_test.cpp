@@ -9,7 +9,7 @@
 #include <boost/cstdint.hpp>
 #include <cstddef>
 
-template<boost::endian::order Order, boost::endian::align Align, class T> void test_arithmetic_( T const& x )
+template<BOOST_SCOPED_ENUM(boost::endian::order) Order, BOOST_SCOPED_ENUM(boost::endian::align) Align, class T> void test_arithmetic_( T const& x )
 {
     boost::endian::endian_arithmetic<Order, T, sizeof(T) * 8, Align> y( x );
 
@@ -78,7 +78,7 @@ template<boost::endian::order Order, boost::endian::align Align, class T> void t
     }
 }
 
-template<boost::endian::order Order, boost::endian::align Align, class T> void test_integral_( T const& x )
+template<BOOST_SCOPED_ENUM(boost::endian::order) Order, BOOST_SCOPED_ENUM(boost::endian::align) Align, class T> void test_integral_( T const& x )
 {
     boost::endian::endian_arithmetic<Order, T, sizeof(T) * 8, Align> y( x );
 

@@ -11,12 +11,14 @@
 #define BOOST_JSON_IMPL_STATIC_RESOURCE_IPP
 
 #include <boost/json/static_resource.hpp>
-#include <boost/throw_exception.hpp>
-#include <boost/align/align.hpp>
+#include <boost/json/detail/align.hpp>
+#include <boost/json/detail/except.hpp>
 #include <memory>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
+
+static_resource::
+~static_resource() noexcept = default;
 
 static_resource::
 static_resource(
@@ -43,10 +45,11 @@ do_allocate(
     std::size_t n,
     std::size_t align)
 {
-    auto p = alignment::align(
+    auto p = detail::align(
         align, n, p_, n_);
     if(! p)
-        throw_exception( std::bad_alloc(), BOOST_CURRENT_LOCATION );
+        detail::throw_bad_alloc(
+            BOOST_JSON_SOURCE_POS);
     p_ = reinterpret_cast<char*>(p) + n;
     n_ -= n;
     return p;
@@ -70,7 +73,6 @@ do_is_equal(
     return this == &mr;
 }
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 
-#include <boost/type_traits/integral_constant.hpp>
+#include <boost/mpl/bool.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
@@ -28,6 +28,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
@@ -130,6 +131,12 @@ public:
         {
             return m_Filter(attrs);
         }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif
         catch (...)
         {
             if (m_ExceptionHandler.empty())
@@ -159,6 +166,12 @@ protected:
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< BackendMutexT > lock(backend_mutex);)
             backend.consume(rec);
         }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif
         catch (...)
         {
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< mutex_type > lock(m_Mutex);)
@@ -177,6 +190,10 @@ protected:
         {
             if (!backend_mutex.try_lock())
                 return false;
+        }
+        catch (thread_interrupted&)
+        {
+            throw;
         }
         catch (...)
         {
@@ -207,13 +224,19 @@ protected:
 private:
     //! Flushes record buffers in the backend (the actual implementation)
     template< typename BackendMutexT, typename BackendT >
-    void flush_backend_impl(BackendMutexT& backend_mutex, BackendT& backend, boost::true_type)
+    void flush_backend_impl(BackendMutexT& backend_mutex, BackendT& backend, mpl::true_)
     {
         try
         {
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< BackendMutexT > lock(backend_mutex);)
             backend.flush();
         }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif
         catch (...)
         {
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< mutex_type > lock(m_Mutex);)
@@ -224,7 +247,7 @@ private:
     }
     //! Flushes record buffers in the backend (stub for backends that don't support flushing)
     template< typename BackendMutexT, typename BackendT >
-    void flush_backend_impl(BackendMutexT&, BackendT&, boost::false_type)
+    void flush_backend_impl(BackendMutexT&, BackendT&, mpl::false_)
     {
     }
 };
@@ -441,6 +464,12 @@ protected:
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< BackendMutexT > lock(backend_mutex);)
             backend.consume(rec, context->m_FormattedRecord);
         }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif
         catch (...)
         {
             BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< mutex_type > lock(this->frontend_mutex());)
@@ -459,6 +488,10 @@ protected:
         {
             if (!backend_mutex.try_lock())
                 return false;
+        }
+        catch (thread_interrupted&)
+        {
+            throw;
         }
         catch (...)
         {

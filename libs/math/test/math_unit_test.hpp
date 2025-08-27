@@ -10,34 +10,16 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath> // for std::isnan
-#include <string>
-#include <type_traits>
 #include <boost/math/tools/assert.hpp>
 #include <boost/math/special_functions/next.hpp>
 #include <boost/math/special_functions/trunc.hpp>
-#if defined __has_include
-#  if __has_include(<cxxabi.h>)
-#define BOOST_MATH_HAS_CXX_ABI 1
-#    include <cxxabi.h>
-#  endif
-#endif
+#include <boost/core/demangle.hpp>
+
 namespace boost { namespace math { namespace  test {
 
 namespace detail {
     static std::atomic<int64_t> global_error_count{0};
     static std::atomic<int64_t> total_ulp_distance{0};
-
-    inline std::string demangle(char const * name)
-    {
-        int status = 0;
-        std::size_t size = 0;
-#if BOOST_MATH_HAS_CXX_ABI
-        std::string s {abi::__cxa_demangle( name, NULL, &size, &status )};
-#else
-        std::string s {name};
-#endif
-        return s;
-    }
 }
 
 template<class Real>
@@ -67,7 +49,7 @@ bool check_mollified_close(Real expected, Real computed, Real tol, std::string c
         std::ios_base::fmtflags f( std::cerr.flags() );
         std::cerr << std::setprecision(3);
         std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
-                  << " \033[0m Mollified relative error in " << detail::demangle(typeid(Real).name())<< " precision is " << mollified_relative_error
+                  << " \033[0m Mollified relative error in " << boost::core::demangle(typeid(Real).name())<< " precision is " << mollified_relative_error
                   << ", which exceeds " << tol << ", error/tol  = " << mollified_relative_error/tol << ".\n"
                   << std::setprecision(std::numeric_limits<Real>::max_digits10) << std::showpos
                   << "  Expected: " << std::defaultfloat << std::fixed << expected << std::hexfloat << " = " << expected << "\n"
@@ -91,21 +73,17 @@ bool check_ulp_close(PreciseReal expected1, Real computed, size_t ulps, std::str
     using boost::math::lltrunc;
     // Of course integers can be expected values, and they are exact:
     if (!std::is_integral<PreciseReal>::value) {
-    if (boost::math::isnan(expected1)) {
-        std::ostringstream oss;
-        oss << "Error in CHECK_ULP_CLOSE: Expected value cannot be a nan. Callsite: " << filename << ":" << function << ":" << line << "."; 
-        throw std::domain_error(oss.str());
-    }
+        BOOST_MATH_ASSERT_MSG(!isnan(expected1), "Expected value cannot be a nan.");
         if (sizeof(PreciseReal) < sizeof(Real)) {
             std::ostringstream err;
             err << "\n\tThe expected number must be computed in higher (or equal) precision than the number being tested.\n";
-            err << "\tType of expected is " << detail::demangle(typeid(PreciseReal).name()) << ", which occupies " << sizeof(PreciseReal) << " bytes.\n";
-            err << "\tType of computed is " << detail::demangle(typeid(Real).name()) << ", which occupies " << sizeof(Real) << " bytes.\n";
+            err << "\tType of expected is " << boost::core::demangle(typeid(PreciseReal).name()) << ", which occupies " << sizeof(PreciseReal) << " bytes.\n";
+            err << "\tType of computed is " << boost::core::demangle(typeid(Real).name()) << ", which occupies " << sizeof(Real) << " bytes.\n";
             throw std::logic_error(err.str());
         }
     }
 
-    if (boost::math::isnan(computed))
+    if (isnan(computed))
     {
         std::ios_base::fmtflags f( std::cerr.flags() );
         std::cerr << std::setprecision(3);
@@ -127,7 +105,7 @@ bool check_ulp_close(PreciseReal expected1, Real computed, size_t ulps, std::str
         std::ios_base::fmtflags f( std::cerr.flags() );
         std::cerr << std::setprecision(3);
         std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
-                  << " \033[0m ULP distance in " << detail::demangle(typeid(Real).name())<< " precision is " << dist
+                  << " \033[0m ULP distance in " << boost::core::demangle(typeid(Real).name())<< " precision is " << dist
                   << ", which exceeds " << ulps;
                   if (ulps > 0)
                   {
@@ -156,28 +134,26 @@ bool check_le(Real lesser, Real greater, std::string const & filename, std::stri
     using std::abs;
     using std::isnan;
 
-    if (std::is_floating_point<Real>::value) {
-        if (boost::math::isnan(lesser))
-        {
-            std::ios_base::fmtflags f( std::cerr.flags() );
-            std::cerr << std::setprecision(3);
-            std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
-                    << " \033[0m Lesser value is a nan\n";
-            std::cerr.flags(f);
-            ++detail::global_error_count;
-            return false;
-        }
+    if (isnan(lesser))
+    {
+        std::ios_base::fmtflags f( std::cerr.flags() );
+        std::cerr << std::setprecision(3);
+        std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
+                  << " \033[0m Lesser value is a nan\n";
+        std::cerr.flags(f);
+        ++detail::global_error_count;
+        return false;
+    }
 
-        if (boost::math::isnan(greater))
-        {
-            std::ios_base::fmtflags f( std::cerr.flags() );
-            std::cerr << std::setprecision(3);
-            std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
-                    << " \033[0m Greater value is a nan\n";
-            std::cerr.flags(f);
-            ++detail::global_error_count;
-            return false;
-        }
+    if (isnan(greater))
+    {
+        std::ios_base::fmtflags f( std::cerr.flags() );
+        std::cerr << std::setprecision(3);
+        std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
+                  << " \033[0m Greater value is a nan\n";
+        std::cerr.flags(f);
+        ++detail::global_error_count;
+        return false;
     }
 
     if (lesser > greater)
@@ -185,7 +161,7 @@ bool check_le(Real lesser, Real greater, std::string const & filename, std::stri
         std::ios_base::fmtflags f( std::cerr.flags() );
         std::cerr << std::setprecision(3);
         std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n"
-                  << " \033[0m Condition " << lesser << " \u2264 " << greater << " is violated in " << detail::demangle(typeid(Real).name()) << " precision.\n";
+                  << " \033[0m Condition " << lesser << " \u2264 " << greater << " is violated in " << boost::core::demangle(typeid(Real).name()) << " precision.\n";
         std::cerr << std::setprecision(std::numeric_limits<Real>::max_digits10) << std::showpos
                   << "  \"Lesser\" : " << std::defaultfloat << std::fixed << lesser  << " = " << std::scientific << lesser  << std::hexfloat << " = " << lesser << "\n"
                   << "  \"Greater\": " << std::defaultfloat << std::fixed << greater << " = " << std::scientific << greater << std::hexfloat << " = " << greater << "\n"
@@ -238,7 +214,7 @@ bool check_conditioned_error(Real abscissa, PreciseReal expected1, PreciseReal e
             std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << ":\n";
             std::cerr << std::setprecision(std::numeric_limits<Real>::max_digits10) << std::showpos;
             std::cerr << "\033[0m  Error at abscissa " << std::defaultfloat << std::fixed << abscissa << " = " << std::hexfloat << abscissa << "\n";
-            std::cerr << "  Given that the expected value is zero, the computed value in " << detail::demangle(typeid(Real).name()) << " precision  must satisfy |f(x)| <= " << tol << ".\n";
+            std::cerr << "  Given that the expected value is zero, the computed value in " << boost::core::demangle(typeid(Real).name()) << " precision  must satisfy |f(x)| <= " << tol << ".\n";
             std::cerr << "  But the computed value is " << std::defaultfloat << std::fixed << computed << std::hexfloat << " = " << computed << "\n";
             std::cerr.flags(f);
             ++detail::global_error_count;
@@ -264,7 +240,7 @@ bool check_conditioned_error(Real abscissa, PreciseReal expected1, PreciseReal e
         std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << "\n";
         std::cerr << std::setprecision(std::numeric_limits<Real>::max_digits10);
         std::cerr << "\033[0m  The relative error at abscissa x = " << std::defaultfloat << std::fixed << abscissa << " = " << std::hexfloat << abscissa
-                  << " in " << detail::demangle(typeid(Real).name()) << " precision is " << std::scientific << relative_error << "\n"
+                  << " in " << boost::core::demangle(typeid(Real).name()) << " precision is " << std::scientific << relative_error << "\n"
                   << "  This exceeds the tolerance " << tol << "\n"
                   << std::showpos
                   << "  Expected: " << std::defaultfloat << std::fixed << expected << " = " << std::scientific << expected << std::hexfloat << " = " << expected << "\n"
@@ -312,7 +288,7 @@ bool check_absolute_error(PreciseReal expected1, Real computed, Real acceptable_
         std::cerr << std::setprecision(3);
         std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << "\n";
         std::cerr << std::setprecision(std::numeric_limits<Real>::max_digits10);
-        std::cerr << "\033[0m  The absolute error in " << detail::demangle(typeid(Real).name()) << " precision is " << std::scientific << error << "\n"
+        std::cerr << "\033[0m  The absolute error in " << boost::core::demangle(typeid(Real).name()) << " precision is " << std::scientific << error << "\n"
                   << "  This exceeds the acceptable error " << acceptable_error << "\n"
                   << std::showpos
                   << "  Expected: " << std::defaultfloat << std::fixed << expected << " = " << std::scientific << expected << std::hexfloat << " = " << expected << "\n"
@@ -364,31 +340,6 @@ bool check_equal(Real x, Real y, std::string const & filename, std::string const
 }
 
 
-bool check_true(bool condition, std::string const & filename, std::string const & function, int line)
-{
-  if (!condition) {
-    std::ios_base::fmtflags f( std::cerr.flags() );
-    std::cerr << "\033[0;31mError at " << filename << ":" << function << ":" << line << "\n";
-    std::cerr << "\033[0m  Boolean condition is not satisfied:\n";
-    std::cerr.flags(f);
-    ++detail::global_error_count;
-    return false;
-  }
-  return true;
-}
-
-void report_non_throw(const std::string& file, int line)
-{
-   std::cerr << "Expected exception not thrown in test at: " << file << ":" << line << std::endl;
-   ++detail::global_error_count;
-}
-
-void report_incorrect_throw(const std::string& file, int line)
-{
-   std::cerr << "Exception of the wrong type thrown in test at: " << file << ":" << line << std::endl;
-   ++detail::global_error_count;
-}
-
 int report_errors()
 {
     if (detail::global_error_count > 0)
@@ -416,8 +367,6 @@ int report_errors()
 
 #define CHECK_ULP_CLOSE(X, Y, Z) boost::math::test::check_ulp_close((X), (Y), (Z), __FILE__, __func__, __LINE__)
 
-#define CHECK_GE(X, Y) boost::math::test::check_le((Y), (X), __FILE__, __func__, __LINE__)
-
 #define CHECK_LE(X, Y) boost::math::test::check_le((X), (Y), __FILE__, __func__, __LINE__)
 
 #define CHECK_NAN(X) boost::math::test::check_nan((X), __FILE__, __func__, __LINE__)
@@ -427,9 +376,5 @@ int report_errors()
 #define CHECK_CONDITIONED_ERROR(V, W, X, Y, Z) boost::math::test::check_conditioned_error((V), (W), (X), (Y), (Z), __FILE__, __func__, __LINE__)
 
 #define CHECK_ABSOLUTE_ERROR(X, Y, Z) boost::math::test::check_absolute_error((X), (Y), (Z), __FILE__, __func__, __LINE__)
-
-#define CHECK_TRUE(X) boost::math::test::check_true((X), __FILE__, __func__, __LINE__)
-
-#define CHECK_THROW(x, what) try{ x; boost::math::test::report_non_throw(__FILE__, __LINE__); }catch(const what&){} catch(...){ boost::math::test::report_incorrect_throw(__FILE__, __LINE__); }
 
 #endif

@@ -36,7 +36,6 @@ in a translation unit of the program.
 #include <boost/json/impl/object.ipp>
 #include <boost/json/impl/parse.ipp>
 #include <boost/json/impl/parser.ipp>
-#include <boost/json/impl/pointer.ipp>
 #include <boost/json/impl/serialize.ipp>
 #include <boost/json/impl/serializer.ipp>
 #include <boost/json/impl/static_resource.ipp>
@@ -55,6 +54,5 @@ in a translation unit of the program.
 #include <boost/json/detail/impl/string_impl.ipp>
 
 #include <boost/json/detail/ryu/impl/d2s.ipp>
-#include <boost/json/detail/charconv/impl/from_chars.ipp>
 
 #endif

@@ -1,4 +1,4 @@
-[[b2.installation]]
+[[bbv2.installation]]
 = Installation
 
 To install B2 from an official release, as available on

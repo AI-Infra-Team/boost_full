@@ -6,28 +6,6 @@
 #include "constexpr_arithmetric_test.hpp"
 #include "../performance/arithmetic_backend.hpp"
 
-template <class T>
-constexpr int expected_1()
-{
-#ifdef BOOST_HAS_INT128
-   if constexpr (std::is_constructible<T, boost::int128_type>::value)
-      return 230;
-   else
-#endif
-      return 210;
-}
-template <class T>
-constexpr int expected_2()
-{
-#ifdef BOOST_HAS_INT128
-   if constexpr (std::is_constructible<T, boost::int128_type>::value)
-      return 120;
-   else
-#endif
-      return 106;
-}
-
-
 int main()
 {
    typedef boost::multiprecision::number<boost::multiprecision::backends::arithmetic_backend<long long>, boost::multiprecision::et_off>          int_backend;
@@ -61,9 +39,13 @@ int main()
       constexpr unsigned_backend c(22);
       constexpr int_backend b      = test_constexpr_bitwise(a);
       constexpr unsigned_backend d = test_constexpr_bitwise(c);
-
-      static_assert(b == expected_1<int_backend>());
-      static_assert(d == expected_2<unsigned_backend>());
+#ifdef BOOST_HAS_INT128
+      static_assert(b == 230);
+      static_assert(d == 120);
+#else
+      static_assert(b == 210);
+      static_assert(d == 106);
+#endif
    }
    {
       constexpr int_backend a(22);
@@ -106,9 +88,13 @@ int main()
       constexpr unsigned_backend_et c(22);
       constexpr int_backend_et b      = test_constexpr_bitwise(a);
       constexpr unsigned_backend_et d = test_constexpr_bitwise(c);
-
-      static_assert(b == expected_1<int_backend>());
-      static_assert(d == expected_2<int_backend>());
+#ifdef BOOST_HAS_INT128
+      static_assert(b == 230);
+      static_assert(d == 120);
+#else
+      static_assert(b == 210);
+      static_assert(d == 106);
+#endif
    }
    {
       constexpr int_backend_et a(22);

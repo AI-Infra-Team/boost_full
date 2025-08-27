@@ -34,10 +34,6 @@ namespace boost { namespace spirit { namespace lex
     namespace detail
     {
         ///////////////////////////////////////////////////////////////////////
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4512) // assignment operator could not be generated.
-#endif
         template <typename LexerDef>
         struct lexer_def_
           : proto::extends<
@@ -186,6 +182,9 @@ namespace boost { namespace spirit { namespace lex
 //                 }
 
                 lexer_def_& def;
+
+                // silence MSVC warning C4512: assignment operator could not be generated
+                BOOST_DELETED_FUNCTION(adder& operator= (adder const&))
             };
             friend struct adder;
 
@@ -204,6 +203,9 @@ namespace boost { namespace spirit { namespace lex
                 }
 
                 lexer_def_& def;
+
+                // silence MSVC warning C4512: assignment operator could not be generated
+                BOOST_DELETED_FUNCTION(pattern_adder& operator= (pattern_adder const&))
             };
             friend struct pattern_adder;
 
@@ -233,19 +235,19 @@ namespace boost { namespace spirit { namespace lex
             {}
 
             // allow to switch states
-            lexer_def_ operator()(char_type const* state_) const
+            lexer_def_ operator()(char_type const* state) const
             {
-                return lexer_def_(def, state_);
+                return lexer_def_(def, state);
             }
-            lexer_def_ operator()(char_type const* state_
-              , char_type const* targetstate_) const
+            lexer_def_ operator()(char_type const* state
+              , char_type const* targetstate) const
             {
-                return lexer_def_(def, state_, targetstate_);
+                return lexer_def_(def, state, targetstate);
             }
-            lexer_def_ operator()(string_type const& state_
-              , string_type const& targetstate_ = string_type()) const
+            lexer_def_ operator()(string_type const& state
+              , string_type const& targetstate = string_type()) const
             {
-                return lexer_def_(def, state_, targetstate_);
+                return lexer_def_(def, state, targetstate);
             }
 
             // allow to assign a token definition expression
@@ -265,9 +267,9 @@ namespace boost { namespace spirit { namespace lex
 
             // explicitly tell the lexer that the given state will be defined
             // (useful in conjunction with "*")
-            std::size_t add_state(char_type const* state_ = 0)
+            std::size_t add_state(char_type const* state = 0)
             {
-                return def.add_state(state_ ? state_ : def.initial_state().c_str());
+                return def.add_state(state ? state : def.initial_state().c_str());
             }
 
             adder add;
@@ -277,10 +279,10 @@ namespace boost { namespace spirit { namespace lex
             LexerDef& def;
             string_type state;
             string_type targetstate;
+
+            // silence MSVC warning C4512: assignment operator could not be generated
+            BOOST_DELETED_FUNCTION(lexer_def_& operator= (lexer_def_ const&))
         };
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         // allow to assign a token definition expression

@@ -7,7 +7,7 @@
 
 #| tag::doc[]
 
-[[b2.reference.tools.compiler.acc]]
+[[bbv2.reference.tools.compiler.acc]]
 = HP aC++ compiler
 
 The `acc` module supports the
@@ -58,6 +58,8 @@ import common ;
 
 feature.extend toolset : acc ;
 toolset.inherit acc : unix ;
+generators.override builtin.lib-generator : acc.prebuilt ;
+generators.override acc.searched-lib-generator : searched-lib-generator ;
 
 # Configures the acc toolset.
 rule init ( version ? : user-provided-command * : options * )

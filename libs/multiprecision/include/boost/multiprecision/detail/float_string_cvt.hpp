@@ -12,15 +12,12 @@
 #ifndef BOOST_MP_FLOAT_STRING_CVT_HPP
 #define BOOST_MP_FLOAT_STRING_CVT_HPP
 
-#include <string>
 #include <cctype>
-#include <boost/multiprecision/detail/no_exceptions_support.hpp>
-#include <boost/multiprecision/detail/assert.hpp>
 
 namespace boost { namespace multiprecision { namespace detail {
 
 template <class I>
-inline void round_string_up_at(std::string& s, std::ptrdiff_t pos, I& expon)
+inline void round_string_up_at(std::string& s, int pos, I& expon)
 {
    //
    // Rounds up a string representation of a number at pos:
@@ -31,16 +28,16 @@ inline void round_string_up_at(std::string& s, std::ptrdiff_t pos, I& expon)
       s.erase(s.size() - 1);
       ++expon;
    }
-   else if (s[static_cast<std::size_t>(pos)] == '9')
+   else if (s[pos] == '9')
    {
-      s[static_cast<std::size_t>(pos)] = '0';
+      s[pos] = '0';
       round_string_up_at(s, pos - 1, expon);
    }
    else
    {
-      if ((pos == 0) && (s[static_cast<std::size_t>(pos)] == '0') && (s.size() == 1))
+      if ((pos == 0) && (s[pos] == '0') && (s.size() == 1))
          ++expon;
-      ++s[static_cast<std::size_t>(pos)];
+      ++s[pos];
    }
 }
 
@@ -64,23 +61,23 @@ std::string convert_to_string(Backend b, std::streamsize digits, std::ios_base::
    bool            isneg      = false;
    exponent_type   expon      = 0;
    std::streamsize org_digits = digits;
-   BOOST_MP_ASSERT(digits > 0);
+   BOOST_ASSERT(digits > 0);
 
    int fpt = eval_fpclassify(b);
 
-   if (fpt == static_cast<int>(FP_ZERO))
+   if (fpt == (int)FP_ZERO)
    {
       result = "0";
       iszero = true;
    }
-   else if (fpt == static_cast<int>(FP_INFINITE))
+   else if (fpt == (int)FP_INFINITE)
    {
       if (b.compare(ui_type(0)) < 0)
          return "-inf";
       else
          return ((f & std::ios_base::showpos) == std::ios_base::showpos) ? "+inf" : "inf";
    }
-   else if (fpt == static_cast<int>(FP_NAN))
+   else if (fpt == (int)FP_NAN)
    {
       return "nan";
    }
@@ -139,7 +136,7 @@ std::string convert_to_string(Backend b, std::streamsize digits, std::ios_base::
       //
       // Extract the digits one at a time:
       //
-      for (std::streamsize i = 0; i < digits; ++i)
+      for (unsigned i = 0; i < digits; ++i)
       {
          eval_floor(digit, t);
          eval_convert_to(&cdigit, digit);
@@ -160,21 +157,13 @@ std::string convert_to_string(Backend b, std::streamsize digits, std::ios_base::
             // Bankers rounding:
             if ((*result.rbegin() - '0') & 1)
             {
-               round_string_up_at(result, static_cast<std::ptrdiff_t>(result.size() - 1u), expon);
+               round_string_up_at(result, result.size() - 1, expon);
             }
          }
          else if (cdigit >= 5)
          {
-            round_string_up_at(result, static_cast<std::ptrdiff_t>(result.size() - 1u), expon);
+            round_string_up_at(result, result.size() - 1, expon);
          }
-      }
-      eval_floor(t, b);
-      if ((t.compare(b) == 0) && (static_cast<std::size_t>(expon + 1) < result.size()))
-      {
-         // Input is an integer, sometimes we get a result which is not an integer here as a result of printing too
-         // many digits, so lets round if required:
-         round_string_up_at(result, expon + 1, expon);
-         result.erase(static_cast<std::string::size_type>(expon + 1));
       }
    }
    while ((static_cast<std::streamsize>(result.size()) > digits) && (result.size() != 0U))
@@ -191,7 +180,7 @@ std::string convert_to_string(Backend b, std::streamsize digits, std::ios_base::
          ++digits;
       }
    }
-   BOOST_MP_ASSERT(org_digits >= 0);
+   BOOST_ASSERT(org_digits >= 0);
    if (isneg)
       result.insert(static_cast<std::string::size_type>(0), 1, '-');
    format_float_string(result, expon, org_digits, f, iszero);
@@ -212,15 +201,13 @@ void convert_from_string(Backend& b, const char* p)
    if (!p || (*p == 0))
       return;
 
-   bool                            is_neg       = false;
-   bool                            is_neg_expon = false;
-   constexpr ui_type               ten          = ui_type(10);
-   typename Backend::exponent_type expon        = 0;
-   int                             digits_seen  = 0;
-
-   using limits = std::numeric_limits<number<Backend, et_off>>;
-
-   constexpr int max_digits = limits::is_specialized ? limits::max_digits10 + 1 : INT_MAX;
+   bool                                                  is_neg       = false;
+   bool                                                  is_neg_expon = false;
+   constexpr const ui_type                               ten          = ui_type(10);
+   typename Backend::exponent_type                       expon        = 0;
+   int                                                   digits_seen  = 0;
+   using limits = std::numeric_limits<number<Backend, et_off> >;
+   constexpr const int                                   max_digits = limits::is_specialized ? limits::max_digits10 + 1 : INT_MAX;
 
    if (*p == '+')
       ++p;
@@ -324,7 +311,7 @@ void convert_from_string(Backend& b, const char* p)
    if (*p)
    {
       // Unexpected input in string:
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Unexpected characters in string being interpreted as a float128."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected characters in string being interpreted as a float128."));
    }
 }
 

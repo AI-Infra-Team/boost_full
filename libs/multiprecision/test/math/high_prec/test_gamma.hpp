@@ -13,10 +13,10 @@
 #include <boost/math/tools/stats.hpp>
 #include <boost/math/tools/test.hpp>
 #include <boost/math/constants/constants.hpp>
-#include <array>
-#include "functor.hpp"
+#include <boost/array.hpp>
+#include "libs/math/test/functor.hpp"
 
-#include "handle_test_result.hpp"
+#include "libs/math/test/handle_test_result.hpp"
 #include "../table_type.hpp"
 
 #ifndef SC_
@@ -26,7 +26,8 @@
 template <class Real, class T>
 void do_test_gamma(const T& data, const char* type_name, const char* test_name)
 {
-   typedef Real value_type;
+   typedef typename T::value_type row_type;
+   typedef Real                   value_type;
 
    typedef value_type (*pg)(value_type);
 #if defined(BOOST_MATH_NO_DEDUCED_FUNCTION_POINTERS)

@@ -4,7 +4,7 @@
   
   <url>
     <loc>/requirements.html</loc>
-    <lastmod>2023-04-18T20:57:50+01:00</lastmod>
+    <lastmod>2020-02-25T11:15:13+00:00</lastmod>
   </url>
   
   <url>
@@ -24,7 +24,7 @@
   
   <url>
     <loc>/experimental/advantages.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <lastmod>2019-02-05T21:41:47+00:00</lastmod>
   </url>
   
   <url>
@@ -38,16 +38,6 @@
   </url>
   
   <url>
-    <loc>/alternatives.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/abi-stability.html</loc>
-    <lastmod>2021-12-15T11:47:12+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/tutorial/essential/no-value/custom.html</loc>
     <lastmod>2019-02-08T22:18:08+00:00</lastmod>
   </url>
@@ -58,18 +48,13 @@
   </url>
   
   <url>
-    <loc>/experimental/c-api/from-c/system_code.html</loc>
-    <lastmod>2024-07-17T17:54:05+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/tutorial/essential/coroutines/try.html</loc>
     <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/preamble.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/preamble.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
@@ -83,13 +68,13 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example/implicit-construction.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/tutorial/advanced/hooks/keeping_state.html</loc>
+    <lastmod>2019-02-08T22:18:08+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tutorial/advanced/hooks/keeping_state.html</loc>
-    <lastmod>2019-02-08T22:18:08+00:00</lastmod>
+    <loc>/experimental/c-api/limitations.html</loc>
+    <lastmod>2019-02-05T17:14:18+00:00</lastmod>
   </url>
   
   <url>
@@ -120,11 +105,6 @@
   <url>
     <loc>/tutorial/essential/result.html</loc>
     <lastmod>2021-02-23T17:37:27+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/alternatives/exceptions.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
   </url>
   
   <url>
@@ -168,28 +148,18 @@
   </url>
   
   <url>
-    <loc>/experimental/c-api/from-cxx.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/reference/concepts.html</loc>
     <lastmod>2018-12-11T14:56:04+00:00</lastmod>
   </url>
   
   <url>
     <loc>/tutorial/essential/coroutines/awaitables.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>
-    <loc>/experimental/c-api/from-c/declare.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/experimental/c-api/from-cxx/example.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/c-api/example.html</loc>
+    <lastmod>2019-02-05T17:14:18+00:00</lastmod>
   </url>
   
   <url>
@@ -208,8 +178,8 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/value_type.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/value_type.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
@@ -233,11 +203,6 @@
   </url>
   
   <url>
-    <loc>/alternatives/error_code.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/reference/converters.html</loc>
     <lastmod>2018-12-15T17:49:37+00:00</lastmod>
   </url>
@@ -258,18 +223,13 @@
   </url>
   
   <url>
-    <loc>/experimental/c-api/from-c.html</loc>
-    <lastmod>2024-07-17T17:54:05+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/experimental/c-api/from-cxx/example2.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/c-api/example2.html</loc>
+    <lastmod>2019-02-05T17:14:18+00:00</lastmod>
   </url>
   
   <url>
     <loc>/tutorial/essential/coroutines.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>
@@ -314,7 +274,7 @@
   
   <url>
     <loc>/tutorial/essential/coroutines/returning.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>
@@ -323,23 +283,13 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/constructor.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/constructor.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
     <loc>/reference/traits.html</loc>
     <lastmod>2018-12-13T17:36:11+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/experimental/c-api/from-c/use.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/alternatives/expected.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
   </url>
   
   <url>
@@ -368,11 +318,6 @@
   </url>
   
   <url>
-    <loc>/alternatives/outcome.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/tutorial/advanced/constructors/metaprogrammg1.html</loc>
     <lastmod>2019-02-08T22:18:08+00:00</lastmod>
   </url>
@@ -388,13 +333,8 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/string_ref.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/experimental/c-api/from-c/try.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/string_ref.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
@@ -433,6 +373,11 @@
   </url>
   
   <url>
+    <loc>/experimental/c-api/reference.html</loc>
+    <lastmod>2020-12-17T11:27:06+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/tutorial/advanced/hooks/hook_outcome.html</loc>
     <lastmod>2020-12-15T12:22:39+00:00</lastmod>
   </url>
@@ -448,18 +393,13 @@
   </url>
   
   <url>
-    <loc>/alternatives/leaf.html</loc>
-    <lastmod>2022-01-10T14:29:13+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/motivation/plug_error_code.html</loc>
     <lastmod>2021-09-10T11:56:40+01:00</lastmod>
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/message.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/message.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
@@ -498,8 +438,8 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/source.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/source.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
@@ -513,18 +453,13 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long/implicit_conversion.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/experimental/outcome.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example/implicit_conversion.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
     <loc>/changelog.html</loc>
-    <lastmod>2025-05-21T13:05:20+01:00</lastmod>
+    <lastmod>2021-11-01T20:14:02+00:00</lastmod>
   </url>
   
   <url>
@@ -538,18 +473,18 @@
   </url>
   
   <url>
-    <loc>/experimental/worked-example.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/outcome.html</loc>
+    <lastmod>2019-02-05T17:14:18+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/experimental/worked-example-long.html</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <loc>/experimental/worked-example.html</loc>
+    <lastmod>2019-01-26T23:38:56+00:00</lastmod>
   </url>
   
   <url>
     <loc>/history.html</loc>
-    <lastmod>2021-12-16T11:42:04+00:00</lastmod>
+    <lastmod>2020-09-16T11:58:04+01:00</lastmod>
   </url>
   
   <url>
@@ -569,7 +504,7 @@
   
   <url>
     <loc>/reference/policies/base/ub.html</loc>
-    <lastmod>2023-12-16T20:51:26+00:00</lastmod>
+    <lastmod>2019-01-22T01:11:40+00:00</lastmod>
   </url>
   
   <url>
@@ -1430,7 +1365,7 @@
   
   <url>
     <loc>/tags/awaitables.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -1507,7 +1442,7 @@
   
   <url>
     <loc>/tags/coroutines.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -1543,7 +1478,7 @@
   
   <url>
     <loc>/tags/eager.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -1578,7 +1513,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2024-07-16T21:33:35+01:00</lastmod>
+    <lastmod>2021-02-12T20:25:43+00:00</lastmod>
   </url>
   
   <url>
@@ -1607,7 +1542,7 @@
   
   <url>
     <loc>/tags/lazy.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -1702,19 +1637,8 @@
   </url>
   
   <url>
-    <loc>/tags/rust.html</loc>
-    <lastmod>2025-04-30T22:36:03+01:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/recipes/rust.html</loc>
-    <lastmod>2025-04-30T22:36:03+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/categories/special.html</loc>
-    <lastmod>2023-12-16T20:51:26+00:00</lastmod>
+    <lastmod>2019-01-22T01:11:40+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -1995,7 +1919,7 @@
   
   <url>
     <loc>/reference/types/awaitables/eager.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>
@@ -2026,11 +1950,6 @@
   <url>
     <loc>/reference/types/failure_type.html</loc>
     <lastmod>2021-02-23T17:37:27+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/reference/types/awaitables/generator.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
   </url>
   
   <url>
@@ -2085,7 +2004,7 @@
   
   <url>
     <loc>/reference/types/awaitables/lazy.html</loc>
-    <lastmod>2022-03-18T14:45:32+00:00</lastmod>
+    <lastmod>2020-04-07T10:22:38+01:00</lastmod>
   </url>
   
   <url>

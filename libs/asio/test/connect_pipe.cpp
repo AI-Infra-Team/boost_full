@@ -2,7 +2,7 @@
 // connect_pipe.cpp
 // ~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,6 @@
 // Test that header file is self-contained.
 #include <boost/asio/connect_pipe.hpp>
 
-#include <functional>
 #include <string>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/read.hpp>
@@ -24,6 +23,12 @@
 #include <boost/asio/writable_pipe.hpp>
 #include <boost/asio/write.hpp>
 #include "unit_test.hpp"
+
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <boost/bind/bind.hpp>
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <functional>
+#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
 
 //------------------------------------------------------------------------------
 
@@ -93,13 +98,19 @@ void test()
   using namespace std; // For memcmp.
   using namespace boost::asio;
 
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+  namespace bindns = boost;
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
   namespace bindns = std;
+#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
   using bindns::placeholders::_1;
   using bindns::placeholders::_2;
 
   try
   {
     boost::asio::io_context io_context;
+    boost::system::error_code ec1;
+    boost::system::error_code ec2;
 
     readable_pipe p1(io_context);
     writable_pipe p2(io_context);
@@ -147,6 +158,6 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "connect_pipe",
-  BOOST_ASIO_COMPILE_TEST_CASE(connect_pipe_compile::test)
+  BOOST_ASIO_TEST_CASE(connect_pipe_compile::test)
   BOOST_ASIO_TEST_CASE(connect_pipe_runtime::test)
 )

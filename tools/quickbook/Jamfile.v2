@@ -9,18 +9,7 @@
 #   http://www.boost.org/LICENSE_1_0.txt)
 #==============================================================================
 
-require-b2 5.2 ;
-
-import path ;
-import option ;
-
-local DIST_DIR = [ option.get distdir ] ;
-DIST_DIR ?= [ option.get build-dir ] ;
-DIST_DIR ?= [ path.join $(BOOST_ROOT) dist ] ;
-DIST_DIR ?= dist ;
-DIST_DIR = [ path.root [ path.make $(DIST_DIR) ] [ path.pwd ] ] ;
-
-project /boost/quickbook
+project quickbook
     : requirements
         <toolset>gcc:<c++-template-depth>300
         <toolset>darwin:<c++-template-depth>300
@@ -30,16 +19,39 @@ project /boost/quickbook
         <warnings>all
         <define>BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE
     : default-build
-        <cxxstd>11 <variant>release
+        <cxxstd>0x
     ;
 
-explicit
-    [ install dist-bin
-        : src//quickbook/<link>static
-        : <install-type>EXE <location>$(DIST_DIR)/bin ]
-    [ alias quickbook : src//quickbook/<link>static ]
-    [ alias all : quickbook dist test ]
+import boostcpp ;
+import path ;
+import option ;
+
+local DIST_DIR = [ option.get distdir ] ;
+if $(DIST_DIR) {
+    DIST_DIR = [ path.root [ path.make $(DIST_DIR) ] [ path.pwd ] ] ;
+} else {
+    DIST_DIR = [ path.join $(BOOST_ROOT) dist ] ;
+}
+local DIST_BIN = [ path.join $(DIST_DIR) bin ] ;
+
+# Install quickbook by default.
+
+install dist-bin
+    :
+    src//quickbook
+    :
+    <install-type>EXE
+    <location>$(DIST_BIN)
+    :
+    release
     ;
 
-# Install distribution files/execs by default.
-alias dist : dist-bin ;
+# Target for quickbook toolset's auto build.
+
+alias quickbook
+    : src//quickbook
+    : release
+    ;
+
+explicit quickbook
+    ;

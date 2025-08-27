@@ -6,7 +6,7 @@
         "Tim Blechmann",
         "Andrey Semashev"
     ],
-    "description": "C++11-style atomic types.",
+    "description": "C++11-style atomic<>.",
     "category": [
         "Concurrent"
     ],
@@ -15,5 +15,5 @@
         "Tim Blechmann <tim -at- klingt.org>",
         "Andrey Semashev <andrey.semashev -at- gmail.com>"
     ],
-    "cxxstd": "11"
+    "cxxstd": "03"
 }

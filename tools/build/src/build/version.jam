@@ -8,27 +8,13 @@ import numbers ;
 
 
 # Mirror engine JAM_VERSION
-.major = 5 ;
-.minor = 3 ;
-.patch = 2 ;
+.major = "4" ;
+.minor = "7" ;
 
 
-rule build ( )
+rule boost-build ( )
 {
-    return "$(.major).$(.minor).$(.patch)" ;
-}
-
-
-rule info ( )
-{
-    import sysinfo ;
-    import "class" : new ;
-
-    local si = [ new system_info ] ;
-
-    local OS = [ modules.peek : OS ] ;
-    local jobs = [ $(si).cpu_thread_count ] ;
-    return "OS=$(OS)" "jobs=$(jobs)" ;
+    return "$(.major).$(.minor)-git" ;
 }
 
 
@@ -36,8 +22,7 @@ rule print ( )
 {
     if [ verify-engine-version ]
     {
-        local i = [ info ] ;
-        ECHO "B2" [ build ] "($(i:J=, ))" ;
+        ECHO "B2" [ boost-build ] ;
     }
 }
 
@@ -53,10 +38,9 @@ rule verify-engine-version ( )
         local l = [ modules.binding version ] ;
         l = $(l:D) ;
         l = $(l:D) ;
-        ECHO "error: mismatched versions of B2 engine and core" ;
-        ECHO "error: B2 engine ($(e)) is $(v:J=.)" ;
-        ECHO "error: B2 core (at $(l)) is" [ build ] ;
-        EXIT : 1 ;
+        ECHO "warning: mismatched versions of B2 engine and core" ;
+        ECHO "warning: B2 engine ($(e)) is $(v:J=.)" ;
+        ECHO "warning: B2 core (at $(l)) is" [ boost-build ] ;
     }
     else
     {
@@ -65,9 +49,56 @@ rule verify-engine-version ( )
 }
 
 
+# Utility rule for testing whether all elements in a sequence are equal to 0.
+#
+local rule is-all-zeroes ( sequence * )
+{
+    local result = "true" ;
+    for local e in $(sequence)
+    {
+        if $(e) != "0"
+        {
+            result = "" ;
+        }
+    }
+    return $(result) ;
+}
+
+
 # Returns "true" if the first version is less than the second one.
 #
-# rule version-less ( lhs + : rhs + ) # BUILTIN
+rule version-less ( lhs + : rhs + )
+{
+    numbers.check $(lhs) ;
+    numbers.check $(rhs) ;
+
+    local done ;
+    local result ;
+
+    while ! $(done) && $(lhs) && $(rhs)
+    {
+        if [ numbers.less $(lhs[1]) $(rhs[1]) ]
+        {
+            done = "true" ;
+            result = "true" ;
+        }
+        else if [ numbers.less $(rhs[1]) $(lhs[1])  ]
+        {
+            done = "true" ;
+        }
+        else
+        {
+            lhs = $(lhs[2-]) ;
+            rhs = $(rhs[2-]) ;
+        }
+    }
+    if ( ! $(done) && ! $(lhs) && ! [ is-all-zeroes $(rhs) ] )
+    {
+        result = "true" ;
+    }
+
+    return $(result) ;
+}
 
 # Returns "true" if the required version is compatible with the having one.
 # This uses sematic versioning where (major.x.y) is compatible with

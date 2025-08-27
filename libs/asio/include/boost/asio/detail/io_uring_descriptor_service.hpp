@@ -2,7 +2,7 @@
 // detail/io_uring_descriptor_service.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -86,7 +86,7 @@ public:
 
   // Move-construct a new descriptor implementation.
   BOOST_ASIO_DECL void move_construct(implementation_type& impl,
-      implementation_type& other_impl) noexcept;
+      implementation_type& other_impl) BOOST_ASIO_NOEXCEPT;
 
   // Move-assign from another descriptor implementation.
   BOOST_ASIO_DECL void move_assign(implementation_type& impl,
@@ -120,14 +120,6 @@ public:
   // Release ownership of the native descriptor representation.
   BOOST_ASIO_DECL native_handle_type release(implementation_type& impl);
 
-  // Release ownership of the native descriptor representation.
-  native_handle_type release(implementation_type& impl,
-      boost::system::error_code& ec)
-  {
-    ec = success_ec_;
-    return release(impl);
-  }
-
   // Cancel all operations associated with the descriptor.
   BOOST_ASIO_DECL boost::system::error_code cancel(implementation_type& impl,
       boost::system::error_code& ec);
@@ -139,7 +131,6 @@ public:
   {
     descriptor_ops::ioctl(impl.descriptor_, impl.state_,
         command.name(), static_cast<ioctl_arg_type*>(command.data()), ec);
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -155,7 +146,6 @@ public:
   {
     descriptor_ops::set_user_non_blocking(
         impl.descriptor_, impl.state_, mode, ec);
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -171,7 +161,6 @@ public:
   {
     descriptor_ops::set_internal_non_blocking(
         impl.descriptor_, impl.state_, mode, ec);
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -196,7 +185,6 @@ public:
       break;
     }
 
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return ec;
   }
 
@@ -210,7 +198,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     int op_type;
@@ -265,10 +253,9 @@ public:
     typedef buffer_sequence_adapter<boost::asio::const_buffer,
         ConstBufferSequence> bufs_type;
 
-    size_t n;
     if (bufs_type::is_single_buffer)
     {
-      n = descriptor_ops::sync_write1(impl.descriptor_,
+      return descriptor_ops::sync_write1(impl.descriptor_,
           impl.state_, bufs_type::first(buffers).data(),
           bufs_type::first(buffers).size(), ec);
     }
@@ -276,12 +263,9 @@ public:
     {
       bufs_type bufs(buffers);
 
-      n = descriptor_ops::sync_write(impl.descriptor_, impl.state_,
+      return descriptor_ops::sync_write(impl.descriptor_, impl.state_,
           bufs.buffers(), bufs.count(), bufs.all_empty(), ec);
     }
-
-    BOOST_ASIO_ERROR_LOCATION(ec);
-    return n;
   }
 
   // Wait until data can be written without blocking.
@@ -291,7 +275,6 @@ public:
     // Wait for descriptor to become ready.
     descriptor_ops::poll_write(impl.descriptor_, impl.state_, ec);
 
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return 0;
   }
 
@@ -305,7 +288,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.
@@ -341,7 +324,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.
@@ -374,23 +357,19 @@ public:
     typedef buffer_sequence_adapter<boost::asio::const_buffer,
         ConstBufferSequence> bufs_type;
 
-    size_t n;
     if (bufs_type::is_single_buffer)
     {
-      n = descriptor_ops::sync_write_at1(impl.descriptor_,
-          impl.state_, offset, bufs_type::first(buffers).data(),
+      return descriptor_ops::sync_write_at1(impl.descriptor_,
+          offset, impl.state_, bufs_type::first(buffers).data(),
           bufs_type::first(buffers).size(), ec);
     }
     else
     {
       bufs_type bufs(buffers);
 
-      n = descriptor_ops::sync_write_at(impl.descriptor_, impl.state_,
+      return descriptor_ops::sync_write_at(impl.descriptor_, impl.state_,
           offset, bufs.buffers(), bufs.count(), bufs.all_empty(), ec);
     }
-
-    BOOST_ASIO_ERROR_LOCATION(ec);
-    return n;
   }
 
   // Wait until data can be written without blocking.
@@ -410,7 +389,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.
@@ -454,10 +433,9 @@ public:
     typedef buffer_sequence_adapter<boost::asio::mutable_buffer,
         MutableBufferSequence> bufs_type;
 
-    size_t n;
     if (bufs_type::is_single_buffer)
     {
-      n = descriptor_ops::sync_read1(impl.descriptor_,
+      return descriptor_ops::sync_read1(impl.descriptor_,
           impl.state_, bufs_type::first(buffers).data(),
           bufs_type::first(buffers).size(), ec);
     }
@@ -465,12 +443,9 @@ public:
     {
       bufs_type bufs(buffers);
 
-      n = descriptor_ops::sync_read(impl.descriptor_, impl.state_,
+      return descriptor_ops::sync_read(impl.descriptor_, impl.state_,
           bufs.buffers(), bufs.count(), bufs.all_empty(), ec);
     }
-
-    BOOST_ASIO_ERROR_LOCATION(ec);
-    return n;
   }
 
   // Wait until data can be read without blocking.
@@ -480,7 +455,6 @@ public:
     // Wait for descriptor to become ready.
     descriptor_ops::poll_read(impl.descriptor_, impl.state_, ec);
 
-    BOOST_ASIO_ERROR_LOCATION(ec);
     return 0;
   }
 
@@ -495,7 +469,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.
@@ -531,7 +505,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.
@@ -597,7 +571,7 @@ public:
     bool is_continuation =
       boost_asio_handler_cont_helpers::is_continuation(handler);
 
-    associated_cancellation_slot_t<Handler> slot
+    typename associated_cancellation_slot<Handler>::type slot
       = boost::asio::get_associated_cancellation_slot(handler);
 
     // Allocate and construct an operation to wrap the handler.

@@ -1,9 +1,10 @@
 #ifndef BOOST_QVM_QUAT_HPP_INCLUDED
 #define BOOST_QVM_QUAT_HPP_INCLUDED
 
-// Copyright 2008-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/// Copyright (c) 2008-2021 Emil Dotchevski and Reverge Studios, Inc.
+
+/// Distributed under the Boost Software License, Version 1.0. (See accompanying
+/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/qvm/detail/quat_assign.hpp>
 #include <boost/qvm/assert.hpp>
@@ -16,11 +17,7 @@ struct
 quat
     {
     T a[4];
-    template <class R
-#if __cplusplus >= 201103L
-        , class = typename enable_if<is_quat<R> >::type
-#endif
-    >
+    template <class R>
     operator R() const
         {
         R r;
@@ -41,7 +38,7 @@ quat_traits< quat<T> >
 
     template <int I>
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type
     read_element( this_quaternion const & x )
         {
@@ -52,7 +49,7 @@ quat_traits< quat<T> >
 
     template <int I>
     static
-    BOOST_QVM_CONSTEXPR BOOST_QVM_INLINE_CRITICAL
+    BOOST_QVM_INLINE_CRITICAL
     scalar_type &
     write_element( this_quaternion & x )
         {

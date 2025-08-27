@@ -8,9 +8,8 @@
 #include <cmath>
 #include <limits>
 #include <boost/math/differentiation/finite_difference.hpp>
-#include <boost/math/tools/config.hpp>
 
-namespace boost { namespace math { namespace tools {
+namespace boost::math::tools {
 
 template<class Real, bool kahan=true>
 class summation_condition_number {
@@ -28,7 +27,7 @@ public:
         using std::abs;
         // No need to Kahan the l1 calc; it's well conditioned:
         m_l1 += abs(x);
-        BOOST_MATH_IF_CONSTEXPR (kahan)
+        if constexpr(kahan)
         {
             Real y = x - m_c;
             Real t = m_sum + y;
@@ -51,7 +50,7 @@ public:
     // but is this sensible? More important is it useful?
     // In addition, it might change the condition number.
 
-    Real operator()() const
+    [[nodiscard]] Real operator()() const
     {
         using std::abs;
         if (m_sum == Real(0) && m_l1 != Real(0))
@@ -61,7 +60,7 @@ public:
         return m_l1/abs(m_sum);
     }
 
-    Real sum() const
+    [[nodiscard]] Real sum() const
     {
         // Higham, 1993, "The Accuracy of Floating Point Summation":
         // "In [17] and [18], Kahan describes a variation of compensated summation in which the final sum is also corrected
@@ -69,7 +68,7 @@ public:
         return m_sum + m_c;
     }
 
-    Real l1_norm() const
+    [[nodiscard]] Real l1_norm() const
     {
         return m_l1;
     }
@@ -95,18 +94,15 @@ Real evaluation_condition_number(F const & f, Real const & x)
     }
     bool caught_exception = false;
     Real fp;
-#ifndef BOOST_MATH_NO_EXCEPTIONS
     try
     {
-#endif
         fp = finite_difference_derivative(f, x);
-#ifndef BOOST_MATH_NO_EXCEPTIONS
     }
     catch(...)
     {
         caught_exception = true;
     }
-#endif
+
     if (isnan(fp) || caught_exception)
     {
         // Check if the right derivative exists:
@@ -140,5 +136,5 @@ Real evaluation_condition_number(F const & f, Real const & x)
     return abs(x*fp/fx);
 }
 
-}}} // Namespaces
+}
 #endif

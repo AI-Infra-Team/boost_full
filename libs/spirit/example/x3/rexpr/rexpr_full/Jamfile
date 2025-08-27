@@ -8,6 +8,7 @@
 project spirit-x3-example-rexpr
    : requirements
       <c++-template-depth>512
+      <use>/boost//headers
       <define>BOOST_SPIRIT_X3_NO_FILESYSTEM
       <include>.
    ;

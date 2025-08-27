@@ -7,6 +7,12 @@
 #include <boost/config.hpp>
 #include <functional>
 
+#if defined(BOOST_NO_CXX11_HDR_FUNCTIONAL)
+
+int main() {}
+
+#else
+
 class base
 {
 private:
@@ -57,3 +63,5 @@ int main()
 
     return boost::report_errors();
 }
+
+#endif // #if defined(BOOST_NO_CXX11_HDR_FUNCTIONAL)

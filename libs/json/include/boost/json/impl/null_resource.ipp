@@ -11,10 +11,9 @@
 #define BOOST_JSON_IMPL_NULL_RESOURCE_IPP
 
 #include <boost/json/null_resource.hpp>
-#include <boost/throw_exception.hpp>
+#include <boost/json/detail/except.hpp>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 namespace detail {
 
@@ -24,7 +23,7 @@ namespace detail {
     `std::bad_alloc` in calls to `allocate`.
 */
 class null_resource final
-    : public container::pmr::memory_resource
+    : public memory_resource
 {
 public:
     /// Copy constructor (deleted)
@@ -34,6 +33,18 @@ public:
     /// Copy assignment (deleted)
     null_resource& operator=(
         null_resource const&) = delete;
+
+    /** Destructor
+
+        This destroys the resource.
+
+        @par Complexity
+        Constant.
+
+        @part Exception Safety
+        No-throw guarantee.
+    */
+    ~null_resource() noexcept = default;
 
     /** Constructor
 
@@ -54,7 +65,8 @@ protected:
         std::size_t,
         std::size_t) override
     {
-        throw_exception( std::bad_alloc(), BOOST_CURRENT_LOCATION );
+        detail::throw_bad_alloc(
+            BOOST_JSON_SOURCE_POS);
     }
 
     void
@@ -77,14 +89,13 @@ protected:
 
 } // detail
 
-container::pmr::memory_resource*
+memory_resource*
 get_null_resource() noexcept
 {
     static detail::null_resource mr;
     return &mr;
 }
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

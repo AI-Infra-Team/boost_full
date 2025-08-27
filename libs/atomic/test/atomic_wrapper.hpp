@@ -1,4 +1,4 @@
-//  Copyright (c) 2020-2025 Andrey Semashev
+//  Copyright (c) 2020 Andrey Semashev
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //  See accompanying file LICENSE_1_0.txt or copy at
@@ -11,18 +11,19 @@
 #include <boost/atomic/atomic_ref.hpp>
 #include <boost/atomic/ipc_atomic.hpp>
 #include <boost/atomic/ipc_atomic_ref.hpp>
+#include <boost/config.hpp>
 #include "aligned_object.hpp"
 
 //! Wrapper type for atomic template
 template< typename T >
 struct atomic_wrapper
 {
-    using atomic_type = boost::atomic< T >;
-    using atomic_reference_type = atomic_type&;
+    typedef boost::atomic< T > atomic_type;
+    typedef atomic_type& atomic_reference_type;
 
     atomic_type a;
 
-    atomic_wrapper() = default;
+    BOOST_DEFAULTED_FUNCTION(atomic_wrapper(), {})
     explicit atomic_wrapper(T const& value) : a(value) {}
 };
 
@@ -30,8 +31,8 @@ struct atomic_wrapper
 template< typename T >
 struct atomic_ref_wrapper
 {
-    using atomic_type = boost::atomic_ref< T >;
-    using atomic_reference_type = atomic_type const&;
+    typedef boost::atomic_ref< T > atomic_type;
+    typedef atomic_type const& atomic_reference_type;
 
     aligned_object< T, atomic_type::required_alignment > object;
     const atomic_type a;
@@ -44,12 +45,12 @@ struct atomic_ref_wrapper
 template< typename T >
 struct ipc_atomic_wrapper
 {
-    using atomic_type = boost::ipc_atomic< T >;
-    using atomic_reference_type = atomic_type&;
+    typedef boost::ipc_atomic< T > atomic_type;
+    typedef atomic_type& atomic_reference_type;
 
     atomic_type a;
 
-    ipc_atomic_wrapper() = default;
+    BOOST_DEFAULTED_FUNCTION(ipc_atomic_wrapper(), {})
     explicit ipc_atomic_wrapper(T const& value) : a(value) {}
 };
 
@@ -57,8 +58,8 @@ struct ipc_atomic_wrapper
 template< typename T >
 struct ipc_atomic_ref_wrapper
 {
-    using atomic_type = boost::ipc_atomic_ref< T >;
-    using atomic_reference_type = atomic_type const&;
+    typedef boost::ipc_atomic_ref< T > atomic_type;
+    typedef atomic_type const& atomic_reference_type;
 
     aligned_object< T, atomic_type::required_alignment > object;
     const atomic_type a;

@@ -37,41 +37,31 @@ inline void get_process_id_ptr_name(std::string &str, const void *ptr)
 
 inline const char *get_process_id_name()
 {
-   static bool done = false;
    static std::string str;
-   if(!done)
-      get_process_id_name(str);
+   get_process_id_name(str);
    return str.c_str();
 }
 
 inline const char *get_process_id_ptr_name(void *ptr)
 {
-   static bool done = false;
    static std::string str;
-   if(!done)
-      get_process_id_ptr_name(str, ptr);
+   get_process_id_ptr_name(str, ptr);
    return str.c_str();
 }
 
 inline const char *add_to_process_id_name(const char *name)
 {
-   static bool done = false;
    static std::string str;
-   if(!done){
-      get_process_id_name(str);
-      str += name;
-   }
+   get_process_id_name(str);
+   str += name;
    return str.c_str();
 }
 
 inline const char *add_to_process_id_ptr_name(const char *name, void *ptr)
 {
-   static bool done = false;
    static std::string str;
-   if(!done){
-      get_process_id_ptr_name(str, ptr);
-      str += name;
-   }
+   get_process_id_ptr_name(str, ptr);
+   str += name;
    return str.c_str();
 }
 
@@ -98,22 +88,16 @@ inline void get_process_id_wname(std::wstring &str)
 
 inline const wchar_t *get_process_id_wname()
 {
-   static bool done = false;
    static std::wstring str;
-   if(!done)
-      get_process_id_wname(str);
-
+   get_process_id_wname(str);
    return str.c_str();
 }
 
 inline const wchar_t *add_to_process_id_name(const wchar_t *name)
 {
-   static bool done = false;
    static std::wstring str;
-   if(!done){
-      get_process_id_wname(str);
-      str += name;
-   }
+   get_process_id_wname(str);
+   str += name;
    return str.c_str();
 }
 
@@ -128,13 +112,6 @@ inline std::wstring get_wfilename()
 }
 
 #endif
-
-namespace test {
-
-inline const char *get_argv_2(char *argv[])
-{  return argv[2]; }
-
-}  //namespace test {
 
 }  //namespace interprocess{
 }  //namespace boost{

@@ -470,8 +470,7 @@ class abstract-file-target : virtual-target
                 {
                     import errors : error : errors.error ;
                     errors.error <tag>@rulename is present but is not the only
-                        <tag> feature. Tags present..
-                        : $(tag) ;
+                        <tag> feature. ;
                 }
 
                 self.name = [ indirect.call $(rule-name) $(specified-name)
@@ -757,6 +756,12 @@ class action
         self.targets += $(targets) ;
     }
 
+    rule replace-targets ( old-targets * : new-targets * )
+    {
+        self.targets = [ set.difference $(self.targets) : $(old-targets) ] ;
+        self.targets += $(new-targets) ;
+    }
+
     rule targets ( )
     {
         return $(self.targets) ;
@@ -995,17 +1000,47 @@ rule from-file ( file : file-loc : project )
 #
 rule register ( target )
 {
-    local signature = [ $(target).actual-name ] ;
-    local result = $(.cache.$(signature)) ;
+    local signature = [ sequence.join [ $(target).path ] [ $(target).name ] : -
+        ] ;
+
+    local result ;
+    for local t in $(.cache.$(signature))
+    {
+        local a1 = [ $(t).action ] ;
+        local a2 = [ $(target).action ] ;
+
+        if ! $(result)
+        {
+            if ! $(a1) && ! $(a2)
+            {
+                result = $(t) ;
+            }
+            else if $(a1) && $(a2) &&
+                ( [ $(a1).action-name ] = [ $(a2).action-name ] ) &&
+                ( [ $(a1).sources     ] = [ $(a2).sources     ] )
+            {
+                local ps1 = [ $(a1).properties ] ;
+                local ps2 = [ $(a2).properties ] ;
+                local relevant = [ toolset.relevant [ $(a1).action-name ] ] ;
+                relevant = [ $(relevant).add [ $(target).relevant ] ] ;
+                local p1 = [ $(ps1).relevant $(relevant) ] ;
+                local p2 = [ $(ps2).relevant $(relevant) ] ;
+                if $(p1) = $(p2)
+                {
+                    result = $(t) ;
+                }
+            }
+        }
+    }
 
     if ! $(result)
     {
         .cache.$(signature) += $(target) ;
-        .all-targets += $(target) ;
         result = $(target) ;
     }
 
     .recent-targets += $(result) ;
+    .all-targets += $(result) ;
 
     return $(result) ;
 }

@@ -11,8 +11,6 @@
 #include "pathsys.h"
 #include "cwd.h"
 #include "function.h"
-#include "mem.h"
-#include "startup.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -31,9 +29,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
-
-#include <string>
-#include <vector>
 
 #undef debug_on_enter_function
 #undef debug_on_exit_function
@@ -71,7 +66,7 @@ static int debug_depth;
 static OBJECT * debug_file;
 static int debug_line;
 static FRAME * debug_frame;
-b2::list_ref debug_print_result;
+LIST * debug_print_result;
 static int current_token;
 static int debug_selected_frame_number;
 
@@ -102,17 +97,17 @@ static void debug_string_write( FILE * out, const char * data )
     fputc( '\0', out );
 }
 
-static std::string debug_string_read( FILE * in )
+static char * debug_string_read( FILE * in )
 {
     string buf[ 1 ];
     int ch;
-    std::string result;
+    char * result;
     string_new( buf );
     while( ( ch = fgetc( in ) ) > 0 )
     {
         string_push_back( buf, (char)ch );
     }
-    result = buf->value;
+    result = strdup( buf->value );
     string_free( buf );
     return result;
 }
@@ -239,24 +234,20 @@ static void debug_frame_write( FILE * out, FRAME * frame )
  */
 typedef struct _frame_info
 {
-    OBJECT * file = nullptr;
-    int line = 0;
-    OBJECT * fullname = nullptr;
+    OBJECT * file;
+    int line;
+    OBJECT * fullname;
     LOL args[ 1 ];
-    std::string rulename;
-
-    _frame_info()
-    {
-        lol_init( args );
-    }
-
-    ~_frame_info()
-    {
-        if ( file ) object_free( file );
-        if ( fullname ) object_free( fullname );
-        lol_free( args );
-    }
+    char * rulename;
 } FRAME_INFO;
+
+static void debug_frame_info_free( FRAME_INFO * frame )
+{
+    object_free( frame->file );
+    object_free( frame->fullname );
+    lol_free( frame->args );
+    free( frame->rulename );
+}
 
 static void debug_frame_read( FILE * in, FRAME_INFO * frame )
 {
@@ -425,28 +416,28 @@ static void debug_print_source( OBJECT * filename, int line )
     }
 }
 
-static void debug_print_frame_info( FRAME_INFO & frame )
+static void debug_print_frame_info( FRAME_INFO * frame )
 {
-    OBJECT * file = frame.file;
+    OBJECT * file = frame->file;
     if ( file == NULL ) file = constant_builtin;
-    printf( "%s ", frame.rulename.c_str() );
-    if ( frame.rulename != "module scope" )
+    printf( "%s ", frame->rulename );
+    if ( strcmp( frame->rulename, "module scope" ) != 0 )
     {
         printf( "( " );
-        if ( frame.args->count )
+        if ( frame->args->count )
         {
-            lol_print( frame.args );
+            lol_print( frame->args );
             printf( " " );
         }
         printf( ") " );
     }
-    printf( "at %s:%d", object_str( file ), frame.line );
+    printf( "at %s:%d", object_str( file ), frame->line );
 }
 
 static void debug_mi_print_frame_info( FRAME_INFO * frame )
 {
     printf( "frame={func=\"%s\",args=[],file=\"%s\",fullname=\"%s\",line=\"%d\"}",
-        frame->rulename.c_str(),
+        frame->rulename,
         object_str( frame->file ),
         object_str( frame->fullname ),
         frame->line );
@@ -578,7 +569,7 @@ static void debug_child_finish( int argc, const char * * argv )
 
 static void debug_child_kill( int argc, const char * * argv )
 {
-    b2::clean_exit( 0 );
+    exit( 0 );
 }
 
 static int debug_add_breakpoint( const char * name )
@@ -713,7 +704,7 @@ static void debug_child_print( int argc, const char * * argv )
     lines[ 1 ] = NULL;
     parse_string( constant_builtin, lines, &new_frame );
     string_free( buf );
-    debug_list_write( command_output, *debug_print_result );
+    debug_list_write( command_output, debug_print_result );
     fflush( command_output );
     debug_frame = saved_frame;
     debug_file = saved_file;
@@ -826,11 +817,11 @@ static void debug_mi_error( const char * message )
 
 static void debug_error_( const char * message )
 {
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "%s\n", message );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_error( message );
     }
@@ -885,11 +876,11 @@ static void debug_error( const char * format, ... )
 
 static void debug_parent_child_exited( int pid, int exit_code )
 {
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Child %d exited with status %d\n", (int)child_pid, (int)exit_code );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         if ( exit_code == 0 )
             printf( "*stopped,reason=\"exited-normally\"\n(gdb) \n" );
@@ -907,11 +898,11 @@ static void debug_parent_child_exited( int pid, int exit_code )
 static void debug_parent_child_signalled( int pid, int id )
 {
 
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Child %d exited on signal %d\n", child_pid, id );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         const char * name = "unknown";
         const char * meaning = "unknown";
@@ -937,14 +928,14 @@ static void debug_parent_on_breakpoint( void )
     fprintf( command_output, "info frame\n" );
     fflush( command_output );
     debug_frame_read( command_child, &base );
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Breakpoint %d, ", id );
-        debug_print_frame_info( base );
+        debug_print_frame_info( &base );
         printf( "\n" );
         debug_print_source( base.file, base.line );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         printf( "*stopped,reason=\"breakpoint-hit\",bkptno=\"%d\",disp=\"keep\",", id );
         debug_mi_print_frame_info( &base );
@@ -964,7 +955,7 @@ static void debug_parent_on_end_stepping( void )
     fprintf( command_output, "info frame\n" );
     fflush( command_output );
     debug_frame_read( command_child, &base );
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         debug_print_source( base.file, base.line );
     }
@@ -1108,6 +1099,7 @@ static void debug_parent_copy_breakpoints( void )
 static void debug_start_child( int argc, const char * * argv )
 {
 #if NT
+    char buf[ 80 ];
     HANDLE pipe1[ 2 ];
     HANDLE pipe2[ 2 ];
     string self[ 1 ];
@@ -1142,10 +1134,12 @@ static void debug_start_child( int argc, const char * * argv )
     string_copy( command_line, "b2 " );
     /* Pass the handles as the first and second arguments. */
     string_append( command_line, debugger_opt );
-    string_append( command_line, b2::value::format( "=%p", pipe1[ 0 ] )->str() );
+    sprintf( buf, "%p", pipe1[ 0 ] );
+    string_append( command_line, buf );
     string_push_back( command_line, ' ' );
     string_append( command_line, debugger_opt );
-    string_append( command_line, b2::value::format( "=%p", pipe2[ 1 ] )->str() );
+    sprintf( buf, "%p", pipe2[ 1 ] );
+    string_append( command_line, buf );
     /* Pass the rest of the command line. */
 	{
         int i;
@@ -1265,7 +1259,7 @@ static void debug_parent_run( int argc, const char * * argv )
         debug_parent_wait( 1 );
     }
     debug_parent_run_print( argc, argv );
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         printf( "=thread-created,id=\"1\",group-id=\"i1\"\n" );
         debug_mi_format_token();
@@ -1312,7 +1306,7 @@ static void debug_parent_continue( int argc, const char * * argv )
         debug_error( "Too many arguments to continue." );
         return;
     }
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^running\n(gdb) \n" );
@@ -1328,7 +1322,7 @@ static void debug_parent_kill( int argc, const char * * argv )
         debug_error( "Too many arguments to kill." );
         return;
     }
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
@@ -1344,7 +1338,7 @@ static void debug_parent_step( int argc, const char * * argv )
         debug_error( "Too many arguments to step." );
         return;
     }
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^running\n(gdb) \n" );
@@ -1360,7 +1354,7 @@ static void debug_parent_next( int argc, const char * * argv )
         debug_error( "Too many arguments to next." );
         return;
     }
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^running\n(gdb) \n" );
@@ -1376,7 +1370,7 @@ static void debug_parent_finish( int argc, const char * * argv )
         debug_error( "Too many arguments to finish." );
         return;
     }
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^running\n(gdb) \n" );
@@ -1400,11 +1394,11 @@ static void debug_parent_break( int argc, const char * * argv )
     }
     id = debug_add_breakpoint( argv[ 1 ] );
     debug_parent_forward_nowait( argc, argv, 1, 0 );
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Breakpoint %d set at %s\n", id, argv[ 1 ] );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
@@ -1453,7 +1447,7 @@ static void debug_parent_disable( int argc, const char * * argv )
     }
     debug_child_disable( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
@@ -1468,7 +1462,7 @@ static void debug_parent_enable( int argc, const char * * argv )
     }
     debug_child_enable( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
@@ -1483,7 +1477,7 @@ static void debug_parent_delete( int argc, const char * * argv )
     }
     debug_child_delete( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
@@ -1492,6 +1486,7 @@ static void debug_parent_delete( int argc, const char * * argv )
 
 static void debug_parent_clear( int argc, const char * * argv )
 {
+    char buf[ 16 ];
     const char * new_args[ 2 ];
     int id;
     if ( argc < 2 )
@@ -1511,14 +1506,14 @@ static void debug_parent_clear( int argc, const char * * argv )
         return;
     }
 
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Deleted breakpoint %d\n", id );
     }
 
-    auto id_s = std::to_string(id);
+    sprintf( buf, "%d", id );
     new_args[ 0 ] = "delete";
-    new_args[ 1 ] = id_s.c_str();
+    new_args[ 1 ] = buf;
     debug_parent_delete( 2, new_args );
 }
 
@@ -1531,12 +1526,12 @@ static void debug_parent_print( int argc, const char * * argv )
     }
     result = debug_list_read( command_child );
 
-    if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         list_print( result );
         printf( "\n" );
     }
-    else if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         printf( "~\"$1 = " );
         list_print( result );
@@ -1554,6 +1549,7 @@ static void debug_parent_backtrace( int argc, const char * * argv )
     OBJECT * depth_str;
     int depth;
     int i;
+    FRAME_INFO frame;
 
     if ( debug_state == DEBUG_NO_CHILD )
     {
@@ -1572,13 +1568,13 @@ static void debug_parent_backtrace( int argc, const char * * argv )
 
     for ( i = 0; i < depth; ++i )
     {
-        FRAME_INFO frame;
-        auto i_s = std::to_string(i);
-        new_args[ 2 ] = i_s.c_str();
+        char buf[ 16 ];
+        sprintf( buf, "%d", i );
+        new_args[ 2 ] = buf;
         debug_parent_forward_nowait( 3, new_args, 0, 0 );
         debug_frame_read( command_child, &frame );
         printf( "#%d  in ", i );
-        debug_print_frame_info( frame );
+        debug_print_frame_info( &frame );
         printf( "\n" );
     }
     fflush( stdout );
@@ -1592,7 +1588,7 @@ static void debug_parent_quit( int argc, const char * * argv )
         fflush( command_output );
         debug_parent_wait( 0 );
     }
-    b2::clean_exit( 0 );
+    exit( 0 );
 }
 
 static const char * const help_text[][2] =
@@ -1932,9 +1928,10 @@ static void debug_mi_break_insert( int argc, const char * * argv )
 
     if ( disabled )
     {
-        auto num_breakpoints_s = std::to_string(num_breakpoints);
+        char buf[ 80 ];
+        sprintf( buf, "%d", num_breakpoints );
         inner_argv[ 0 ] = "disable";
-        inner_argv[ 1 ] = num_breakpoints_s.c_str();
+        inner_argv[ 1 ] = buf;
         debug_child_disable( 2, inner_argv );
         debug_parent_forward_nowait( 2, inner_argv, 1, 0 );
     }
@@ -2118,7 +2115,7 @@ static void debug_mi_gdb_exit( int argc, const char * * argv )
     }
     debug_mi_format_token();
     printf( "^exit\n" );
-    b2::clean_exit( EXIT_SUCCESS );
+    exit( EXIT_SUCCESS );
 }
 
 static void debug_mi_gdb_set( int argc, const char * * argv )
@@ -2175,6 +2172,7 @@ static void debug_mi_thread_info( int argc, const char * * argv )
         debug_mi_format_token();
         printf( "^done,threads=[{id=\"1\"," );
         debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "}],current-thread-id=\"1\"\n(gdb) \n" );
     }
 }
@@ -2197,6 +2195,7 @@ static void debug_mi_thread_select( int argc, const char * * argv )
         debug_mi_format_token();
         printf( "^done,new-thread-id=\"1\"," );
         debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "\n(gdb) \n" );
     }
 }
@@ -2235,6 +2234,7 @@ static void debug_mi_stack_info_frame( int argc, const char * * argv )
         debug_mi_format_token();
         printf( "^done," );
         debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "\n(gdb) \n" );
     }
 }
@@ -2601,11 +2601,11 @@ int debugger( void )
 {
     command_array = parent_commands;
     command_input = stdin;
-    if ( globs.debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_MI )
         printf( "=thread-group-added,id=\"i1\"\n(gdb) \n" );
     while ( 1 )
     {
-        if ( globs.debug_interface == DEBUG_INTERFACE_CONSOLE )
+        if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
             printf("(b2db) ");
         fflush( stdout );
         read_command();
@@ -2644,10 +2644,11 @@ static int process_command( char * line )
 {
     int result;
     size_t capacity = 8;
-    std::vector<char*> tokens;
-    tokens.reserve(capacity);
+    char * * buffer = (char **)malloc( capacity * sizeof( char * ) );
+    char * * current = buffer;
     char * iter = line;
     char * saved = iter;
+    *current = iter;
     for ( ; ; )
     {
         /* skip spaces */
@@ -2677,15 +2678,22 @@ static int process_command( char * line )
                 ++iter;
             }
         }
+        /* resize the buffer if necessary */
+        if ( current == buffer + capacity )
+        {
+            buffer = (char**)realloc( (void *)buffer, capacity * 2 * sizeof( char * ) );
+            current = buffer + capacity;
+        }
         /* append the token to the buffer */
-        tokens.push_back(saved);
+        *current++ = saved;
         /* null terminate the token */
         if ( *iter )
         {
             *iter++ = '\0';
         }
     }
-    result = run_command( (int) tokens.size(), const_cast<const char **>( &tokens[0] ) );
+    result = run_command( int(current - buffer), (const char **)buffer );
+    free( (void *)buffer );
     return result;
 }
 
@@ -2694,7 +2702,7 @@ static int read_command( void )
     int result;
     int ch;
     string line[ 1 ];
-    auto line_delete = b2::jam::make_unique_bare_jptr( line, string_new, string_free );
+    string_new( line );
     /* HACK: force line to be on the heap. */
     string_reserve( line, 64 );
     while( ( ch = fgetc( command_input ) )  != EOF )
@@ -2709,6 +2717,7 @@ static int read_command( void )
         }
     }
     result = process_command( line->value );
+    string_free( line );
     return result;
 }
 
@@ -2718,7 +2727,7 @@ static void debug_listen( void )
     while ( debug_state == DEBUG_STOPPED )
     {
         if ( feof( command_input ) )
-            b2::clean_exit( 1 );
+            exit( 1 );
         fflush(stdout);
         fflush( command_output );
         read_command();
@@ -2727,10 +2736,5 @@ static void debug_listen( void )
 }
 
 struct debug_child_data_t debug_child_data;
-const char debugger_opt[] = "--b2db-internal-debug-handle";
+const char debugger_opt[] = "--b2db-internal-debug-handle=";
 int debug_interface;
-
-void debugger_done()
-{
-    debug_print_result.reset();
-}

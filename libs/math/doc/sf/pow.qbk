@@ -10,10 +10,10 @@ power of a run-time base.
     namespace boost { namespace math {
 
     template <int N, typename T>
-    BOOST_MATH_GPU_ENABLED constexpr ``__sf_result`` pow(T base);
+    constexpr ``__sf_result`` pow(T base);
 
     template <int N, typename T, class Policy>
-    BOOST_MATH_GPU_ENABLED constexpr ``__sf_result`` pow(T base, const Policy& policy);
+    constexpr ``__sf_result`` pow(T base, const Policy& policy);
 
     }}
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2007 Rene Rivera.
 # Copyright 2011 Steven Watanabe
@@ -49,7 +49,6 @@ echo [subtest_b] 2
 [subtest_b] 0
 [subtest_b] 1
 [subtest_b] 2
-
 ...updated 2 targets...
 """)
 

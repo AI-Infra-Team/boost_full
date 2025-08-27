@@ -1,7 +1,5 @@
 ///////////////////////////////////////////////////////////////
-//  Copyright 2011-25 John Maddock.
-//  Copyright 2021-25 Christopher Kormanyos.
-//  Distributed under the Boost
+//  Copyright 2011-21 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
@@ -25,7 +23,6 @@
 // TEST_CPP_INT
 // TEST_CPP_INT_RATIONAL
 // TEST_CPP_BIN_FLOAT
-// TEST_CPP_DOUBLE_FLOAT
 //
 
 #include "performance_test.hpp"

@@ -11,6 +11,7 @@
 #define BOOST_BEAST_TEST_IMPL_STREAM_IPP
 
 #include <boost/beast/_experimental/test/stream.hpp>
+#include <boost/beast/core/bind_handler.hpp>
 #include <boost/beast/core/buffer_traits.hpp>
 #include <boost/make_shared.hpp>
 #include <stdexcept>
@@ -245,9 +246,7 @@ teardown(
 
     if( s.in_->fc &&
         s.in_->fc->fail(ec))
-    {
-        BOOST_BEAST_ASSIGN_EC(ec, net::error::eof);
-    }
+        ec = net::error::eof;
     else
         ec = {};
 }

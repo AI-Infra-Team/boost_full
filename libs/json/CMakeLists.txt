@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2019 Vinnie Falco (vinnie.falco@gmail.com)
-# Copyright (c) 2021 Dmitry Arkhipov (grisumbras@gmail.com)
+# Copyright (c) 2021 DMitry Arkhipov (grisumbras@gmail.com)
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -27,6 +27,7 @@ if(BOOST_JSON_IS_ROOT)
     include(CTest)
 endif()
 if(NOT BOOST_SUPERPROJECT_VERSION)
+    option(BOOST_JSON_STANDALONE "Build boost::json as a standalone library" OFF)
     option(BOOST_JSON_INSTALL "Install boost::json files" ON)
     option(BOOST_JSON_BUILD_TESTS "Build boost::json tests" ${BUILD_TESTING})
     option(BOOST_JSON_BUILD_FUZZERS "Build boost::json fuzzers" ${BOOST_JSON_IS_ROOT})
@@ -38,38 +39,21 @@ endif()
 
 
 include(GNUInstallDirs)
-if(BOOST_JSON_IS_ROOT)
+if(BOOST_JSON_IS_ROOT AND NOT BOOST_JSON_STANDALONE)
     #
     # Building inside Boost tree, but as a separate project e.g. on Travis or
     # other CI, or when producing Visual Studio Solution and Projects.
 
     set(BOOST_INCLUDE_LIBRARIES json)
     set(BOOST_EXCLUDE_LIBRARIES json)
-    if(BOOST_JSON_BUILD_EXAMPLES)
-        list(APPEND BOOST_INCLUDE_LIBRARIES optional)
-    endif()
 
     set(CMAKE_FOLDER _deps)
     add_subdirectory(../.. _deps/boost EXCLUDE_FROM_ALL)
     unset(CMAKE_FOLDER)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/pretty_printers")
-find_package(BoostPrettyPrinters QUIET)
-if(BoostPrettyPrinters_FOUND)
-    boost_pretty_printers_gdb_python_header(
-        TARGET boost_json_regenerate_printers
-        INPUT src/boost_json_gdb_printers.py
-        OUTPUT include/boost/json/detail/gdb_printers.hpp
-        HEADER_GUARD BOOST_JSON_DETAIL_GDB_PRINTERS_HPP
-        NO_DISABLE_MACRO
-        EXCLUDE_FROM_ALL)
-endif()
 
 function(boost_json_setup_properties target)
-    if(MSVC)
-        target_compile_definitions(${target} PRIVATE _SCL_SECURE_NO_WARNINGS)
-    endif()
     target_compile_features(${target} PUBLIC cxx_constexpr)
     target_compile_definitions(${target} PUBLIC BOOST_JSON_NO_LIB=1)
 
@@ -83,20 +67,23 @@ function(boost_json_setup_properties target)
         )
     endif()
 
-    target_link_libraries(${target}
-        PUBLIC
-            Boost::align
-            Boost::assert
-            Boost::config
-            Boost::container
-            Boost::container_hash
-            Boost::core
-            Boost::describe
-            Boost::endian
-            Boost::mp11
-            Boost::system
-            Boost::throw_exception
-    )
+  if(BOOST_JSON_STANDALONE)
+      target_compile_definitions(${target} PUBLIC BOOST_JSON_STANDALONE)
+      target_compile_features(${target} PUBLIC cxx_std_17)
+  else()
+      target_link_libraries(${target}
+          PUBLIC
+              Boost::align
+              Boost::assert
+              Boost::config
+              Boost::container
+              Boost::exception
+              Boost::mp11
+              Boost::system
+              Boost::throw_exception
+              Boost::utility
+      )
+  endif()
 endfunction()
 
 

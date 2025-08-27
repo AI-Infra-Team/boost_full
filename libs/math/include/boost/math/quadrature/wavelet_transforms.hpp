@@ -23,7 +23,7 @@ public:
     int max_refinements = 12) : f_{f}, psi_{wavelet}, tol_{tol}, max_refinements_{max_refinements}
     {}
 
-    auto operator()(Real s, Real t) const ->decltype(std::declval<F>()(std::declval<Real>()))
+    auto operator()(Real s, Real t)->decltype(std::declval<F>()(std::declval<Real>())) const
     {
         using std::sqrt;
         using std::abs;

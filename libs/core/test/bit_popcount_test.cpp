@@ -1,4 +1,4 @@
-// Test for boost/core/bit.hpp (popcount)
+// Test for boost/core/bit.hpp (bit_ceil)
 //
 // Copyright 2020 Peter Dimov
 // Distributed under the Boost Software License, Version 1.0.
@@ -14,7 +14,7 @@
 template<class T> void test_popcount( T x )
 {
     int k = 0;
-    for( T y = x; y; y = static_cast<T>( y & (y - 1) ), ++k );
+    for( T y = x; y; y &= y - 1, ++k );
 
     BOOST_TEST_EQ( boost::core::popcount( x ), k ) || ( std::cerr << "x: " << +x << std::endl );
 }
@@ -26,7 +26,7 @@ int main()
         test_popcount( static_cast<unsigned short>( 0 ) );
         test_popcount( static_cast<unsigned int>( 0 ) );
         test_popcount( static_cast<unsigned long>( 0 ) );
-        test_popcount( static_cast<boost::ulong_long_type>( 0 ) );
+        test_popcount( static_cast<unsigned long long>( 0 ) );
     }
 
     boost::detail::splitmix64 rng;
@@ -39,7 +39,7 @@ int main()
         test_popcount( static_cast<unsigned short>( x ) );
         test_popcount( static_cast<unsigned int>( x ) );
         test_popcount( static_cast<unsigned long>( x ) );
-        test_popcount( static_cast<boost::ulong_long_type>( x ) );
+        test_popcount( static_cast<unsigned long long>( x ) );
     }
 
     return boost::report_errors();

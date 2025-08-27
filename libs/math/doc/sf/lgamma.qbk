@@ -9,16 +9,16 @@
    namespace boost{ namespace math{
    
    template <class T>
-   BOOST_MATH_GPU_ENABLED ``__sf_result`` lgamma(T z);
+   ``__sf_result`` lgamma(T z);
    
    template <class T, class ``__Policy``>
-   BOOST_MATH_GPU_ENABLED ``__sf_result`` lgamma(T z, const ``__Policy``&);
+   ``__sf_result`` lgamma(T z, const ``__Policy``&);
    
    template <class T>
-   BOOST_MATH_GPU_ENABLED ``__sf_result`` lgamma(T z, int* sign);
+   ``__sf_result`` lgamma(T z, int* sign);
    
    template <class T, class ``__Policy``>
-   BOOST_MATH_GPU_ENABLED ``__sf_result`` lgamma(T z, int* sign, const ``__Policy``&);
+   ``__sf_result`` lgamma(T z, int* sign, const ``__Policy``&);
    
    }} // namespaces
 

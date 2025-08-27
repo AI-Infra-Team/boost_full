@@ -87,14 +87,6 @@ int main() {
 #endif
     BOOST_TEST(get("int",properties,std::string("one"), type<int>()) == 1);
     BOOST_TEST(get("double",properties,5.3) == "five point three");
-    try {
-      get("not_there",properties,"");
-      BOOST_ERROR("No exception thrown.");
-    } catch (boost::dynamic_get_failure& ex) {
-      BOOST_TEST_CSTR_EQ(ex.what(), "dynamic property get cannot retrieve value for property: not_there.");
-      // test idempotent error string generator branch
-      BOOST_TEST_CSTR_EQ(ex.what(), "dynamic property get cannot retrieve value for property: not_there.");
-    }
   }
 
   // Put tests
@@ -125,11 +117,7 @@ int main() {
     try {
       put("nada",properties,3.14,std::string("3.14159"));
       BOOST_ERROR("No exception thrown.");
-    } catch (boost::property_not_found& ex) {
-      BOOST_TEST_CSTR_EQ(ex.what(), "Property not found: nada.");
-      // test idempotent error string generator branch
-      BOOST_TEST_CSTR_EQ(ex.what(), "Property not found: nada.");
-    }
+    } catch (boost::property_not_found&) { }
   }
 
   // Nonexistent property gets generated

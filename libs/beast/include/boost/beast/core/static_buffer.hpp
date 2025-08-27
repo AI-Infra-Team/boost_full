@@ -143,10 +143,11 @@ public:
     /** Returns a mutable buffer sequence representing writable bytes.
 
         Returns a mutable buffer sequence representing the writable
-        bytes containing exactly `n` bytes of storage.
+        bytes containing exactly `n` bytes of storage. Memory may be
+        reallocated as needed.
 
         All buffers sequences previously obtained using
-        @ref data or @ref prepare may be invalidated.
+        @ref data or @ref prepare are invalidated.
 
         @param n The desired number of bytes in the returned buffer
         sequence.

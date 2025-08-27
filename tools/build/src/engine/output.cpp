@@ -120,7 +120,7 @@ void out_action
         out_printf( "%s %s\n", action, target );
 
     /* Print out the command executed if given -d+2. */
-    if ( is_debug_exec() )
+    if ( DEBUG_EXEC )
     {
         out_puts( command );
         out_putc( '\n' );
@@ -172,13 +172,17 @@ void errno_printf(char const * const f, ...)
 
 OBJECT * outf_int( int const value )
 {
-    return b2::value::as_string( value );
+    char buffer[ 50 ];
+    sprintf( buffer, "%i", value );
+    return object_new( buffer );
 }
 
 
 OBJECT * outf_double( double const value )
 {
-    return b2::value::as_string( value );
+    char buffer[ 50 ];
+    sprintf( buffer, "%f", value );
+    return object_new( buffer );
 }
 
 

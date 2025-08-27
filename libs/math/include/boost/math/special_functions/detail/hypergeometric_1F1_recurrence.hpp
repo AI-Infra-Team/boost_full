@@ -29,16 +29,12 @@
   template <class T>
   struct hypergeometric_1F1_recurrence_a_coefficients
   {
-    using result_type = boost::math::tuple<T, T, T>;
+    typedef boost::math::tuple<T, T, T> result_type;
 
     hypergeometric_1F1_recurrence_a_coefficients(const T& a, const T& b, const T& z):
     a(a), b(b), z(z)
     {
     }
-
-    hypergeometric_1F1_recurrence_a_coefficients(const hypergeometric_1F1_recurrence_a_coefficients&) = default;
-
-    hypergeometric_1F1_recurrence_a_coefficients operator=(const hypergeometric_1F1_recurrence_a_coefficients&) = delete;
 
     result_type operator()(std::intmax_t i) const
     {
@@ -52,24 +48,19 @@
     }
 
   private:
-    const T a;
-    const T b;
-    const T z;
+    const T a, b, z;
+    hypergeometric_1F1_recurrence_a_coefficients operator=(const hypergeometric_1F1_recurrence_a_coefficients&);
   };
 
   template <class T>
   struct hypergeometric_1F1_recurrence_b_coefficients
   {
-    using result_type = boost::math::tuple<T, T, T>;
+    typedef boost::math::tuple<T, T, T> result_type;
 
     hypergeometric_1F1_recurrence_b_coefficients(const T& a, const T& b, const T& z):
     a(a), b(b), z(z)
     {
     }
-
-    hypergeometric_1F1_recurrence_b_coefficients(const hypergeometric_1F1_recurrence_b_coefficients&) = default;
-
-    hypergeometric_1F1_recurrence_b_coefficients& operator=(const hypergeometric_1F1_recurrence_b_coefficients&) = delete;
 
     result_type operator()(std::intmax_t i) const
     {
@@ -83,9 +74,8 @@
     }
 
   private:
-    const T a;
-    const T b;
-    const T z;
+    const T a, b, z;
+    hypergeometric_1F1_recurrence_b_coefficients& operator=(const hypergeometric_1F1_recurrence_b_coefficients&) = delete;
   };
   //
   // for use when we're recursing to a small b:
@@ -93,16 +83,12 @@
   template <class T>
   struct hypergeometric_1F1_recurrence_small_b_coefficients
   {
-     using result_type = boost::math::tuple<T, T, T>;
+     typedef boost::math::tuple<T, T, T> result_type;
 
      hypergeometric_1F1_recurrence_small_b_coefficients(const T& a, const T& b, const T& z, int N) :
         a(a), b(b), z(z), N(N)
      {
      }
-
-     hypergeometric_1F1_recurrence_small_b_coefficients(const hypergeometric_1F1_recurrence_small_b_coefficients&) = default;
-
-     hypergeometric_1F1_recurrence_small_b_coefficients operator=(const hypergeometric_1F1_recurrence_small_b_coefficients&) = delete;
 
      result_type operator()(std::intmax_t i) const
      {
@@ -117,25 +103,20 @@
      }
 
   private:
-     const T a;
-     const T b;
-     const T z;
+     hypergeometric_1F1_recurrence_small_b_coefficients operator=(const hypergeometric_1F1_recurrence_small_b_coefficients&) = delete;
+     const T a, b, z;
      int N;
   };
 
   template <class T>
   struct hypergeometric_1F1_recurrence_a_and_b_coefficients
   {
-    using result_type = boost::math::tuple<T, T, T>;
+    typedef boost::math::tuple<T, T, T> result_type;
 
     hypergeometric_1F1_recurrence_a_and_b_coefficients(const T& a, const T& b, const T& z, int offset = 0):
     a(a), b(b), z(z), offset(offset)
     {
     }
-
-    hypergeometric_1F1_recurrence_a_and_b_coefficients(const hypergeometric_1F1_recurrence_a_and_b_coefficients&) = default;
-
-    hypergeometric_1F1_recurrence_a_and_b_coefficients operator=(const hypergeometric_1F1_recurrence_a_and_b_coefficients&) = delete;
 
     result_type operator()(std::intmax_t i) const
     {
@@ -150,10 +131,9 @@
     }
 
   private:
-    const T a;
-    const T b;
-    const T z;
+    const T a, b, z;
     int offset;
+    hypergeometric_1F1_recurrence_a_and_b_coefficients operator=(const hypergeometric_1F1_recurrence_a_and_b_coefficients&) = delete;
   };
 #if 0
   //
@@ -311,32 +291,20 @@
        ak += 2;
        integer_part -= 2;
     }
-    if (ak - 1 == b)
-    {
-       // When ak - 1 == b are recursion coefficients disappear to zero and
-       // we end up with a NaN result.  Reduce the recursion steps by 1 to
-       // avoid this.  We rely on |b| small and therefore no infinite recursion.
-       ak -= 1;
-       integer_part += 1;
-    }
 
     if (-integer_part > static_cast<std::intmax_t>(policies::get_max_series_iterations<Policy>()))
        return policies::raise_evaluation_error<T>(function, "1F1 arguments sit in a range with a so negative that we have no evaluation method, got a = %1%", std::numeric_limits<T>::quiet_NaN(), pol);
 
-    T first {};
-    T second {};
+    T first, second;
     if(ak == 0)
     { 
        first = 1;
        ak -= 1;
        second = 1 - z / b;
-       if (fabs(second) < 0.5)
-          second = (b - z) / b;  // cancellation avoidance
     }
     else
     {
-       long long scaling1 {};
-       long long scaling2 {};
+       long long scaling1(0), scaling2(0);
        first = detail::hypergeometric_1F1_imp(ak, b, z, pol, scaling1);
        ak -= 1;
        second = detail::hypergeometric_1F1_imp(ak, b, z, pol, scaling2);
@@ -440,10 +408,8 @@
         trailing_b_shift += diff;
      }
 
-     T first {};
-     T second {};
-     long long scale1 {};
-     long long scale2 {};
+     T first, second;
+     long long scale1(0), scale2(0);
      first = boost::math::detail::hypergeometric_1F1_imp(T(a + a_shift), T(b + b_shift), z, pol, scale1);
      //
      // It would be good to compute "second" from first and the ratio - unfortunately we are right on the cusp

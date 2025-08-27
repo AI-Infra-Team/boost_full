@@ -210,8 +210,6 @@ public:
     dynamic_bitset&amp; <a href="#flip3">flip</a>(size_type n, size_type len);
     dynamic_bitset&amp; <a href="#flip2">flip</a>(size_type n);
     dynamic_bitset&amp; <a href="#flip1">flip</a>();
-    reference <a href="#at">at</a>(size_type n);
-    bool <a href="#const-at">at</a>(size_type n) const;
     bool <a href="#test">test</a>(size_type n) const;
     bool <a href="#test">test_set</a>(size_type n, bool val = true);
     bool <a href="#all">all</a>() const;
@@ -238,7 +236,6 @@ public:
     bool <a href="#intersects">intersects</a>(const dynamic_bitset&amp; a) const;
 
     size_type <a href="#find_first">find_first</a>() const;
-    size_type <a href="#find_first_off">find_first</a>(size_type pos) const;
     size_type <a href="#find_next">find_next</a>(size_type pos) const;
 
 };
@@ -1255,24 +1252,6 @@ returns <tt>false</tt>.<br />
 
 <hr />
 <pre>
-reference <a id="at">at</a>(size_type n)
-</pre>
-
-<b>Precondition:</b> <tt>n &lt; this-&gt;size()</tt>.<br />
-<b>Returns:</b> The same as <tt>operator[](n)</tt>.<br />
-<b>Throws:</b> <tt>std::out_of_range</tt> if that <tt>n</tt> is not within the range of the bitset.
-
-<hr />
-<pre>
-bool <a id="const-at">at</a>(size_type n) const
-</pre>
-
-<b>Precondition:</b> <tt>n &lt; this-&gt;size()</tt>.<br />
-<b>Returns:</b> The same as <tt>operator[](n)</tt>.<br />
-<b>Throws:</b> <tt>std::out_of_range</tt> if that <tt>n</tt> is not within the range of the bitset.
-
-<hr />
-<pre>
 bool <a id="test">test</a>(size_type n) const
 </pre>
 
@@ -1373,15 +1352,6 @@ size_type <a id = "find_first">find_first</a>() const;
 
 <b>Returns:</b> the lowest index <tt>i</tt> such as bit <tt>i</tt>
 is set, or <tt>npos</tt> if <tt>*this</tt> has no on bits.
-
-<hr />
-<pre>
-size_type <a id = "find_first_off">find_first</a>(size_type pos) const;
-</pre>
-
-<b>Returns:</b> the lowest index <tt>i</tt> greater or equal to
-<tt>offset</tt> such as bit <tt>i</tt> is set, or <tt>npos</tt> if
-no such index exists.
 
 <hr />
 <pre>

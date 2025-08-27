@@ -1,6 +1,5 @@
 //
 // Copyright 2019 Olzhas Zhumabek <anonymous.from.applecity@gmail.com>
-// Copyright 2021 Pranam Lashkari <plashkari628@gmail.com>
 //
 // Use, modification and distribution are subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -9,8 +8,8 @@
 #ifndef BOOST_GIL_IMAGE_PROCESSING_NUMERIC_HPP
 #define BOOST_GIL_IMAGE_PROCESSING_NUMERIC_HPP
 
-#include <boost/gil/image_processing/kernel.hpp>
-#include <boost/gil/image_processing/convolve.hpp>
+#include <boost/gil/extension/numeric/kernel.hpp>
+#include <boost/gil/extension/numeric/convolve.hpp>
 #include <boost/gil/image_view.hpp>
 #include <boost/gil/typedefs.hpp>
 #include <boost/gil/detail/math.hpp>
@@ -49,7 +48,7 @@ inline double lanczos(double x, std::ptrdiff_t a)
     if (0 <= x && x <= 0)
         return 1;
 
-    if (static_cast<double>(-a) < x && x < static_cast<double>(a))
+    if (-a < x && x < a)
         return normalized_sinc(x) / normalized_sinc(x / static_cast<double>(a));
 
     return 0;
@@ -89,8 +88,7 @@ inline void compute_tensor_entries(
 /// in which all entries will be equal to
 /// \code 1 / (dst.size()) \endcode
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_normalized_mean(std::size_t side_length)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_normalized_mean(std::size_t side_length)
 {
     if (side_length % 2 != 1)
         throw std::invalid_argument("kernel dimensions should be odd and equal");
@@ -109,8 +107,7 @@ inline auto generate_normalized_mean(std::size_t side_length)
 ///
 /// Fills supplied view with 1s (ones)
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_unnormalized_mean(std::size_t side_length)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_unnormalized_mean(std::size_t side_length)
 {
     if (side_length % 2 != 1)
         throw std::invalid_argument("kernel dimensions should be odd and equal");
@@ -129,32 +126,27 @@ inline auto generate_unnormalized_mean(std::size_t side_length)
 /// Fills supplied view with values taken from Gaussian distribution. See
 /// https://en.wikipedia.org/wiki/Gaussian_blur
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_gaussian_kernel(std::size_t side_length, double sigma)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_gaussian_kernel(std::size_t side_length, double sigma)
 {
     if (side_length % 2 != 1)
         throw std::invalid_argument("kernel dimensions should be odd and equal");
 
+
     const double denominator = 2 * boost::gil::detail::pi * sigma * sigma;
-    auto const middle = side_length / 2;
+    auto middle = side_length / 2;
     std::vector<T, Allocator> values(side_length * side_length);
-    T sum{0};
     for (std::size_t y = 0; y < side_length; ++y)
     {
         for (std::size_t x = 0; x < side_length; ++x)
         {
-            const auto delta_x = x - middle;
-            const auto delta_y = y - middle;
-            const auto power = static_cast<double>(delta_x * delta_x + delta_y * delta_y) / (2 * sigma * sigma);
+            const auto delta_x = middle > x ? middle - x : x - middle;
+            const auto delta_y = middle > y ? middle - y : y - middle;
+            const double power = (delta_x * delta_x +  delta_y * delta_y) / (2 * sigma * sigma);
             const double nominator = std::exp(-power);
-            const auto value = static_cast<T>(nominator / denominator);
+            const float value = static_cast<float>(nominator / denominator);
             values[y * side_length + x] = value;
-            sum += value;
         }
     }
-
-    // normalize so that Gaussian kernel sums up to 1.
-    std::transform(values.begin(), values.end(), values.begin(), [&sum](const auto & v) { return v/sum; });
 
     return detail::kernel_2d<T, Allocator>(values.begin(), values.size(), middle, middle);
 }
@@ -167,8 +159,7 @@ inline auto generate_gaussian_kernel(std::size_t side_length, double sigma)
 /// to obtain the desired degree).
 /// https://www.researchgate.net/publication/239398674_An_Isotropic_3_3_Image_Gradient_Operator
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_dx_sobel(unsigned int degree = 1)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_dx_sobel(unsigned int degree = 1)
 {
     switch (degree)
     {
@@ -198,8 +189,7 @@ inline auto generate_dx_sobel(unsigned int degree = 1)
 /// to obtain the desired degree).
 /// https://www.researchgate.net/profile/Hanno_Scharr/publication/220955743_Optimal_Filters_for_Extended_Optical_Flow/links/004635151972eda98f000000/Optimal-Filters-for-Extended-Optical-Flow.pdf
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_dx_scharr(unsigned int degree = 1)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_dx_scharr(unsigned int degree = 1)
 {
     switch (degree)
     {
@@ -229,8 +219,7 @@ inline auto generate_dx_scharr(unsigned int degree = 1)
 /// to obtain the desired degree).
 /// https://www.researchgate.net/publication/239398674_An_Isotropic_3_3_Image_Gradient_Operator
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_dy_sobel(unsigned int degree = 1)
-    -> detail::kernel_2d<T, Allocator>
+inline detail::kernel_2d<T, Allocator> generate_dy_sobel(unsigned int degree = 1)
 {
     switch (degree)
     {
@@ -260,8 +249,7 @@ inline auto generate_dy_sobel(unsigned int degree = 1)
 /// to obtain the desired degree).
 /// https://www.researchgate.net/profile/Hanno_Scharr/publication/220955743_Optimal_Filters_for_Extended_Optical_Flow/links/004635151972eda98f000000/Optimal-Filters-for-Extended-Optical-Flow.pdf
 template <typename T = float, typename Allocator = std::allocator<T>>
-inline auto generate_dy_scharr(unsigned int degree = 1)
-    -> detail::kernel_2d<T, Allocator> 
+inline detail::kernel_2d<T, Allocator> generate_dy_scharr(unsigned int degree = 1)
 {
     switch (degree)
     {

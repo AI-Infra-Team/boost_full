@@ -40,13 +40,8 @@ void file_path_to_url_tests()
     BOOST_TEST_EQ(
         std::string("file:///c:/foo/bar"),
         file_path_to_url(path("c:\\foo\\bar")));
-
-    // "\\localhost\c:\foo\bar" is an invalid UNC path, because a share name
-    // can't contain a colon. But it was being tested, so I'm just updating
-    // the expected result from "file://localhost/c:/foo/bar" to
-    // "file://localhost/c%3a/foo/bar"
     BOOST_TEST_EQ(
-        std::string("file://localhost/c%3a/foo/bar"),
+        std::string("file://localhost/c:/foo/bar"),
         file_path_to_url(path("\\\\localhost\\c:\\foo\\bar")));
 
     // Really not sure what to do with these examples.
@@ -86,13 +81,8 @@ void dir_path_to_url_tests()
     BOOST_TEST_EQ(
         std::string("file:///c:/foo/bar/"),
         dir_path_to_url(path("c:\\foo\\bar")));
-
-    // "\\localhost\c:\foo\bar" is an invalid UNC path, because a share name
-    // can't contain a colon. But it was being tested, so I'm just updating
-    // the expected result from "file://localhost/c:/foo/bar" to
-    // "file://localhost/c%3a/foo/bar"
     BOOST_TEST_EQ(
-        std::string("file://localhost/c%3a/foo/bar/"),
+        std::string("file://localhost/c:/foo/bar/"),
         dir_path_to_url(path("\\\\localhost\\c:\\foo\\bar")));
 
     // Really not sure what to do with these examples.

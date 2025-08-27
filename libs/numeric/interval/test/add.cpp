@@ -15,7 +15,6 @@
 #include <boost/numeric/interval/utility.hpp>
 #include <boost/numeric/interval/policies.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <memory>
 #include "bugs.hpp"
 
 typedef enum { EXPR_VAR, EXPR_NEG, EXPR_UP, EXPR_DOWN, EXPR_ADD, EXPR_SUB } e_type;

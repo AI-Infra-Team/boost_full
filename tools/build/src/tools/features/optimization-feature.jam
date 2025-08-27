@@ -7,8 +7,8 @@ import feature ;
 
 #| tag::doc[]
 
-[[b2.builtin.features.optimization]]`optimization`::
-*Allowed values:* `off`, `speed`, `space`, 'minimal', 'debug'.
+[[bbv2.builtin.features.optimization]]`optimization`::
+*Allowed values:* `off`, `speed`, `space`.
 +
 Enables optimization. `speed` optimizes for faster code, `space` optimizes for
 smaller binary.
@@ -16,12 +16,12 @@ smaller binary.
 |# # end::doc[]
 
 feature.feature optimization
-    : off speed space minimal debug
+    : off speed space
     : propagated ;
 
 #| tag::inline-doc[]
 
-[[b2.builtin.features.inlining]]`inlining`::
+[[bbv2.builtin.features.inlining]]`inlining`::
 *Allowed values:* `off`, `on`, `full`.
 +
 Enables inlining.
@@ -34,7 +34,7 @@ feature.feature inlining
 
 #| tag::vector-doc[]
 
-[[b2.builtin.features.vectorize]]`vectorize`::
+[[bbv2.builtin.features.vectorize]]`vectorize`::
 *Allowed values:* `off`, `on`, `full`.
 +
 Enables vectorization.

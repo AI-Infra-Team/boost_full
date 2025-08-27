@@ -52,13 +52,13 @@ void load_actor_graph(std::istream& in, ActorGraph& g)
         // Map from the actor numbers on this line to the actor vertices
         typedef tokenizer< char_separator< char > > Tok;
         Tok tok(line, char_separator< char >(" "));
-        for (auto const & id : tok)
+        for (Tok::iterator id = tok.begin(); id != tok.end(); ++id)
         {
-            auto actor_id = lexical_cast< int >(id);
-            auto v = actors.find(actor_id);
+            int actor_id = lexical_cast< int >(*id);
+            std::map< int, Vertex >::iterator v = actors.find(actor_id);
             if (v == actors.end())
             {
-                auto new_vertex = add_vertex(Actor(actor_id), g);
+                Vertex new_vertex = add_vertex(Actor(actor_id), g);
                 actors[actor_id] = new_vertex;
                 actors_in_movie.push_back(new_vertex);
             }
@@ -68,9 +68,11 @@ void load_actor_graph(std::istream& in, ActorGraph& g)
             }
         }
 
-        for (auto i = actors_in_movie.begin(); i != actors_in_movie.end(); ++i)
+        for (std::vector< Vertex >::iterator i = actors_in_movie.begin();
+             i != actors_in_movie.end(); ++i)
         {
-            for (auto j = i + 1; j != actors_in_movie.end(); ++j)
+            for (std::vector< Vertex >::iterator j = i + 1;
+                 j != actors_in_movie.end(); ++j)
             {
                 if (!edge(*i, *j, g).second)
                     add_edge(*i, *j, g);
@@ -84,14 +86,16 @@ std::ostream& write_pajek_graph(std::ostream& out, const Graph& g,
     VertexIndexMap vertex_index, VertexNameMap vertex_name)
 {
     out << "*Vertices " << num_vertices(g) << '\n';
-    for (auto v = vertices(g).first; v != vertices(g).second; ++v)
+    typedef typename graph_traits< Graph >::vertex_iterator vertex_iterator;
+    for (vertex_iterator v = vertices(g).first; v != vertices(g).second; ++v)
     {
         out << get(vertex_index, *v) + 1 << " \"" << get(vertex_name, *v)
             << "\"\n";
     }
 
     out << "*Edges\n";
-    for (auto e = edges(g).first; e != edges(g).second; ++e)
+    typedef typename graph_traits< Graph >::edge_iterator edge_iterator;
+    for (edge_iterator e = edges(g).first; e != edges(g).second; ++e)
     {
         out << get(vertex_index, source(*e, g)) + 1 << ' '
             << get(vertex_index, target(*e, g)) + 1 << " 1.0\n"; // HACK!

@@ -13,8 +13,6 @@
 #pragma warning(disable: 4996 4127)
 #endif
 
-#define BOOST_TIMER_ENABLE_DEPRECATED
-
 #include <boost/config.hpp>
 #include <boost/regex.hpp>
 #include <boost/cregex.hpp>

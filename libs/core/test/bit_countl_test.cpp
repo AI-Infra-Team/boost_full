@@ -14,7 +14,7 @@ template<class T> void test_countl( T x )
 {
     x |= static_cast<T>( 1 ) << ( std::numeric_limits<T>::digits - 1 );
 
-    for( int i = 0; i <= std::numeric_limits<T>::digits; ++i, x = static_cast<T>( x >> 1 ) )
+    for( int i = 0; i <= std::numeric_limits<T>::digits; ++i, x >>= 1 )
     {
         BOOST_TEST_EQ( boost::core::countl_zero( x ), i );
         BOOST_TEST_EQ( boost::core::countl_one( static_cast<T>( ~x ) ), i );
@@ -27,7 +27,7 @@ int main()
     test_countl( static_cast<unsigned short>( 0 ) );
     test_countl( static_cast<unsigned int>( 0 ) );
     test_countl( static_cast<unsigned long>( 0 ) );
-    test_countl( static_cast<boost::ulong_long_type>( 0 ) );
+    test_countl( static_cast<unsigned long long>( 0 ) );
 
     boost::detail::splitmix64 rng;
 
@@ -39,7 +39,7 @@ int main()
         test_countl( static_cast<unsigned short>( x ) );
         test_countl( static_cast<unsigned int>( x ) );
         test_countl( static_cast<unsigned long>( x ) );
-        test_countl( static_cast<boost::ulong_long_type>( x ) );
+        test_countl( static_cast<unsigned long long>( x ) );
     }
 
     return boost::report_errors();

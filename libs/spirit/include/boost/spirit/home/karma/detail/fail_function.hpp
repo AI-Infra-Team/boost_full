@@ -16,10 +16,6 @@
 
 namespace boost { namespace spirit { namespace karma { namespace detail
 {
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4512) // assignment operator could not be generated.
-#endif
     template <typename OutputIterator, typename Context, typename Delimiter>
     struct fail_function
     {
@@ -34,7 +30,7 @@ namespace boost { namespace spirit { namespace karma { namespace detail
         bool operator()(Component const& component, Attribute const& attr) const
         {
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))  
-            (void)component; // suppresses warning: C4100: 'component' : unreferenced formal parameter
+            component; // suppresses warning: C4100: 'component' : unreferenced formal parameter
 #endif
             // return true if any of the generators fail
             return !component.generate(sink, ctx, delim, attr);
@@ -44,7 +40,7 @@ namespace boost { namespace spirit { namespace karma { namespace detail
         bool operator()(Component const& component) const
         {
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))  
-            (void)component; // suppresses warning: C4100: 'component' : unreferenced formal parameter
+            component; // suppresses warning: C4100: 'component' : unreferenced formal parameter
 #endif
             // return true if any of the generators fail
             return !component.generate(sink, ctx, delim, unused);
@@ -53,10 +49,10 @@ namespace boost { namespace spirit { namespace karma { namespace detail
         OutputIterator& sink;
         Context& ctx;
         Delimiter const& delim;
+
+        // silence MSVC warning C4512: assignment operator could not be generated
+        BOOST_DELETED_FUNCTION(fail_function& operator= (fail_function const&))
     };
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
 
 }}}}
 

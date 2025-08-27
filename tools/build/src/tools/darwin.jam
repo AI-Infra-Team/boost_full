@@ -20,7 +20,6 @@ import version ;
 import property-set ;
 import regex ;
 import errors ;
-import args ;
 
 ## Use a framework.
 feature framework : : free ;
@@ -38,11 +37,21 @@ feature force-load : : free dependency incidental ;
 
 _ = " " ;
 
-.debug-configuration = [ args.get-arg debug-configuration ] ;
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
 
 feature.extend toolset : darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc : gcc.mingw.link gcc.mingw.link.dll ;
+
+generators.override darwin.prebuilt : builtin.prebuilt ;
+generators.override darwin.searched-lib-generator : searched-lib-generator ;
+
+# Override default do-nothing generators.
+generators.override darwin.compile.c.pch   : pch.default-c-pch-generator   ;
+generators.override darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 type.set-generated-target-suffix PCH : <toolset>darwin : gch ;
 
@@ -113,7 +122,7 @@ rule init ( version ? : command * : options * : requirement * )
     {
         # - The 'command' variable can have multiple elements. When calling
         #   the SHELL builtin we need a single string.
-        local command-string = [ common.make-command-string $(command) ] ;
+        local command-string = $(command:J=" ") ;
         real-version = [ MATCH "^([0-9.]+)"
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
         version ?= $(real-version) ;
@@ -500,8 +509,3 @@ actions piecemeal archive
 {
     "$(.LIBTOOL)" -static -o "$(<:T)"  $(ARFLAGS)  "$(>:T)"
 }
-
-# This is a temporary solution for doing combined architecture builds on macOS.
-flags darwin
-    OPTIONS <target-os>darwin/<architecture>arm+x86/<address-model>64
-    : "-arch arm64" "-arch x86_64" ;

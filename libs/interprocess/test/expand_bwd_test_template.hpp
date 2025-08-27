@@ -17,7 +17,6 @@
 #include <algorithm> //std::equal
 #include <vector>
 #include <iostream>
-#include <typeinfo>
 
 namespace boost { namespace interprocess { namespace test {
 
@@ -136,7 +135,7 @@ bool test_insert_with_expand_bwd()
    for(std::size_t iteration = 0; iteration < Iterations; ++iteration)
    {
       value_type *memory = new value_type[MemorySize];
-      BOOST_INTERPROCESS_TRY {
+      BOOST_TRY {
          std::vector<non_volatile_value_type> initial_data;
          initial_data.resize(InitialSize[iteration]);
          for(std::size_t i = 0; i < InitialSize[iteration]; ++i){
@@ -166,10 +165,10 @@ bool test_insert_with_expand_bwd()
             return false;
          }
       }
-      BOOST_INTERPROCESS_CATCH(...){
+      BOOST_CATCH(...){
          delete [](const_cast<non_volatile_value_type*>(memory));
-         BOOST_INTERPROCESS_RETHROW
-      } BOOST_INTERPROCESS_CATCH_END
+         BOOST_RETHROW
+      } BOOST_CATCH_END
       delete [](const_cast<non_volatile_value_type*>(memory));
    }
 
@@ -193,7 +192,7 @@ bool test_assign_with_expand_bwd()
    for(std::size_t iteration = 0; iteration <Iterations; ++iteration)
    {
       value_type *memory = new value_type[MemorySize];
-      BOOST_INTERPROCESS_TRY {
+      BOOST_TRY {
          //Create initial data
          std::vector<non_volatile_value_type> initial_data;
          initial_data.resize(InitialSize[iteration]);
@@ -227,10 +226,10 @@ bool test_assign_with_expand_bwd()
             return false;
          }
       }
-      BOOST_INTERPROCESS_CATCH(...){
+      BOOST_CATCH(...){
          delete [](const_cast<typename boost::interprocess::ipcdetail::remove_volatile<value_type>::type*>(memory));
-         BOOST_INTERPROCESS_RETHROW
-      } BOOST_INTERPROCESS_CATCH_END
+         BOOST_RETHROW
+      } BOOST_CATCH_END
       delete [](const_cast<typename boost::interprocess::ipcdetail::remove_volatile<value_type>::type*>(memory));
    }
 

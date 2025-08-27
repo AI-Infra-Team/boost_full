@@ -113,14 +113,12 @@ doWrite(z_params& zs, Flush flush, error_code& ec)
 
             if(((! r.in.used() && ! r.out.used()) ||
                     flush == Flush::finish) && ! ec)
-            {
-                BOOST_BEAST_ASSIGN_EC(ec, error::need_buffers);
-            }
+                ec = error::need_buffers;
         };
     auto const err =
         [&](error e)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, e);
+            ec = e;
             mode_ = BAD;
         };
 
@@ -138,7 +136,7 @@ doWrite(z_params& zs, Flush flush, error_code& ec)
         case TYPE:
             if(flush == Flush::block || flush == Flush::trees)
                 return done();
-            BOOST_FALLTHROUGH;
+            // fall through
 
         case TYPEDO:
         {
@@ -518,10 +516,8 @@ doWrite(z_params& zs, Flush flush, error_code& ec)
             BOOST_FALLTHROUGH;
 
         case DONE:
-        {
-            BOOST_BEAST_ASSIGN_EC(ec, error::end_of_stream);
+            ec = error::end_of_stream;
             return done();
-        }
 
         case BAD:
             return done();
@@ -670,13 +666,13 @@ inflate_table(
         left -= count[len];
         if (left < 0)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, error::over_subscribed_length);
+            ec = error::over_subscribed_length;
             return;
         }
     }
     if (left > 0 && (type == build::codes || max != 1))
     {
-        BOOST_BEAST_ASSIGN_EC(ec, error::incomplete_length_set);
+        ec = error::incomplete_length_set;
         return;
     }
 
@@ -1041,7 +1037,7 @@ inflate_fast(ranges& r, error_code& ec)
 #ifdef INFLATE_STRICT
                 if(dist > dmax_)
                 {
-                    BOOST_BEAST_ASSIGN_EC(ec, error::invalid_distance);
+                    ec = error::invalid_distance;
                     mode_ = BAD;
                     break;
                 }
@@ -1055,7 +1051,7 @@ inflate_fast(ranges& r, error_code& ec)
                     op = dist - op; // distance back in window
                     if(op > w_.size())
                     {
-                        BOOST_BEAST_ASSIGN_EC(ec, error::invalid_distance);
+                        ec = error::invalid_distance;
                         mode_ = BAD;
                         break;
                     }
@@ -1082,7 +1078,7 @@ inflate_fast(ranges& r, error_code& ec)
             }
             else
             {
-                BOOST_BEAST_ASSIGN_EC(ec, error::invalid_distance_code);
+                ec = error::invalid_distance_code;
                 mode_ = BAD;
                 break;
             }
@@ -1101,7 +1097,7 @@ inflate_fast(ranges& r, error_code& ec)
         }
         else
         {
-            BOOST_BEAST_ASSIGN_EC(ec, error::invalid_literal_length);
+            ec = error::invalid_literal_length;
             mode_ = BAD;
             break;
         }

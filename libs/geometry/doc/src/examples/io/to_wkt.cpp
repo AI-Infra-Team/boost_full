@@ -19,7 +19,7 @@
 int main()
 {
     namespace geom = boost::geometry;
-    using point_type = geom::model::d2::point_xy<double>;
+    typedef geom::model::d2::point_xy<double> point_type;
 
     point_type point = geom::make<point_type>(3, 2);
     geom::model::polygon<point_type> polygon;

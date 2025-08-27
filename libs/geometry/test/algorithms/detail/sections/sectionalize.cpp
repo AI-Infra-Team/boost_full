@@ -5,9 +5,8 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2020-2024.
-// Modifications copyright (c) 2020-2024, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// This file was modified by Oracle on 2020-2021.
+// Modifications copyright (c) 2020-2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
@@ -46,15 +45,18 @@
 template <int DimensionCount, typename Geometry>
 void test_sectionalize_part()
 {
-    using point_type = typename bg::point_type<Geometry>::type;
-    using box_type = bg::model::box<point_type>;
+    typedef typename bg::point_type<Geometry>::type point_type;
+    typedef bg::model::box<point_type> box_type;
 
-    using sections_type = bg::sections<box_type, DimensionCount>;
-    using section_type = typename boost::range_value<sections_type>::type;
+    typedef bg::sections<box_type, DimensionCount> sections_type;
+    typedef typename boost::range_value<sections_type>::type section_type;
 
-    using dimension_list = std::integer_sequence<std::size_t, 0>;
+    typedef std::integer_sequence<std::size_t, 0> dimension_list;
 
-    using sectionalize_part = bg::detail::sectionalize::sectionalize_part<dimension_list>;
+    typedef bg::detail::sectionalize::sectionalize_part
+        <
+            point_type, dimension_list
+        > sectionalize_part;
 
     sections_type sections;
     section_type section;
@@ -62,6 +64,7 @@ void test_sectionalize_part()
     Geometry geometry;
     geometry.push_back(bg::make<point_type>(1, 1));
 
+    bg::detail::no_rescale_policy rescale_policy;
     typename bg::strategies::relate::services::default_strategy
         <
             Geometry, Geometry
@@ -69,12 +72,12 @@ void test_sectionalize_part()
 
     bg::ring_identifier ring_id;
     sectionalize_part::apply(sections, geometry.begin(), geometry.end(),
-                             strategy, ring_id, 10);
+                             rescale_policy, strategy, ring_id, 10);
     // There should not yet be anything generated, because it is only ONE point
 
     geometry.push_back(bg::make<point_type>(2, 2));
     sectionalize_part::apply(sections, geometry.begin(), geometry.end(),
-                             strategy, ring_id, 10);
+                             rescale_policy, strategy, ring_id, 10);
 }
 
 
@@ -87,12 +90,13 @@ void test_sectionalize(std::string const& caseid, G const& g, std::size_t sectio
 
     static const std::size_t dimension_count = bg::util::sequence_size<DimensionVector>::value;
 
-    using point = typename bg::point_type<G>::type;
-    using box = bg::model::box<point>;
-    using sections= bg::sections<box, dimension_count>;
+    typedef typename bg::point_type<G>::type point;
+    typedef bg::model::box<point> box;
+    typedef bg::sections<box, dimension_count> sections;
 
     sections s;
-    bg::sectionalize<Reverse, DimensionVector>(g, s, 0, max_count);
+    bg::sectionalize<Reverse, DimensionVector>(g,
+            bg::detail::no_rescale_policy(), s, 0, max_count);
 
     BOOST_CHECK_EQUAL(s.size(), section_count);
 
@@ -158,7 +162,7 @@ void test_sectionalize(std::string const& caseid, G const& g, std::size_t sectio
 
         std::ofstream svg(filename.str().c_str());
 
-        using point_type = typename bg::point_type<G>::type;
+        typedef typename bg::point_type<G>::type point_type;
         bg::svg_mapper<point_type> mapper(svg, 500, 500);
 
         mapper.add(g);
@@ -211,8 +215,8 @@ void test_sectionalize(std::string const& caseid, std::string const& wkt,
     G g;
     bg::read_wkt(wkt, g);
 
-    using dim2 = std::integer_sequence<std::size_t, 0, 1>;
-    using dim1 = std::integer_sequence<std::size_t, 0>;
+    typedef std::integer_sequence<std::size_t, 0, 1> dim2;
+    typedef std::integer_sequence<std::size_t, 0> dim1;
 
     test_sectionalize<dim2, Reverse>(caseid + "_d2", g, count2, s2, d2, max_count);
     test_sectionalize<dim1, Reverse>(caseid + "_d1", g, count1, s1, d1, max_count);
@@ -291,7 +295,8 @@ void test_all()
         5, "0..2|2..4|4..5|5..8|8..9", "+|DUP|+|DUP|.");
 
 
-    test_sectionalize<bg::model::box<P>, false>("box2", "BOX(0 0,4 4)",
+    typedef bg::model::box<P> B;
+    test_sectionalize<B, false>("box2", "BOX(0 0,4 4)",
             4, "0..1|1..2|2..3|3..4", ". +|+ .|. -|- .",
             4, "0..1|1..2|2..3|3..4", ".|+|.|-");
 
@@ -309,7 +314,7 @@ void test_all()
         31, "", "", 100);
 
     {
-        using only_y_dim = std::integer_sequence<std::size_t, 1>;
+        typedef std::integer_sequence<std::size_t, 1> only_y_dim;
         bg::model::polygon<P> pol;
         bg::read_wkt(vertical, pol);
         test_sectionalize<only_y_dim, false>("vertical_y", pol, 22, "", "", 100);
@@ -325,8 +330,8 @@ void test_all()
 
 void test_large_integers()
 {
-    using int_point_type = bg::model::point<int, 2, bg::cs::cartesian>;
-    using double_point_type = bg::model::point<double, 2, bg::cs::cartesian>;
+    typedef bg::model::point<int, 2, bg::cs::cartesian> int_point_type;
+    typedef bg::model::point<double, 2, bg::cs::cartesian> double_point_type;
 
     std::string const polygon_li = "POLYGON((1872000 528000,1872000 192000,1536119 192000,1536000 528000,1200000 528000,1200000 863880,1536000 863880,1872000 863880,1872000 528000))";
     bg::model::polygon<int_point_type> int_poly;
@@ -334,13 +339,13 @@ void test_large_integers()
     bg::read_wkt(polygon_li, int_poly);
     bg::read_wkt(polygon_li, double_poly);
 
-    using dimensions = std::integer_sequence<std::size_t, 0>;
+    typedef std::integer_sequence<std::size_t, 0> dimensions;
     bg::sections<bg::model::box<int_point_type>, 1> int_sections;
     bg::sections<bg::model::box<double_point_type>, 1> double_sections;
 
 
-    bg::sectionalize<false, dimensions>(int_poly, int_sections);
-    bg::sectionalize<false, dimensions>(double_poly, double_sections);
+    bg::sectionalize<false, dimensions>(int_poly, bg::detail::no_rescale_policy(), int_sections);
+    bg::sectionalize<false, dimensions>(double_poly, bg::detail::no_rescale_policy(), double_sections);
 
     bool equally_sized = int_sections.size() == double_sections.size();
     BOOST_CHECK(equally_sized);

@@ -11,6 +11,7 @@
 
 #include <boost/assert.hpp>
 
+#include "boost/fiber/algo/round_robin.hpp"
 #include "boost/fiber/context.hpp"
 #include "boost/fiber/exceptions.hpp"
 
@@ -93,8 +94,8 @@ scheduler::sleep2ready_() noexcept {
     }
 }
 
-scheduler::scheduler(algo::algorithm::ptr_t algo) noexcept :
-    algo_{algo} {
+scheduler::scheduler() noexcept :
+    algo_{ new algo::round_robin() } {
 }
 
 scheduler::~scheduler() {

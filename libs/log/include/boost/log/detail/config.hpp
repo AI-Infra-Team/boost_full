@@ -17,8 +17,10 @@
 #ifndef BOOST_LOG_DETAIL_CONFIG_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_CONFIG_HPP_INCLUDED_
 
+#include <boost/predef/os.h>
+
 // Try including WinAPI config as soon as possible so that any other headers don't include Windows SDK headers
-#if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+#if defined(BOOST_OS_WINDOWS_AVAILABLE)
 #include <boost/winapi/config.hpp>
 #endif
 
@@ -32,6 +34,10 @@
 
 #if defined(_MSC_VER) && _MSC_VER >= 1600
 #   define BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH
+#endif
+
+#if defined(BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH)
+#include <boost/preprocessor/stringize.hpp>
 #endif
 
 #if !defined(BOOST_WINDOWS)
@@ -92,20 +98,18 @@
 #   define BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS
 #endif
 
-#if (defined(BOOST_NO_CXX11_HDR_CODECVT) && BOOST_CXX_VERSION < 201703) || (BOOST_CXX_VERSION >= 202002) || \
-    (defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142)
+#if (defined(BOOST_NO_CXX11_HDR_CODECVT) && BOOST_CXX_VERSION < 201703) || (defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142)
     // The compiler does not support std::codecvt<char16_t> and std::codecvt<char32_t> specializations.
     // The BOOST_NO_CXX11_HDR_CODECVT means there's no usable <codecvt>, which is slightly different from this macro.
     // But in order for <codecvt> to be implemented the std::codecvt specializations have to be implemented as well.
     // We need to check the C++ version as well, since <codecvt> is deprecated from C++17 onwards which may cause
     // BOOST_NO_CXX11_HDR_CODECVT to be set, even though std::codecvt in <locale> is just fine.
-    // The std::codecvt<char16_t> and std::codecvt<char32_t> specializations were eventually deprecated in C++20.
 #   define BOOST_LOG_NO_CXX11_CODECVT_FACETS
 #endif
 
-#if defined(__CYGWIN__) && !defined(BOOST_LOG_WITHOUT_ASIO)
+#if defined(__CYGWIN__)
     // Boost.ASIO is broken on Cygwin
-#   define BOOST_LOG_WITHOUT_ASIO
+#   define BOOST_LOG_NO_ASIO
 #endif
 
 #if defined(__VXWORKS__)
@@ -115,13 +119,13 @@
 #   include <vsbConfig.h>
 #endif
 
-#if (!defined(__CRYSTAX__) && defined(__ANDROID__) && (__ANDROID_API__ < 21)) || \
-     (defined(__VXWORKS__) && !defined(_WRS_CONFIG_USER_MANAGEMENT))
+#if (!defined(__CRYSTAX__) && defined(__ANDROID__) && (__ANDROID_API__+0) < 21) \
+     || (defined(__VXWORKS__) && !defined(_WRS_CONFIG_USER_MANAGEMENT))
 // Until Android API version 21 Google NDK does not provide getpwuid_r
 #    define BOOST_LOG_NO_GETPWUID_R
 #endif
 
-#if !defined(BOOST_LOG_USE_NATIVE_SYSLOG) && defined(BOOST_LOG_WITHOUT_ASIO)
+#if !defined(BOOST_LOG_USE_NATIVE_SYSLOG) && defined(BOOST_LOG_NO_ASIO)
 #   ifndef BOOST_LOG_WITHOUT_SYSLOG
 #       define BOOST_LOG_WITHOUT_SYSLOG
 #   endif
@@ -139,35 +143,19 @@
 #define BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION
 #endif
 
-#if defined(BOOST_NO_CXX11_CONSTEXPR) || (defined(BOOST_GCC) && (BOOST_GCC / 100) <= 406)
+#if defined(BOOST_NO_CXX11_CONSTEXPR) || (defined(BOOST_GCC) && ((BOOST_GCC+0) / 100) <= 406)
 // GCC 4.6 does not support in-class brace initializers for static constexpr array members
 #define BOOST_LOG_NO_CXX11_CONSTEXPR_DATA_MEMBER_BRACE_INITIALIZERS
 #endif
 
-#if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_GCC) && (BOOST_GCC / 100) <= 406)
-// GCC 4.6 cannot handle defaulted functions with noexcept specifier or virtual functions
+#if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_GCC) && ((BOOST_GCC+0) / 100) <= 406)
+// GCC 4.6 cannot handle a defaulted function with noexcept specifier
 #define BOOST_LOG_NO_CXX11_DEFAULTED_NOEXCEPT_FUNCTIONS
-#define BOOST_LOG_NO_CXX11_DEFAULTED_VIRTUAL_FUNCTIONS
 #endif
 
-#if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_CLANG) && ((__clang_major__ == 3) && (__clang_minor__ <= 1)))
+#if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_CLANG) && (((__clang_major__+0) == 3) && ((__clang_minor__+0) <= 1)))
 // Clang 3.1 cannot handle a defaulted constexpr constructor in some cases (presumably, if the class contains a member with a constexpr constructor)
 #define BOOST_LOG_NO_CXX11_DEFAULTED_CONSTEXPR_CONSTRUCTORS
-#endif
-
-// The macro indicates that the compiler does not support C++20 pack expansions in lambda init-captures.
-// Early gcc, clang and MSVC versions support C++20 pack expansions in lambda init-captures,
-// but define __cpp_init_captures to a lower value.
-#if (!defined(__cpp_init_captures) || (__cpp_init_captures < 201803)) && \
-    !(\
-        BOOST_CXX_VERSION > 201703 && \
-        (\
-            (defined(BOOST_GCC) && (BOOST_GCC >= 90000)) || \
-            (defined(BOOST_CLANG) && (BOOST_CLANG_VERSION >= 90000)) || \
-            (defined(BOOST_MSVC) && (BOOST_MSVC >= 1922))\
-        )\
-    )
-#define BOOST_LOG_NO_CXX20_PACK_EXPANSION_IN_LAMBDA_INIT_CAPTURE
 #endif
 
 #if defined(_MSC_VER)
@@ -377,7 +365,7 @@ inline namespace BOOST_LOG_VERSION_NAMESPACE {}
 #       define BOOST_LOG_OPEN_NAMESPACE namespace log { inline namespace BOOST_LOG_VERSION_NAMESPACE {
 #       define BOOST_LOG_CLOSE_NAMESPACE }}
 
-#   elif defined(BOOST_GCC) && (BOOST_GCC >= 40400)
+#   elif defined(BOOST_GCC) && (BOOST_GCC+0) >= 40400
 
 // GCC 7 deprecated strong using directives but allows inline namespaces in C++03 mode since GCC 4.4.
 __extension__ inline namespace BOOST_LOG_VERSION_NAMESPACE {}
@@ -410,7 +398,7 @@ namespace log {}
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 #if defined(BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH)
-#pragma detect_mismatch("boost_log_abi", BOOST_STRINGIZE(BOOST_LOG_VERSION_NAMESPACE))
+#pragma detect_mismatch("boost_log_abi", BOOST_PP_STRINGIZE(BOOST_LOG_VERSION_NAMESPACE))
 #endif
 
 } // namespace boost

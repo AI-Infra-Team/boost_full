@@ -61,10 +61,11 @@ template < class Graph > struct print_edge
     typedef typename boost::graph_traits< Graph >::vertex_descriptor Vertex;
     void operator()(Edge e) const
     {
-        auto id = get(vertex_index, G);
+        typename boost::property_map< Graph, vertex_index_t >::type id
+            = get(vertex_index, G);
 
-        auto src = source(e, G);
-        auto targ = target(e, G);
+        Vertex src = source(e, G);
+        Vertex targ = target(e, G);
 
         cout << "(" << id[src] << "," << id[targ] << ") ";
     }

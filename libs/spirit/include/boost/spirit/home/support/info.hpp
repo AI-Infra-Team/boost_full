@@ -68,10 +68,6 @@ namespace boost { namespace spirit
         value_type value;
     };
 
-#ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable: 4512) // assignment operator could not be generated.
-#endif
     template <typename Callback>
     struct basic_info_walker
     {
@@ -120,6 +116,9 @@ namespace boost { namespace spirit
         Callback& callback;
         utf8_string const& tag;
         int depth;
+
+        // silence MSVC warning C4512: assignment operator could not be generated
+        BOOST_DELETED_FUNCTION(basic_info_walker& operator= (basic_info_walker const&))
     };
 
     // bare-bones print support
@@ -140,10 +139,10 @@ namespace boost { namespace spirit
         }
 
         Out& out;
+
+        // silence MSVC warning C4512: assignment operator could not be generated
+        BOOST_DELETED_FUNCTION(simple_printer& operator= (simple_printer const&))
     };
-#ifdef _MSC_VER
-#  pragma warning(pop)
-#endif
 
     template <typename Out>
     Out& operator<<(Out& out, info const& what)

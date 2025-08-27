@@ -1,7 +1,7 @@
 //  filesystem unique_path.cpp  --------------------------------------------------------//
 
 //  Copyright Beman Dawes 2010
-//  Copyright Andrey Semashev 2020, 2024
+//  Copyright Andrey Semashev 2020
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -20,8 +20,10 @@
 
 #include <cerrno>
 #include <stddef.h>
-#include <unistd.h>
 #include <fcntl.h>
+#ifdef BOOST_HAS_UNISTD_H
+#include <unistd.h>
+#endif
 
 #if !defined(BOOST_FILESYSTEM_DISABLE_ARC4RANDOM)
 #if BOOST_OS_BSD_OPEN >= BOOST_VERSION_NUMBER(2, 1, 0) || \
@@ -54,7 +56,6 @@
 #endif // (defined(__linux__) || defined(__linux) || defined(linux)) && (!defined(__ANDROID__) || __ANDROID_API__ >= 28)
 #endif // !defined(BOOST_FILESYSTEM_DISABLE_GETRANDOM)
 
-#include <boost/scope/unique_fd.hpp>
 #include "posix_tools.hpp"
 
 #else  // BOOST_WINDOWS_API
@@ -94,8 +95,6 @@
 #include "atomic_tools.hpp"
 #include "error_handling.hpp"
 
-#include <boost/filesystem/detail/header.hpp> // must be the last #include
-
 #if defined(BOOST_POSIX_API)
 // At least Mac OS X 10.6 and older doesn't support O_CLOEXEC
 #ifndef O_CLOEXEC
@@ -109,57 +108,57 @@ namespace detail {
 
 namespace {
 
+#if defined(BOOST_FILESYSTEM_HAS_BCRYPT)
+//! Converts NTSTATUS error codes to Win32 error codes for reporting
+inline boost::winapi::DWORD_ translate_ntstatus(boost::winapi::NTSTATUS_ status)
+{
+    // Note: Legacy MinGW doesn't have ntstatus.h and doesn't define NTSTATUS error codes other than STATUS_SUCCESS.
+    //       Because of this we have to use hardcoded integer literals here. Also, we have to cast to unsigned
+    //       integral type to avoid signed overflow and narrowing conversion in the constants.
+    switch (static_cast< boost::winapi::ULONG_ >(status))
+    {
+    case 0xC0000017ul: // STATUS_NO_MEMORY
+        return boost::winapi::ERROR_OUTOFMEMORY_;
+    case 0xC0000008ul: // STATUS_INVALID_HANDLE
+        return boost::winapi::ERROR_INVALID_HANDLE_;
+    case 0xC000000Dul: // STATUS_INVALID_PARAMETER
+        return boost::winapi::ERROR_INVALID_PARAMETER_;
+    default:
+        return boost::winapi::ERROR_NOT_SUPPORTED_;
+    }
+}
+#endif // defined(BOOST_FILESYSTEM_HAS_BCRYPT)
+
 #if defined(BOOST_POSIX_API) && !defined(BOOST_FILESYSTEM_HAS_ARC4RANDOM)
 
 //! Fills buffer with cryptographically random data obtained from /dev/(u)random
 int fill_random_dev_random(void* buf, std::size_t len)
 {
-    boost::scope::unique_fd file;
-    while (true)
+    int file = ::open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+    if (file == -1)
     {
-        file.reset(::open("/dev/urandom", O_RDONLY | O_CLOEXEC));
-        if (!file)
-        {
-            if (errno == EINTR)
-                continue;
-        }
-
-        break;
-    }
-
-    if (!file)
-    {
-        while (true)
-        {
-            file.reset(::open("/dev/random", O_RDONLY | O_CLOEXEC));
-            if (!file)
-            {
-                const int err = errno;
-                if (err == EINTR)
-                    continue;
-                return err;
-            }
-
-            break;
-        }
+        file = ::open("/dev/random", O_RDONLY | O_CLOEXEC);
+        if (file == -1)
+            return errno;
     }
 
     std::size_t bytes_read = 0u;
     while (bytes_read < len)
     {
-        ssize_t n = ::read(file.get(), buf, len - bytes_read);
-        if (BOOST_UNLIKELY(n < 0))
+        ssize_t n = ::read(file, buf, len - bytes_read);
+        if (BOOST_UNLIKELY(n == -1))
         {
-            const int err = errno;
+            int err = errno;
             if (err == EINTR)
                 continue;
+            close_fd(file);
             return err;
         }
-
         bytes_read += n;
         buf = static_cast< char* >(buf) + n;
     }
 
+    close_fd(file);
     return 0;
 }
 
@@ -234,7 +233,7 @@ void system_crypt_random(void* buf, std::size_t len, boost::system::error_code* 
 #if defined(BOOST_FILESYSTEM_HAS_BCRYPT)
 
     boost::winapi::BCRYPT_ALG_HANDLE_ handle;
-    boost::winapi::NTSTATUS_ status = boost::winapi::BCryptOpenAlgorithmProvider(&handle, boost::winapi::BCRYPT_RNG_ALGORITHM_, nullptr, 0);
+    boost::winapi::NTSTATUS_ status = boost::winapi::BCryptOpenAlgorithmProvider(&handle, boost::winapi::BCRYPT_RNG_ALGORITHM_, NULL, 0);
     if (BOOST_UNLIKELY(status != 0))
     {
     fail:
@@ -253,7 +252,7 @@ void system_crypt_random(void* buf, std::size_t len, boost::system::error_code* 
 
     boost::winapi::HCRYPTPROV_ handle;
     boost::winapi::DWORD_ err = 0u;
-    if (BOOST_UNLIKELY(!boost::winapi::CryptAcquireContextW(&handle, nullptr, nullptr, boost::winapi::PROV_RSA_FULL_, boost::winapi::CRYPT_VERIFYCONTEXT_ | boost::winapi::CRYPT_SILENT_)))
+    if (BOOST_UNLIKELY(!boost::winapi::CryptAcquireContextW(&handle, NULL, NULL, boost::winapi::PROV_RSA_FULL_, boost::winapi::CRYPT_VERIFYCONTEXT_ | boost::winapi::CRYPT_SILENT_)))
     {
         err = boost::winapi::GetLastError();
 
@@ -347,5 +346,3 @@ path unique_path(path const& model, system::error_code* ec)
 } // namespace detail
 } // namespace filesystem
 } // namespace boost
-
-#include <boost/filesystem/detail/footer.hpp>

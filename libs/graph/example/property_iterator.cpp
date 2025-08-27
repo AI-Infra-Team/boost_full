@@ -106,12 +106,14 @@ int main(int argc, char* argv[])
     std::cout << write(graph);
 
     std::cout << "radii:" << std::endl;
-    auto seqRadius = get_property_iter_range(graph, radius_t());
+    graph_property_iter_range< Graph, radius_t >::type seqRadius
+        = get_property_iter_range(graph, radius_t());
     std::for_each(seqRadius.first, seqRadius.second, Print());
     std::cout << std::endl;
 
     std::cout << "stiff:" << std::endl;
-    auto seqStiff = get_property_iter_range(graph, stiff_t());
+    graph_property_iter_range< Graph, stiff_t >::type seqStiff
+        = get_property_iter_range(graph, stiff_t());
     std::for_each(seqStiff.first, seqStiff.second, Print());
     std::cout << std::endl;
 

@@ -27,7 +27,7 @@ target_compile_features(boost_hana INTERFACE cxx_std_14)
 
 else()
 
-# Copyright Louis Dionne 2013-2022
+# Copyright Louis Dionne 2013-2017
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.md or copy at http://boost.org/LICENSE_1_0.txt)
 
@@ -112,6 +112,7 @@ function(boost_hana_set_test_properties target)
     if (NOT MSVC)
         setflag(BOOST_HANA_HAS_FDIAGNOSTICS_COLOR         -fdiagnostics-color)
         setflag(BOOST_HANA_HAS_FTEMPLATE_BACKTRACE_LIMIT  -ftemplate-backtrace-limit=0)
+        setflag(BOOST_HANA_HAS_PEDANTIC                   -pedantic)
         setflag(BOOST_HANA_HAS_WALL                       -Wall)
         setflag(BOOST_HANA_HAS_WERROR                     -Werror)
         setflag(BOOST_HANA_HAS_WEXTRA                     -Wextra)

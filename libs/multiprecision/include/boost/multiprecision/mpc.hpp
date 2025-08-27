@@ -3,20 +3,16 @@
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_MP_MPC_HPP
-#define BOOST_MP_MPC_HPP
+#ifndef BOOST_MULTIPRECISION_MPC_HPP
+#define BOOST_MULTIPRECISION_MPC_HPP
 
-#include <cstdint>
-#include <boost/multiprecision/detail/standalone_config.hpp>
-#include <boost/multiprecision/detail/fpclassify.hpp>
 #include <boost/multiprecision/number.hpp>
+#include <cstdint>
 #include <boost/multiprecision/detail/digits.hpp>
 #include <boost/multiprecision/detail/atomic.hpp>
 #include <boost/multiprecision/traits/is_variable_precision.hpp>
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/detail/hash.hpp>
-#include <boost/multiprecision/detail/no_exceptions_support.hpp>
-#include <boost/multiprecision/detail/assert.hpp>
 #include <mpc.h>
 #include <cmath>
 #include <algorithm>
@@ -28,6 +24,17 @@
 
 namespace boost {
 namespace multiprecision {
+namespace backends {
+
+template <unsigned digits10>
+struct mpc_complex_backend;
+
+template <class Backend>
+struct logged_adaptor;
+template <class Backend>
+struct debug_adaptor;
+
+} // namespace backends
 
 template <unsigned digits10>
 struct number_category<backends::mpc_complex_backend<digits10> > : public std::integral_constant<int, number_kind_complex>
@@ -59,8 +66,8 @@ template <unsigned digits10>
 struct mpc_complex_imp
 {
 #ifdef BOOST_HAS_LONG_LONG
-   using signed_types = std::tuple<long, long long>          ;
-   using unsigned_types = std::tuple<unsigned long, unsigned long long>;
+   using signed_types = std::tuple<long, boost::long_long_type>          ;
+   using unsigned_types = std::tuple<unsigned long, boost::ulong_long_type>;
 #else
    using signed_types = std::tuple<long>         ;
    using unsigned_types = std::tuple<unsigned long>;
@@ -92,7 +99,7 @@ struct mpc_complex_imp
       if ((this->get_default_options() != variable_precision_options::preserve_target_precision) || (mpc_get_prec(o.data()) == binary_default_precision))
       {
          m_data[0] = o.m_data[0];
-         o.m_data[0].re[0]._mpfr_d = nullptr;
+         o.m_data[0].re[0]._mpfr_d = 0;
       }
       else
       {
@@ -106,7 +113,7 @@ struct mpc_complex_imp
    {
       if ((o.m_data[0].re[0]._mpfr_d) && (this != &o))
       {
-         if (m_data[0].re[0]._mpfr_d == nullptr)
+         if (m_data[0].re[0]._mpfr_d == 0)
             mpc_init2(m_data, preserve_source_precision() ? mpc_get_prec(o.m_data) : boost::multiprecision::detail::digits10_2_2(get_default_precision()));
          else if (preserve_source_precision() && (mpc_get_prec(o.data()) != mpc_get_prec(data())))
          {
@@ -127,29 +134,29 @@ struct mpc_complex_imp
    }
 #ifdef BOOST_HAS_LONG_LONG
 #ifdef _MPFR_H_HAVE_INTMAX_T
-   mpc_complex_imp& operator=(unsigned long long i)
+   mpc_complex_imp& operator=(boost::ulong_long_type i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
-      mpc_set_uj(data(), i, GMP_RNDN);
+      mpc_set_uj(data(), i, GMP_RNDD);
       return *this;
    }
-   mpc_complex_imp& operator=(long long i)
+   mpc_complex_imp& operator=(boost::long_long_type i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
-      mpc_set_sj(data(), i, GMP_RNDN);
+      mpc_set_sj(data(), i, GMP_RNDD);
       return *this;
    }
 #else
-   mpc_complex_imp& operator=(unsigned long long i)
+   mpc_complex_imp& operator=(boost::ulong_long_type i)
    {
       mpfr_float_backend<digits10> f(0uL, mpc_get_prec(m_data));
       f = i;
       mpc_set_fr(this->data(), f.data(), GMP_RNDN);
       return *this;
    }
-   mpc_complex_imp& operator=(long long i)
+   mpc_complex_imp& operator=(boost::long_long_type i)
    {
       mpfr_float_backend<digits10> f(0uL, mpc_get_prec(m_data));
       f = i;
@@ -160,75 +167,52 @@ struct mpc_complex_imp
 #endif
    mpc_complex_imp& operator=(unsigned long i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_ui(m_data, i, GMP_RNDN);
       return *this;
    }
    mpc_complex_imp& operator=(long i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_si(m_data, i, GMP_RNDN);
       return *this;
    }
    mpc_complex_imp& operator=(double d)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_d(m_data, d, GMP_RNDN);
       return *this;
    }
    mpc_complex_imp& operator=(long double d)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_ld(m_data, d, GMP_RNDN);
       return *this;
    }
    mpc_complex_imp& operator=(mpz_t i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_z(m_data, i, GMP_RNDN);
       return *this;
    }
    mpc_complex_imp& operator=(gmp_int i)
    {
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       mpc_set_z(m_data, i.data(), GMP_RNDN);
       return *this;
    }
-#ifdef BOOST_HAS_INT128
-   mpc_complex_imp& operator=(int128_type val)
-   {
-      gmp_int i;
-      i            = val;
-      return *this = i.data();
-   }
-   mpc_complex_imp& operator=(uint128_type val)
-   {
-      gmp_int i;
-      i            = val;
-      return *this = i.data();
-   }
-#endif
-#ifdef BOOST_HAS_FLOAT128
-   mpc_complex_imp& operator=(float128_type val)
-   {
-      mpfr_float_backend<digits10> f;
-      f            = val;
-      mpc_set_fr(this->m_data, f.data(), GMP_RNDN);
-      return *this;
-   }
-#endif
 
    mpc_complex_imp& operator=(const char* s)
    {
       using default_ops::eval_fpclassify;
 
-      if (m_data[0].re[0]._mpfr_d == nullptr)
+      if (m_data[0].re[0]._mpfr_d == 0)
          mpc_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
 
       mpfr_float_backend<digits10> a(0uL, mpc_get_prec(m_data)), b(0uL, mpc_get_prec(m_data));
@@ -265,11 +249,11 @@ struct mpc_complex_imp
          b = 0uL;
       }
 
-      if (eval_fpclassify(a) == static_cast<int>(FP_NAN))
+      if (eval_fpclassify(a) == (int)FP_NAN)
       {
          mpc_set_fr(this->data(), a.data(), GMP_RNDN);
       }
-      else if (eval_fpclassify(b) == static_cast<int>(FP_NAN))
+      else if (eval_fpclassify(b) == (int)FP_NAN)
       {
          mpc_set_fr(this->data(), b.data(), GMP_RNDN);
       }
@@ -285,12 +269,12 @@ struct mpc_complex_imp
    }
    std::string str(std::streamsize digits, std::ios_base::fmtflags f) const
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
 
       mpfr_float_backend<digits10> a(0uL, mpc_get_prec(m_data)), b(0uL, mpc_get_prec(m_data));
 
-      mpc_real(a.data(), m_data, GMP_RNDN);
-      mpc_imag(b.data(), m_data, GMP_RNDN);
+      mpc_real(a.data(), m_data, GMP_RNDD);
+      mpc_imag(b.data(), m_data, GMP_RNDD);
 
       if (eval_is_zero(b))
          return a.str(digits, f);
@@ -304,27 +288,27 @@ struct mpc_complex_imp
    }
    void negate() noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
-      mpc_neg(m_data, m_data, GMP_RNDN);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
+      mpc_neg(m_data, m_data, GMP_RNDD);
    }
    int compare(const mpc_complex_imp& o) const noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d && o.m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d && o.m_data[0].re[0]._mpfr_d);
       return mpc_cmp(m_data, o.m_data);
    }
    int compare(const mpc_complex_backend<digits10>& o) const noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d && o.m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d && o.m_data[0].re[0]._mpfr_d);
       return mpc_cmp(m_data, o.data());
    }
    int compare(long int i) const noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
       return mpc_cmp_si(m_data, i);
    }
    int compare(unsigned long int i) const noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
       constexpr const unsigned long int max_val = (std::numeric_limits<long>::max)();
       if (i > max_val)
       {
@@ -332,7 +316,7 @@ struct mpc_complex_imp
          d = i;
          return compare(d);
       }
-      return mpc_cmp_si(m_data, static_cast<long>(i));
+      return mpc_cmp_si(m_data, (long)i);
    }
    template <class V>
    int compare(const V& v) const noexcept
@@ -343,12 +327,12 @@ struct mpc_complex_imp
    }
    mpc_t& data() noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
       return m_data;
    }
    const mpc_t& data() const noexcept
    {
-      BOOST_MP_ASSERT(m_data[0].re[0]._mpfr_d);
+      BOOST_ASSERT(m_data[0].re[0]._mpfr_d);
       return m_data;
    }
 
@@ -411,13 +395,13 @@ struct mpc_complex_backend : public detail::mpc_complex_imp<digits10>
    mpc_complex_backend(mpc_complex_backend&& o) : detail::mpc_complex_imp<digits10>(static_cast<detail::mpc_complex_imp<digits10>&&>(o))
    {}
    template <unsigned D>
-   mpc_complex_backend(const mpc_complex_backend<D>& val, typename std::enable_if<D <= digits10>::type* = nullptr)
+   mpc_complex_backend(const mpc_complex_backend<D>& val, typename std::enable_if<D <= digits10>::type* = 0)
        : detail::mpc_complex_imp<digits10>()
    {
       mpc_set(this->m_data, val.data(), GMP_RNDN);
    }
    template <unsigned D>
-   explicit mpc_complex_backend(const mpc_complex_backend<D>& val, typename std::enable_if<!(D <= digits10)>::type* = nullptr)
+   explicit mpc_complex_backend(const mpc_complex_backend<D>& val, typename std::enable_if<!(D <= digits10)>::type* = 0)
        : detail::mpc_complex_imp<digits10>()
    {
       mpc_set(this->m_data, val.data(), GMP_RNDN);
@@ -508,12 +492,12 @@ struct mpc_complex_backend : public detail::mpc_complex_imp<digits10>
       return *this;
    }
    template <unsigned D10, mpfr_allocation_type AllocationType>
-   mpc_complex_backend(mpfr_float_backend<D10, AllocationType> const& val, typename std::enable_if<D10 <= digits10>::type* = nullptr) : detail::mpc_complex_imp<digits10>()
+   mpc_complex_backend(mpfr_float_backend<D10, AllocationType> const& val, typename std::enable_if<D10 <= digits10>::type* = 0) : detail::mpc_complex_imp<digits10>()
    {
       mpc_set_fr(this->m_data, val.data(), GMP_RNDN);
    }
    template <unsigned D10, mpfr_allocation_type AllocationType>
-   explicit mpc_complex_backend(mpfr_float_backend<D10, AllocationType> const& val, typename std::enable_if<!(D10 <= digits10)>::type* = nullptr) : detail::mpc_complex_imp<digits10>()
+   explicit mpc_complex_backend(mpfr_float_backend<D10, AllocationType> const& val, typename std::enable_if<!(D10 <= digits10)>::type* = 0) : detail::mpc_complex_imp<digits10>()
    {
       mpc_set_fr(this->m_data, val.data(), GMP_RNDN);
    }
@@ -535,7 +519,7 @@ struct mpc_complex_backend : public detail::mpc_complex_imp<digits10>
       return *this;
    }
    template <class V>
-   typename std::enable_if<std::is_assignable<detail::mpc_complex_imp<digits10>, V>::value, mpc_complex_backend&>::type operator=(const V& v)
+   mpc_complex_backend& operator=(const V& v)
    {
       *static_cast<detail::mpc_complex_imp<digits10>*>(this) = v;
       return *this;
@@ -614,7 +598,7 @@ struct mpc_complex_backend<0> : public detail::mpc_complex_imp<0>
    }
    mpc_complex_backend& operator=(gmp_int const& val)
    {
-      if (this->m_data[0].im->_mpfr_d == nullptr)
+      if (this->m_data[0].im->_mpfr_d == 0)
       {
          unsigned requested_precision = this->thread_default_precision();
          if (thread_default_variable_precision_options() >= variable_precision_options::preserve_all_precision)
@@ -684,7 +668,7 @@ struct mpc_complex_backend<0> : public detail::mpc_complex_imp<0>
    }
    mpc_complex_backend& operator=(gmp_rational const& val)
    {
-      if (this->m_data[0].im->_mpfr_d == nullptr)
+      if (this->m_data[0].im->_mpfr_d == 0)
       {
          unsigned requested_precision = this->get_default_precision();
          if (thread_default_variable_precision_options() >= variable_precision_options::preserve_all_precision)
@@ -884,22 +868,22 @@ inline typename std::enable_if<boost::multiprecision::detail::is_arithmetic<T>::
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& result, const mpc_complex_backend<D2>& o)
 {
-   mpc_add(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_add(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& result, const mpfr_float_backend<D2>& o)
 {
-   mpc_add_fr(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_add_fr(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_subtract(mpc_complex_backend<D1>& result, const mpc_complex_backend<D2>& o)
 {
-   mpc_sub(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_sub(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_subtract(mpc_complex_backend<D1>& result, const mpfr_float_backend<D2>& o)
 {
-   mpc_sub_fr(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_sub_fr(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_multiply(mpc_complex_backend<D1>& result, const mpc_complex_backend<D2>& o)
@@ -917,12 +901,12 @@ inline void eval_multiply(mpc_complex_backend<D1>& result, const mpfr_float_back
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& result, const mpc_complex_backend<D2>& o)
 {
-   mpc_div(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_div(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& result, const mpfr_float_backend<D2>& o)
 {
-   mpc_div_fr(result.data(), result.data(), o.data(), GMP_RNDN);
+   mpc_div_fr(result.data(), result.data(), o.data(), GMP_RNDD);
 }
 template <unsigned digits10>
 inline void eval_add(mpc_complex_backend<digits10>& result, unsigned long i)
@@ -980,35 +964,35 @@ inline void eval_divide(mpc_complex_backend<digits10>& result, long i)
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_add(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_add(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_add(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_add(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpfr_float_backend<D3>& y)
 {
-   mpc_add_fr(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_add_fr(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_add(mpc_complex_backend<D1>& a, const mpfr_float_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_add_fr(a.data(), y.data(), x.data(), GMP_RNDN);
+   mpc_add_fr(a.data(), y.data(), x.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, unsigned long y)
 {
-   mpc_add_ui(a.data(), x.data(), y, GMP_RNDN);
+   mpc_add_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, long y)
 {
    if (y < 0)
-      mpc_sub_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDN);
+      mpc_sub_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDD);
    else
-      mpc_add_ui(a.data(), x.data(), y, GMP_RNDN);
+      mpc_add_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& a, unsigned long x, const mpc_complex_backend<D2>& y)
 {
-   mpc_add_ui(a.data(), y.data(), x, GMP_RNDN);
+   mpc_add_ui(a.data(), y.data(), x, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_add(mpc_complex_backend<D1>& a, long x, const mpc_complex_backend<D2>& y)
@@ -1016,38 +1000,38 @@ inline void eval_add(mpc_complex_backend<D1>& a, long x, const mpc_complex_backe
    if (x < 0)
    {
       mpc_ui_sub(a.data(), boost::multiprecision::detail::unsigned_abs(x), y.data(), GMP_RNDN);
-      mpc_neg(a.data(), a.data(), GMP_RNDN);
+      mpc_neg(a.data(), a.data(), GMP_RNDD);
    }
    else
-      mpc_add_ui(a.data(), y.data(), x, GMP_RNDN);
+      mpc_add_ui(a.data(), y.data(), x, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_subtract(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_sub(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_sub(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_subtract(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpfr_float_backend<D3>& y)
 {
-   mpc_sub_fr(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_sub_fr(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_subtract(mpc_complex_backend<D1>& a, const mpfr_float_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_fr_sub(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_fr_sub(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_subtract(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, unsigned long y)
 {
-   mpc_sub_ui(a.data(), x.data(), y, GMP_RNDN);
+   mpc_sub_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_subtract(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, long y)
 {
    if (y < 0)
-      mpc_add_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDN);
+      mpc_add_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDD);
    else
-      mpc_sub_ui(a.data(), x.data(), y, GMP_RNDN);
+      mpc_sub_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_subtract(mpc_complex_backend<D1>& a, unsigned long x, const mpc_complex_backend<D2>& y)
@@ -1059,8 +1043,8 @@ inline void eval_subtract(mpc_complex_backend<D1>& a, long x, const mpc_complex_
 {
    if (x < 0)
    {
-      mpc_add_ui(a.data(), y.data(), boost::multiprecision::detail::unsigned_abs(x), GMP_RNDN);
-      mpc_neg(a.data(), a.data(), GMP_RNDN);
+      mpc_add_ui(a.data(), y.data(), boost::multiprecision::detail::unsigned_abs(x), GMP_RNDD);
+      mpc_neg(a.data(), a.data(), GMP_RNDD);
    }
    else
       mpc_ui_sub(a.data(), x, y.data(), GMP_RNDN);
@@ -1070,99 +1054,99 @@ template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_multiply(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
    if ((void*)&x == (void*)&y)
-      mpc_sqr(a.data(), x.data(), GMP_RNDN);
+      mpc_sqr(a.data(), x.data(), GMP_RNDD);
    else
-      mpc_mul(a.data(), x.data(), y.data(), GMP_RNDN);
+      mpc_mul(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_multiply(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpfr_float_backend<D3>& y)
 {
-   mpc_mul_fr(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_mul_fr(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_multiply(mpc_complex_backend<D1>& a, const mpfr_float_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_mul_fr(a.data(), y.data(), x.data(), GMP_RNDN);
+   mpc_mul_fr(a.data(), y.data(), x.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_multiply(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, unsigned long y)
 {
-   mpc_mul_ui(a.data(), x.data(), y, GMP_RNDN);
+   mpc_mul_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_multiply(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, long y)
 {
    if (y < 0)
    {
-      mpc_mul_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDN);
+      mpc_mul_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDD);
       a.negate();
    }
    else
-      mpc_mul_ui(a.data(), x.data(), y, GMP_RNDN);
+      mpc_mul_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_multiply(mpc_complex_backend<D1>& a, unsigned long x, const mpc_complex_backend<D2>& y)
 {
-   mpc_mul_ui(a.data(), y.data(), x, GMP_RNDN);
+   mpc_mul_ui(a.data(), y.data(), x, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_multiply(mpc_complex_backend<D1>& a, long x, const mpc_complex_backend<D2>& y)
 {
    if (x < 0)
    {
-      mpc_mul_ui(a.data(), y.data(), boost::multiprecision::detail::unsigned_abs(x), GMP_RNDN);
-      mpc_neg(a.data(), a.data(), GMP_RNDN);
+      mpc_mul_ui(a.data(), y.data(), boost::multiprecision::detail::unsigned_abs(x), GMP_RNDD);
+      mpc_neg(a.data(), a.data(), GMP_RNDD);
    }
    else
-      mpc_mul_ui(a.data(), y.data(), x, GMP_RNDN);
+      mpc_mul_ui(a.data(), y.data(), x, GMP_RNDD);
 }
 
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_divide(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_div(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_div(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_divide(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, const mpfr_float_backend<D3>& y)
 {
-   mpc_div_fr(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_div_fr(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2, unsigned D3>
 inline void eval_divide(mpc_complex_backend<D1>& a, const mpfr_float_backend<D2>& x, const mpc_complex_backend<D3>& y)
 {
-   mpc_fr_div(a.data(), x.data(), y.data(), GMP_RNDN);
+   mpc_fr_div(a.data(), x.data(), y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, unsigned long y)
 {
-   mpc_div_ui(a.data(), x.data(), y, GMP_RNDN);
+   mpc_div_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& a, const mpc_complex_backend<D2>& x, long y)
 {
    if (y < 0)
    {
-      mpc_div_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDN);
+      mpc_div_ui(a.data(), x.data(), boost::multiprecision::detail::unsigned_abs(y), GMP_RNDD);
       a.negate();
    }
    else
-      mpc_div_ui(a.data(), x.data(), y, GMP_RNDN);
+      mpc_div_ui(a.data(), x.data(), y, GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& a, unsigned long x, const mpc_complex_backend<D2>& y)
 {
-   mpc_ui_div(a.data(), x, y.data(), GMP_RNDN);
+   mpc_ui_div(a.data(), x, y.data(), GMP_RNDD);
 }
 template <unsigned D1, unsigned D2>
 inline void eval_divide(mpc_complex_backend<D1>& a, long x, const mpc_complex_backend<D2>& y)
 {
    if (x < 0)
    {
-      mpc_ui_div(a.data(), boost::multiprecision::detail::unsigned_abs(x), y.data(), GMP_RNDN);
-      mpc_neg(a.data(), a.data(), GMP_RNDN);
+      mpc_ui_div(a.data(), boost::multiprecision::detail::unsigned_abs(x), y.data(), GMP_RNDD);
+      mpc_neg(a.data(), a.data(), GMP_RNDD);
    }
    else
-      mpc_ui_div(a.data(), x, y.data(), GMP_RNDN);
+      mpc_ui_div(a.data(), x, y.data(), GMP_RNDD);
 }
 
 template <unsigned digits10>
@@ -1182,7 +1166,7 @@ inline void eval_convert_to(unsigned long* result, const mpc_complex_backend<dig
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
@@ -1193,7 +1177,7 @@ inline void eval_convert_to(long* result, const mpc_complex_backend<digits10>& v
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
@@ -1201,22 +1185,22 @@ inline void eval_convert_to(long* result, const mpc_complex_backend<digits10>& v
 }
 #ifdef _MPFR_H_HAVE_INTMAX_T
 template <unsigned digits10>
-inline void eval_convert_to(unsigned long long* result, const mpc_complex_backend<digits10>& val)
+inline void eval_convert_to(boost::ulong_long_type* result, const mpc_complex_backend<digits10>& val)
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
    eval_convert_to(result, t);
 }
 template <unsigned digits10>
-inline void eval_convert_to(long long* result, const mpc_complex_backend<digits10>& val)
+inline void eval_convert_to(boost::long_long_type* result, const mpc_complex_backend<digits10>& val)
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
@@ -1228,7 +1212,7 @@ inline void eval_convert_to(double* result, const mpc_complex_backend<digits10>&
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
@@ -1239,52 +1223,12 @@ inline void eval_convert_to(long double* result, const mpc_complex_backend<digit
 {
    if (0 == mpfr_zero_p(mpc_imagref(val.data())))
    {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
+      BOOST_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
    }
    mpfr_float_backend<digits10> t;
    mpc_real(t.data(), val.data(), GMP_RNDN);
    eval_convert_to(result, t);
 }
-#ifdef BOOST_HAS_INT128
-template <unsigned digits10>
-inline void eval_convert_to(uint128_type* result, const mpc_complex_backend<digits10>& val)
-{
-   using default_ops::eval_convert_to;
-   if (0 == mpfr_zero_p(mpc_imagref(val.data())))
-   {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
-   }
-   mpfr_float_backend<digits10> t;
-   mpc_real(t.data(), val.data(), GMP_RNDN);
-   eval_convert_to(result, t);
-}
-template <unsigned digits10>
-inline void eval_convert_to(int128_type* result, const mpc_complex_backend<digits10>& val)
-{
-   using default_ops::eval_convert_to;
-   if (0 == mpfr_zero_p(mpc_imagref(val.data())))
-   {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
-   }
-   mpfr_float_backend<digits10> t;
-   mpc_real(t.data(), val.data(), GMP_RNDN);
-   eval_convert_to(result, t);
-}
-#endif
-#ifdef BOOST_HAS_FLOAT128
-template <unsigned digits10>
-inline void eval_convert_to(float128_type* result, const mpc_complex_backend<digits10>& val)
-{
-   using default_ops::eval_convert_to;
-   if (0 == mpfr_zero_p(mpc_imagref(val.data())))
-   {
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("Could not convert imaginary number to scalar."));
-   }
-   mpfr_float_backend<digits10> t;
-   mpc_real(t.data(), val.data(), GMP_RNDN);
-   eval_convert_to(result, t);
-}
-#endif
 
 template <mpfr_allocation_type AllocationType>
 inline void assign_components_set_precision(mpc_complex_backend<0>& result, const mpfr_float_backend<0, AllocationType>& a, const mpfr_float_backend<0, AllocationType>& b)
@@ -1318,11 +1262,11 @@ inline void assign_components(mpc_complex_backend<D1>& result, const mpfr_float_
    //
    assign_components_set_precision(result, a, b);
    using default_ops::eval_fpclassify;
-   if (eval_fpclassify(a) == static_cast<int>(FP_NAN))
+   if (eval_fpclassify(a) == (int)FP_NAN)
    {
       mpc_set_fr(result.data(), a.data(), GMP_RNDN);
    }
-   else if (eval_fpclassify(b) == static_cast<int>(FP_NAN))
+   else if (eval_fpclassify(b) == (int)FP_NAN)
    {
       mpc_set_fr(result.data(), b.data(), GMP_RNDN);
    }
@@ -1361,11 +1305,11 @@ inline void assign_components(mpc_complex_backend<D1>& result, long long a, long
 template <unsigned D1, unsigned D2, mpfr_allocation_type AllocationType>
 inline void assign_components(mpc_complex_backend<D1>& result, double a, double b)
 {
-   if (BOOST_MP_ISNAN(a))
+   if ((boost::math::isnan)(a))
    {
       mpc_set_d(result.data(), a, GMP_RNDN);
    }
-   else if (BOOST_MP_ISNAN(b))
+   else if ((boost::math::isnan)(b))
    {
       mpc_set_d(result.data(), b, GMP_RNDN);
    }
@@ -1378,11 +1322,11 @@ inline void assign_components(mpc_complex_backend<D1>& result, double a, double 
 template <unsigned D1, unsigned D2, mpfr_allocation_type AllocationType>
 inline void assign_components(mpc_complex_backend<D1>& result, long double a, long double b)
 {
-   if (BOOST_MP_ISNAN(a))
+   if ((boost::math::isnan)(a))
    {
       mpc_set_d(result.data(), a, GMP_RNDN);
    }
-   else if (BOOST_MP_ISNAN(b))
+   else if ((boost::math::isnan)(b))
    {
       mpc_set_d(result.data(), b, GMP_RNDN);
    }
@@ -1680,6 +1624,14 @@ struct is_variable_precision<backends::mpc_complex_backend<0> > : public std::in
 template <>
 struct number_category<detail::canonical<mpc_t, backends::mpc_complex_backend<0> >::type> : public std::integral_constant<int, number_kind_floating_point>
 {};
+
+using boost::multiprecision::backends::mpc_complex_backend;
+
+using mpc_complex_50 = number<mpc_complex_backend<50> >  ;
+using mpc_complex_100 = number<mpc_complex_backend<100> > ;
+using mpc_complex_500 = number<mpc_complex_backend<500> > ;
+using mpc_complex_1000 = number<mpc_complex_backend<1000> >;
+using mpc_complex = number<mpc_complex_backend<0> >   ;
 
 template <unsigned Digits10, expression_template_option ExpressionTemplates>
 struct component_type<number<mpc_complex_backend<Digits10>, ExpressionTemplates> >

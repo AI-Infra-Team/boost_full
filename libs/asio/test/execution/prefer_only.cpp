@@ -2,7 +2,7 @@
 // prefer_only.cpp
 // ~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,12 +16,22 @@
 // Test that header file is self-contained.
 #include <boost/asio/execution/prefer_only.hpp>
 
-#include <functional>
 #include <boost/asio/execution/any_executor.hpp>
 #include "../unit_test.hpp"
 
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <boost/bind/bind.hpp>
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
+# include <functional>
+#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
+
 using namespace boost::asio;
+
+#if defined(BOOST_ASIO_HAS_BOOST_BIND)
+namespace bindns = boost;
+#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
 namespace bindns = std;
+#endif
 
 static int possibly_blocking_count = 0;
 static int never_blocking_count = 0;
@@ -35,13 +45,13 @@ struct possibly_blocking_executor
   }
 
   friend bool operator==(const possibly_blocking_executor&,
-      const possibly_blocking_executor&) noexcept
+      const possibly_blocking_executor&) BOOST_ASIO_NOEXCEPT
   {
     return true;
   }
 
   friend bool operator!=(const possibly_blocking_executor&,
-      const possibly_blocking_executor&) noexcept
+      const possibly_blocking_executor&) BOOST_ASIO_NOEXCEPT
   {
     return false;
   }
@@ -56,8 +66,8 @@ namespace traits {
 template <typename F>
 struct execute_member<possibly_blocking_executor, F>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
   typedef void result_type;
 };
 
@@ -68,8 +78,8 @@ struct execute_member<possibly_blocking_executor, F>
 template <>
 struct equality_comparable<possibly_blocking_executor>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
 };
 
 #endif // !defined(BOOST_ASIO_HAS_DEDUCED_EQUALITY_COMPARABLE_TRAIT)
@@ -80,8 +90,8 @@ struct equality_comparable<possibly_blocking_executor>
 
 struct never_blocking_executor
 {
-  static constexpr execution::blocking_t::never_t
-    query(execution::blocking_t) noexcept
+  static BOOST_ASIO_CONSTEXPR execution::blocking_t::never_t
+    query(execution::blocking_t) BOOST_ASIO_NOEXCEPT
   {
     return execution::blocking_t::never_t();
   }
@@ -93,13 +103,13 @@ struct never_blocking_executor
   }
 
   friend bool operator==(const never_blocking_executor&,
-      const never_blocking_executor&) noexcept
+      const never_blocking_executor&) BOOST_ASIO_NOEXCEPT
   {
     return true;
   }
 
   friend bool operator!=(const never_blocking_executor&,
-      const never_blocking_executor&) noexcept
+      const never_blocking_executor&) BOOST_ASIO_NOEXCEPT
   {
     return false;
   }
@@ -114,8 +124,8 @@ namespace traits {
 template <typename F>
 struct execute_member<never_blocking_executor, F>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
   typedef void result_type;
 };
 
@@ -126,8 +136,8 @@ struct execute_member<never_blocking_executor, F>
 template <>
 struct equality_comparable<never_blocking_executor>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
 };
 
 #endif // !defined(BOOST_ASIO_HAS_DEDUCED_EQUALITY_COMPARABLE_TRAIT)
@@ -141,12 +151,12 @@ struct query_static_constexpr_member<
     boost::asio::is_convertible<Param, execution::blocking_t>::value
   >::type>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
 
   typedef execution::blocking_t::never_t result_type;
 
-  static constexpr result_type value()
+  static BOOST_ASIO_CONSTEXPR result_type value()
   {
     return result_type();
   }
@@ -167,7 +177,7 @@ struct either_blocking_executor
   {
   }
 
-  execution::blocking_t query(execution::blocking_t) const noexcept
+  execution::blocking_t query(execution::blocking_t) const BOOST_ASIO_NOEXCEPT
   {
     return blocking_;
   }
@@ -192,13 +202,13 @@ struct either_blocking_executor
   }
 
   friend bool operator==(const either_blocking_executor& a,
-      const either_blocking_executor& b) noexcept
+      const either_blocking_executor& b) BOOST_ASIO_NOEXCEPT
   {
     return a.blocking_ == b.blocking_;
   }
 
   friend bool operator!=(const either_blocking_executor& a,
-      const either_blocking_executor& b) noexcept
+      const either_blocking_executor& b) BOOST_ASIO_NOEXCEPT
   {
     return a.blocking_ != b.blocking_;
   }
@@ -213,8 +223,8 @@ namespace traits {
 template <typename F>
 struct execute_member<either_blocking_executor, F>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
   typedef void result_type;
 };
 
@@ -225,8 +235,8 @@ struct execute_member<either_blocking_executor, F>
 template <>
 struct equality_comparable<either_blocking_executor>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
 };
 
 #endif // !defined(BOOST_ASIO_HAS_DEDUCED_EQUALITY_COMPARABLE_TRAIT)
@@ -240,8 +250,8 @@ struct query_member<
     boost::asio::is_convertible<Param, execution::blocking_t>::value
   >::type>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = true;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = true);
 
   typedef execution::blocking_t result_type;
 };
@@ -257,8 +267,8 @@ struct require_member<
     boost::asio::is_convertible<Param, execution::blocking_t>::value
   >::type>
 {
-  static constexpr bool is_valid = true;
-  static constexpr bool is_noexcept = false;
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_valid = true);
+  BOOST_ASIO_STATIC_CONSTEXPR(bool, is_noexcept = false);
 
   typedef either_blocking_executor result_type;
 };
@@ -460,73 +470,73 @@ void prefer_only_executor_execute_test()
 
   executor_type ex1 = possibly_blocking_executor();
 
-  ex1.execute(&do_nothing);
+  execution::execute(ex1, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 1);
   BOOST_ASIO_CHECK(never_blocking_count == 0);
 
   executor_type ex2 = boost::asio::prefer(ex1, execution::blocking.possibly);
 
-  ex2.execute(&do_nothing);
+  execution::execute(ex2, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 2);
   BOOST_ASIO_CHECK(never_blocking_count == 0);
 
   executor_type ex3 = boost::asio::prefer(ex1, execution::blocking.never);
 
-  ex3.execute(&do_nothing);
+  execution::execute(ex3, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 3);
   BOOST_ASIO_CHECK(never_blocking_count == 0);
 
   executor_type ex4 = never_blocking_executor();
 
-  ex4.execute(&do_nothing);
+  execution::execute(ex4, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 3);
   BOOST_ASIO_CHECK(never_blocking_count == 1);
 
   executor_type ex5 = boost::asio::prefer(ex4, execution::blocking.possibly);
 
-  ex5.execute(&do_nothing);
+  execution::execute(ex5, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 3);
   BOOST_ASIO_CHECK(never_blocking_count == 2);
 
   executor_type ex6 = boost::asio::prefer(ex4, execution::blocking.never);
 
-  ex6.execute(&do_nothing);
+  execution::execute(ex6, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 3);
   BOOST_ASIO_CHECK(never_blocking_count == 3);
 
   executor_type ex7 = either_blocking_executor(execution::blocking.possibly);
 
-  ex7.execute(&do_nothing);
+  execution::execute(ex7, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 4);
   BOOST_ASIO_CHECK(never_blocking_count == 3);
 
   executor_type ex8 = boost::asio::prefer(ex7, execution::blocking.possibly);
 
-  ex8.execute(&do_nothing);
+  execution::execute(ex8, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 5);
   BOOST_ASIO_CHECK(never_blocking_count == 3);
 
   executor_type ex9 = boost::asio::prefer(ex7, execution::blocking.never);
 
-  ex9.execute(&do_nothing);
+  execution::execute(ex9, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 5);
   BOOST_ASIO_CHECK(never_blocking_count == 4);
 
   executor_type ex10 = either_blocking_executor(execution::blocking.never);
 
-  ex10.execute(&do_nothing);
+  execution::execute(ex10, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 5);
   BOOST_ASIO_CHECK(never_blocking_count == 5);
 
   executor_type ex11 = boost::asio::prefer(ex7, execution::blocking.possibly);
 
-  ex11.execute(&do_nothing);
+  execution::execute(ex11, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 6);
   BOOST_ASIO_CHECK(never_blocking_count == 5);
 
   executor_type ex12 = boost::asio::prefer(ex7, execution::blocking.never);
 
-  ex12.execute(&do_nothing);
+  execution::execute(ex12, &do_nothing);
   BOOST_ASIO_CHECK(possibly_blocking_count == 6);
   BOOST_ASIO_CHECK(never_blocking_count == 6);
 }

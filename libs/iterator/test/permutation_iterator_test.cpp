@@ -8,6 +8,7 @@
 #include <boost/core/lightweight_test.hpp>
 
 #include <boost/iterator/permutation_iterator.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/concept/assert.hpp>
 
@@ -43,8 +44,7 @@ void permutation_test()
   const int element_range_size = 10;
   const int index_size = 7;
 
-  static_assert(index_size <= element_range_size, "The permutation of some elements is checked.");
-
+  BOOST_STATIC_ASSERT(index_size <= element_range_size);
   element_range_type elements( element_range_size );
   for( element_range_type::iterator el_it = elements.begin(); el_it != elements.end(); ++el_it )
     { *el_it = std::distance(elements.begin(), el_it); }

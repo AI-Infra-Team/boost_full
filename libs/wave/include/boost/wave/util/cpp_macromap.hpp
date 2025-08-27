@@ -14,6 +14,7 @@
 #define BOOST_CPP_MACROMAP_HPP_CB8F51B0_A3F0_411C_AEF4_6FF631B8B414_INCLUDED
 
 #include <cstdlib>
+#include <cstdio>
 #include <ctime>
 
 #include <list>
@@ -22,7 +23,6 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
-#include <string>
 
 #include <boost/assert.hpp>
 #include <boost/wave/wave_config.hpp>
@@ -1262,36 +1262,25 @@ macromap<ContextT>::expand_replacement_list(
             else if (adjacent_stringize &&
                     !IS_CATEGORY(*cit, WhiteSpaceTokenType))
             {
-#if BOOST_WAVE_SUPPORT_CPP2A != 0
-                if (i >= arguments.size()) {
-                    // no argument supplied; do nothing (only c20 should reach here)
-                    BOOST_ASSERT(boost::wave::need_cpp2a(ctx.get_language()));
-                    position_type last_valid(arguments.back().back().get_position());
-                    // insert a empty string
-                    expanded.push_back(token_type(T_STRINGLIT, "\"\"", last_valid));
-                } 
+                // stringize the current argument
+                BOOST_ASSERT(!arguments[i].empty());
+
+                // safe a copy of the first tokens position (not a reference!)
+                position_type pos((*arguments[i].begin()).get_position());
+
+#if BOOST_WAVE_SUPPORT_VARIADICS_PLACEMARKERS != 0
+                if (is_ellipsis && boost::wave::need_variadics(ctx.get_language())) {
+                    impl::trim_sequence_left(arguments[i]);
+                    impl::trim_sequence_right(arguments.back());
+                    expanded.push_back(token_type(T_STRINGLIT,
+                        impl::as_stringlit(arguments, i, pos), pos));
+                }
                 else
 #endif
                 {
-                    // shouldn't be oob (w.o. cpp20)
-                    BOOST_ASSERT(i < arguments.size() && !arguments[i].empty());
-                    // safe a copy of the first tokens position (not a reference!)
-                    position_type pos((*arguments[i].begin()).get_position());
-
-#if BOOST_WAVE_SUPPORT_VARIADICS_PLACEMARKERS != 0
-                    if (is_ellipsis && boost::wave::need_variadics(ctx.get_language())) {
-                        impl::trim_sequence_left(arguments[i]);
-                        impl::trim_sequence_right(arguments.back());
-                        expanded.push_back(token_type(T_STRINGLIT,
-                            impl::as_stringlit(arguments, i, pos), pos));
-                    }
-                    else
-#endif
-                    {
-                        impl::trim_sequence(arguments[i]);
-                        expanded.push_back(token_type(T_STRINGLIT,
-                            impl::as_stringlit(arguments[i], pos), pos));
-                    }
+                    impl::trim_sequence(arguments[i]);
+                    expanded.push_back(token_type(T_STRINGLIT,
+                        impl::as_stringlit(arguments[i], pos), pos));
                 }
                 adjacent_stringize = false;
             }
@@ -1712,8 +1701,11 @@ macromap<ContextT>::expand_predefined_macro(token_type const &curr_token,
     }
     else if (value == "__INCLUDE_LEVEL__") {
         // expand the __INCLUDE_LEVEL__ macro
-        std::string buffer = std::to_string(ctx.get_iteration_depth());
-        replacement = token_type(T_INTLIT, buffer.c_str(), curr_token.get_position());
+        char buffer[22]; // 21 bytes holds all NUL-terminated unsigned 64-bit numbers
+
+        using namespace std;    // for some systems sprintf is in namespace std
+        sprintf(buffer, "%d", (int)ctx.get_iteration_depth());
+        replacement = token_type(T_INTLIT, buffer, curr_token.get_position());
     }
 
     // post-expansion hooks
@@ -1793,11 +1785,23 @@ macromap<ContextT>::resolve_has_include(IteratorT &first,
     ContainerT result;
     bool is_quoted_filename;
     bool is_system;
-    IteratorT start = first;
 
-    boost::spirit::classic::parse_info<IteratorT> hit =
-        has_include_grammar_gen<typename ContextT::lexer_type>::
-        parse_operator_has_include(start, last, result, is_quoted_filename, is_system);
+    // to simplify the parser we check for the trailing right paren first
+    // scan from the beginning because unput_queue_iterator is Forward
+    IteratorT end_find_it = first;
+    ++end_find_it;
+    IteratorT rparen_it = first;
+    while (end_find_it != last) {
+        ++end_find_it;
+        ++rparen_it;
+    }
+
+    boost::spirit::classic::parse_info<IteratorT> hit(first);
+    if ((rparen_it != first) && (T_RIGHTPAREN == *rparen_it)) {
+        IteratorT start = first;
+        hit = has_include_grammar_gen<typename ContextT::lexer_type>::
+            parse_operator_has_include(start, rparen_it, result, is_quoted_filename, is_system);
+    }
 
     if (!hit.hit) {
         string_type msg ("__has_include(): ");
@@ -1809,7 +1813,7 @@ macromap<ContextT>::resolve_has_include(IteratorT &first,
         pending.push_back(token_type(T_INTLIT, "0", main_pos));
     }
     else {
-        impl::assign_iterator<IteratorT>::do_(first, hit.stop);
+        impl::assign_iterator<IteratorT>::do_(first, last);
 
         // insert a token, which reflects the outcome
         pending.push_back(

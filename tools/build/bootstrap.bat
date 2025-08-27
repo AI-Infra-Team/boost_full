@@ -9,15 +9,13 @@ REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.t
 
 :b2_build
 ECHO Building the B2 engine..
-setlocal
 pushd src\engine
 call .\build.bat %*
 @ECHO OFF
-if not errorlevel 1 (
-if exist b2.exe (
-    popd
+popd
+if exist ".\src\engine\b2.exe" (
     copy .\src\engine\b2.exe . > nul
-    goto :b2_built))
+    goto :b2_built)
 goto :b2_failure
 
 
@@ -27,11 +25,15 @@ ECHO Building is done. To install, run:
 ECHO.
 ECHO     .\b2 --prefix=DIR install
 ECHO.
-exit /b 0
+goto :end
 
 
 :b2_failure
 ECHO.
 ECHO Failed to build the B2 engine.
 ECHO.
-cmd /c exit 1
+goto :end
+
+
+:end
+exit /b %ERRORLEVEL%

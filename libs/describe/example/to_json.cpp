@@ -5,7 +5,6 @@
 #include <boost/describe.hpp>
 #include <boost/mp11.hpp>
 #include <boost/json.hpp>
-#include <boost/version.hpp>
 #include <type_traits>
 #include <vector>
 #include <map>
@@ -13,13 +12,11 @@
 namespace app
 {
 
-#if BOOST_VERSION < 108100
-
 template<class T,
     class D1 = boost::describe::describe_members<T,
         boost::describe::mod_public | boost::describe::mod_protected>,
     class D2 = boost::describe::describe_members<T, boost::describe::mod_private>,
-    class En = std::enable_if_t<boost::mp11::mp_empty<D2>::value && !std::is_union<T>::value> >
+    class En = std::enable_if_t<boost::mp11::mp_empty<D2>::value> >
 
     void tag_invoke( boost::json::value_from_tag const&, boost::json::value& v, T const & t )
 {
@@ -31,8 +28,6 @@ template<class T,
 
     });
 }
-
-#endif
 
 struct A
 {

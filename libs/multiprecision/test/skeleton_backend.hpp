@@ -36,7 +36,7 @@ do to add all the "template<...>" prefixes to the functions.
 struct skeleton_backend
 {
    //
-   // Each backend needs to declare 3 type lists which declare the types
+   // Each backend need to declare 3 type lists which declare the types
    // with which this can interoperate.  These lists must at least contain
    // the widest type in each category - so "long long" must be the final
    // type in the signed_types list for example.  Any narrower types if not
@@ -1192,11 +1192,11 @@ struct constant_pi<boost::multiprecision::number<boost::multiprecision::skeleton
    // Fixed N-digit precision, return reference to internal/cached object:
    //
    template <int N>
-   static inline const result_type& get(const std::integral_constant<int, N>&);
+   static inline const result_type& get(const boost::integral_constant<int, N>&);
    //
    // Variable precision, returns fresh result each time (unless precision is unchanged from last call):
    //
-   static inline const result_type  get(const std::integral_constant<int, 0>&);
+   static inline const result_type  get(const boost::integral_constant<int, 0>&);
 };
 //
 // Plus any other constants supported natively by this type....

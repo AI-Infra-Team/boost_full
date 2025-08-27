@@ -1,4 +1,5 @@
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -11,7 +12,6 @@ extern "C" {
 }
 #include <boost/leaf.hpp>
 #include <iostream>
-#include <memory>
 #include <stdlib.h>
 
 namespace leaf = boost::leaf;
@@ -158,14 +158,14 @@ int main()
 
 namespace boost
 {
-    [[noreturn]] void throw_exception( std::exception const & e )
+    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
     {
         std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
         std::terminate();
     }
 
     struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
     {
         throw_exception(e);
     }

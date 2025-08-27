@@ -32,8 +32,8 @@
 #include <boost/geometry/core/coordinate_system.hpp>
 #include <boost/geometry/core/coordinate_type.hpp>
 
-#include <boost/geometry/util/is_inverse_spheroidal_coordinates.hpp>
 #include <boost/geometry/util/math.hpp>
+#include <boost/geometry/util/normalize_spheroidal_coordinates.hpp>
 #include <boost/geometry/util/range.hpp>
 
 #include <boost/geometry/views/detail/indexed_point_view.hpp>
@@ -59,7 +59,7 @@ public:
     longitude_interval(T const& left, T const& right)
     {
         m_end[0] = left;
-        m_end[1] = right;
+        m_end[1] = right;        
     }
 
     template <std::size_t Index>
@@ -162,6 +162,11 @@ struct envelope_range_of_boxes_by_expansion
     {
         typedef typename boost::range_value<RangeOfBoxes>::type box_type;
 
+        typedef typename boost::range_iterator
+            <
+                RangeOfBoxes const
+            >::type iterator_type;
+
         // first initialize MBR
         detail::indexed_point_view<Box, min_corner> mbr_min(mbr);
         detail::indexed_point_view<Box, max_corner> mbr_max(mbr);
@@ -189,7 +194,7 @@ struct envelope_range_of_boxes_by_expansion
             >::apply(first_box_max, mbr_max);
 
         // now expand using the remaining boxes
-        auto it = boost::begin(range_of_boxes);
+        iterator_type it = boost::begin(range_of_boxes);
         for (++it; it != boost::end(range_of_boxes); ++it)
         {
             detail::expand::indexed_loop
@@ -229,60 +234,63 @@ struct envelope_range_of_boxes
     {
         // boxes in the range are assumed to be normalized already
 
-        using box_type = typename boost::range_value<RangeOfBoxes>::type;
-        using coordinate_type = coordinate_type_t<box_type>;
-        using units_type = typename detail::cs_angular_units<box_type>::type;
+        typedef typename boost::range_value<RangeOfBoxes>::type box_type;
+        typedef typename coordinate_type<box_type>::type coordinate_type;
+        typedef typename detail::cs_angular_units<box_type>::type units_type;
+        typedef typename boost::range_iterator
+            <
+                RangeOfBoxes const
+            >::type iterator_type;
 
         static const bool is_equatorial = ! std::is_same
                                             <
-                                                cs_tag_t<box_type>,
+                                                typename cs_tag<box_type>::type,
                                                 spherical_polar_tag
                                             >::value;
 
-        using constants = math::detail::constants_on_spheroid
+        typedef math::detail::constants_on_spheroid
             <
                 coordinate_type, units_type, is_equatorial
-            >;
+            > constants;
 
-        using interval_type = longitude_interval<coordinate_type>;
-        using interval_range_type = std::vector<interval_type>;
+        typedef longitude_interval<coordinate_type> interval_type;
+        typedef std::vector<interval_type> interval_range_type;
 
         BOOST_GEOMETRY_ASSERT(! boost::empty(range_of_boxes));
 
-        auto const it_min = std::min_element(boost::begin(range_of_boxes),
-                                             boost::end(range_of_boxes),
-                                             latitude_less<min_corner>());
-        auto const it_max = std::max_element(boost::begin(range_of_boxes),
-                                             boost::end(range_of_boxes),
-                                             latitude_less<max_corner>());
+        iterator_type it_min = std::min_element(boost::begin(range_of_boxes),
+                                                boost::end(range_of_boxes),
+                                                latitude_less<min_corner>());
+        iterator_type it_max = std::max_element(boost::begin(range_of_boxes),
+                                                boost::end(range_of_boxes),
+                                                latitude_less<max_corner>());
 
         coordinate_type const min_longitude = constants::min_longitude();
         coordinate_type const max_longitude = constants::max_longitude();
         coordinate_type const period = constants::period();
 
         interval_range_type intervals;
-        for (auto it = boost::begin(range_of_boxes);
+        for (iterator_type it = boost::begin(range_of_boxes);
              it != boost::end(range_of_boxes);
              ++it)
         {
-            auto const& box = *it;
-            if (is_inverse_spheroidal_coordinates(box))
+            if (is_inverse_spheroidal_coordinates(*it))
             {
                 continue;
             }
 
-            coordinate_type lat_min = geometry::get<min_corner, 1>(box);
-            coordinate_type lat_max = geometry::get<max_corner, 1>(box);
+            coordinate_type lat_min = geometry::get<min_corner, 1>(*it);
+            coordinate_type lat_max = geometry::get<max_corner, 1>(*it);
             if (math::equals(lat_min, constants::max_latitude())
                 || math::equals(lat_max, constants::min_latitude()))
             {
                 // if the box degenerates to the south or north pole
                 // just ignore it
                 continue;
-            }
+            }                             
 
-            coordinate_type lon_left = geometry::get<min_corner, 0>(box);
-            coordinate_type lon_right = geometry::get<max_corner, 0>(box);
+            coordinate_type lon_left = geometry::get<min_corner, 0>(*it);
+            coordinate_type lon_right = geometry::get<max_corner, 0>(*it);
 
             if (math::larger(lon_right, max_longitude))
             {

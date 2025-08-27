@@ -1,8 +1,9 @@
-// Copyright (c) 2012 Artyom Beilis (Tonkikh)
-// Copyright (c) 2020-2021 Alexander Grund
+//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2020-2021 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_NOWIDE_IOSTREAM_HPP_INCLUDED
 #define BOOST_NOWIDE_IOSTREAM_HPP_INCLUDED
@@ -40,13 +41,7 @@ namespace nowide {
         class BOOST_NOWIDE_DECL winconsole_ostream : public std::ostream
         {
         public:
-            enum class target_stream
-            {
-                output,
-                error,
-                log,
-            };
-            winconsole_ostream(target_stream target, bool isBuffered, winconsole_ostream* tieStream);
+            winconsole_ostream(int fd, winconsole_ostream* tieStream);
             ~winconsole_ostream();
 
         private:

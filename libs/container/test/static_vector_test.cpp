@@ -8,11 +8,11 @@
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/core/lightweight_test.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
 #include <boost/container/detail/iterator.hpp>
 #include "../../intrusive/test/iterator_test.hpp"
-#include <boost/container/detail/config_begin.hpp>
 
 #include "static_vector_test.hpp"
 
@@ -21,7 +21,7 @@ template <typename T, size_t N>
 void test_ctor_ndc()
 {
    static_vector<T, N> s;
-   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST_EQ(s.size() , 0u);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
@@ -32,7 +32,7 @@ template <typename T, size_t N>
 void test_ctor_nc(size_t n)
 {
    static_vector<T, N> s(n);
-   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST(s.max_size() == N);
@@ -52,7 +52,7 @@ template <typename T, size_t N>
 void test_ctor_nd(size_t n, T const& v)
 {
    static_vector<T, N> s(n, v);
-   BOOST_CONTAINER_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
+   BOOST_STATIC_ASSERT((static_vector<T, N>::static_capacity) == N);
    BOOST_TEST(s.size() == n);
    BOOST_TEST(s.capacity() == N);
    BOOST_TEST_THROWS( (void)s.at(n), out_of_range_t);
@@ -425,6 +425,7 @@ void test_capacity_0_nd()
    BOOST_TEST_THROWS(s.resize(5u, T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.push_back(T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.insert(s.end(), T(0)), bad_alloc_t);
+   BOOST_TEST_THROWS(s.insert(s.end(), 5u, T(0)), bad_alloc_t);
    BOOST_TEST_THROWS(s.insert(s.end(), v.begin(), v.end()), bad_alloc_t);
    BOOST_TEST_THROWS(s.assign(v.begin(), v.end()), bad_alloc_t);
    BOOST_TEST_THROWS(s.assign(5u, T(0)), bad_alloc_t);
@@ -627,43 +628,45 @@ bool default_init_test()//Test for default initialization
 {
    const std::size_t Capacity = 100;
 
-   typedef static_vector<unsigned char, Capacity> di_vector_t;
+   typedef static_vector<int, Capacity> di_vector_t;
 
    {
-      dtl::aligned_storage<sizeof(di_vector_t)>::type as;
-      di_vector_t *pv = ::new(as.data)di_vector_t(Capacity);
+      di_vector_t v(Capacity, default_init);
+   }
+   {
+      di_vector_t v;
+      int *p = v.data();
 
-      //Use volatile pointer to make compiler's job harder, as we are riding on UB
-      volatile unsigned char * pch_data = pv->data();
-
-      for (std::size_t i = 0; i != Capacity; ++i) {
-         pch_data[i] = static_cast<unsigned char>(i);
+      for(std::size_t i = 0; i != Capacity; ++i, ++p){
+         *p = static_cast<int>(i);
       }
-      pv->~di_vector_t();
 
-      pv = ::new(as.data) di_vector_t(Capacity, default_init);
-      pv->~di_vector_t();
+      //Destroy the vector, p still pointing to the storage
+      v.~di_vector_t();
 
-      for(std::size_t i = 0; i != Capacity; ++i){
-         if (pch_data[i] != static_cast<unsigned char>(i)){
-            std::cout << "failed in iteration" << i << std::endl;
+      di_vector_t &rv = *::new(&v)di_vector_t(Capacity, default_init);
+      di_vector_t::iterator it = rv.begin();
+
+      for(std::size_t i = 0; i != Capacity; ++i, ++it){
+         if(*it != static_cast<int>(i))
             return false;
-         }
       }
+
+      v.~di_vector_t();
    }
    {
       di_vector_t v;
 
-      unsigned char *p = v.data();
+      int *p = v.data();
       for(std::size_t i = 0; i != Capacity; ++i, ++p){
-         *p = static_cast<unsigned char>(i+100);
+         *p = static_cast<int>(i+100);
       }
 
       v.resize(Capacity, default_init);
 
       di_vector_t::iterator it = v.begin();
       for(std::size_t i = 0; i != Capacity; ++i, ++it){
-         if(*it != static_cast<unsigned char>(i+100))
+         if(*it != static_cast<int>(i+100))
             return false;
       }
    }
@@ -790,5 +793,45 @@ int main(int, char* [])
    return boost::report_errors();
 }
 
-#include <boost/container/detail/config_end.hpp>
+/*
 
+#include <boost/container/small_vector.hpp>
+#include <type_traits>
+
+struct S_trivial {
+int i;
+};
+static_assert(std::is_nothrow_move_constructible<S_trivial>::value, "");
+static_assert(std::is_nothrow_move_assignable<S_trivial>::value, "");
+
+struct S1 {
+int i = 0;
+};
+static_assert(std::is_nothrow_move_constructible<S1>::value, "");
+static_assert(std::is_nothrow_move_assignable<S1>::value, "");
+
+struct S2 {
+int i = 0;
+S2(S2&&) noexcept;
+S2& operator=(S2&&) noexcept;
+};
+static_assert(std::is_nothrow_move_constructible<S2>::value, "");
+static_assert(std::is_nothrow_move_assignable<S2>::value, "");
+
+// Succeed
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S_trivial, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S_trivial, 1>>::value, "");
+
+// Fail
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S1, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S1, 1>>::value, "");
+
+// Fail
+static_assert(std::is_nothrow_move_constructible<boost::container::small_vector<S2, 1>>::value, "");
+static_assert(std::is_nothrow_move_assignable<boost::container::small_vector<S2, 1>>::value, "");
+
+int main()
+{
+   return 0;
+}
+*/

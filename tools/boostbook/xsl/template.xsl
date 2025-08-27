@@ -392,15 +392,12 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
+    <xsl:text> </xsl:text>
 
-    <xsl:if test="$parameter/@name != ''">
-      <xsl:text> </xsl:text>
-
-      <xsl:call-template name="template.parameter.name">
-        <xsl:with-param name="name" select="$parameter/@name"/>
-        <xsl:with-param name="highlight" select="$highlight"/>
-      </xsl:call-template>
-    </xsl:if>
+    <xsl:call-template name="template.parameter.name">
+      <xsl:with-param name="name" select="$parameter/@name"/>
+      <xsl:with-param name="highlight" select="$highlight"/>
+    </xsl:call-template>
 
     <xsl:variable name="def">
       <xsl:choose>
@@ -490,15 +487,12 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
+    <xsl:text> </xsl:text>
 
-    <xsl:if test="$parameter/@name != ''">
-      <xsl:text> </xsl:text>
-
-      <xsl:call-template name="template.parameter.name">
-        <xsl:with-param name="name" select="$parameter/@name"/>
-        <xsl:with-param name="highlight" select="$highlight"/>
-      </xsl:call-template>
-    </xsl:if>
+    <xsl:call-template name="template.parameter.name">
+      <xsl:with-param name="name" select="$parameter/@name"/>
+      <xsl:with-param name="highlight" select="$highlight"/>
+    </xsl:call-template>
 
     <xsl:variable name="def">
       <xsl:value-of select="string($parameter/default)"/>

@@ -1,9 +1,11 @@
 //
-// Copyright (c) 2012 Artyom Beilis (Tonkikh)
-// Copyright (c) 2019-2020 Alexander Grund
+//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
+//  Copyright (c) 2019-2020 Alexander Grund
 //
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+//
 
 #include <boost/nowide/stackstring.hpp>
 #include "test.hpp"
@@ -60,8 +62,7 @@ std::string heap_stackstring_to_narrow(const std::wstring& s)
     return ss.get();
 }
 
-// coverity[root_function]
-void test_main(int, char**, char**)
+void test_main(int, char**, char**) // coverity [root_function]
 {
     std::string hello = "\xd7\xa9\xd7\x9c\xd7\x95\xd7\x9d";
     std::wstring whello = boost::nowide::widen(hello);
@@ -70,25 +71,25 @@ void test_main(int, char**, char**)
     {
         std::cout << "-- Default constructed string is NULL" << std::endl;
         const boost::nowide::short_stackstring s;
-        TEST(s.get() == nullptr);
+        TEST(s.get() == NULL);
     }
     {
-        std::cout << "-- nullptr passed to ctor results in NULL" << std::endl;
-        const boost::nowide::short_stackstring s(nullptr);
-        TEST(s.get() == nullptr);
-        const boost::nowide::short_stackstring s2(nullptr, nullptr);
-        TEST(s2.get() == nullptr);
+        std::cout << "-- NULL ptr passed to ctor results in NULL" << std::endl;
+        const boost::nowide::short_stackstring s(NULL);
+        TEST(s.get() == NULL);
+        const boost::nowide::short_stackstring s2(NULL, NULL);
+        TEST(s2.get() == NULL);
     }
     {
-        std::cout << "-- nullptr passed to convert results in NULL" << std::endl;
+        std::cout << "-- NULL ptr passed to convert results in NULL" << std::endl;
         boost::nowide::short_stackstring s(L"foo");
         TEST(s.get() == std::string("foo"));
-        s.convert(nullptr);
-        TEST(s.get() == nullptr);
+        s.convert(NULL);
+        TEST(s.get() == NULL);
         boost::nowide::short_stackstring s2(L"foo");
         TEST(s2.get() == std::string("foo"));
-        s2.convert(nullptr, nullptr);
-        TEST(s2.get() == nullptr);
+        s2.convert(NULL, NULL);
+        TEST(s2.get() == NULL);
     }
     {
         std::cout << "-- An empty string is accepted" << std::endl;
@@ -166,7 +167,7 @@ void test_main(int, char**, char**)
             TEST(sw3.get() == heapVal);
             // Assign empty
             sw3 = sEmpty; //-V820
-            TEST(sw3.get() == nullptr);
+            TEST(sw3.get() == NULL);
         }
         {
             stackstring sw2(stack), sw3, sEmpty;
@@ -178,7 +179,7 @@ void test_main(int, char**, char**)
             TEST(sw3.get() == stackVal);
             // Assign empty
             sw3 = sEmpty; //-V820
-            TEST(sw3.get() == nullptr);
+            TEST(sw3.get() == NULL);
         }
         {
             stackstring sw2(stack);
@@ -200,10 +201,10 @@ void test_main(int, char**, char**)
             TEST(sw3.get() == stackVal);
             swap(sw2, sEmpty1);
             TEST(sEmpty1.get() == heapVal);
-            TEST(sw2.get() == nullptr);
+            TEST(sw2.get() == NULL);
             swap(sw3, sEmpty2);
             TEST(sEmpty2.get() == stackVal);
-            TEST(sw3.get() == nullptr);
+            TEST(sw3.get() == NULL);
         }
         {
             stackstring sw2(heap), sw3(heap);

@@ -2,11 +2,11 @@
 
 // Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2013-2024.
-// Modifications copyright (c) 2013-2024 Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
-// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// This file was modified by Oracle on 2013-2020.
+// Modifications copyright (c) 2013-2020 Oracle and/or its affiliates.
+
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -20,7 +20,8 @@
 #include <boost/geometry/algorithms/detail/overlay/get_turns.hpp>
 #include <boost/geometry/algorithms/detail/overlay/get_turn_info.hpp>
 
-#include <boost/geometry/geometries/helper_geometry.hpp>
+#include <boost/geometry/policies/robustness/get_rescale_policy.hpp>
+#include <boost/geometry/policies/robustness/segment_ratio_type.hpp>
 
 #include <boost/geometry/strategies/cartesian/point_in_point.hpp>
 #include <boost/geometry/strategies/spherical/point_in_point.hpp>
@@ -39,7 +40,7 @@ struct assign_policy
     static bool const include_degenerate = IncludeDegenerate;
 };
 
-// turn retriever, calling get_turns
+// GET_TURNS
 
 template
 <
@@ -52,27 +53,35 @@ template
 >
 struct get_turns
 {
-    using turn_point_type = typename helper_geometry
-        <
-            geometry::point_type_t<Geometry1>
-        >::type;
+    typedef typename geometry::point_type<Geometry1>::type point1_type;
+
+    template <typename Strategy>
+    struct robust_policy_type
+        : geometry::rescale_overlay_policy_type
+            <
+                Geometry1,
+                Geometry2,
+                typename Strategy::cs_tag
+            >
+    {};
 
     template
     <
-        typename Strategy
+        typename Strategy,
+        typename RobustPolicy = typename robust_policy_type<Strategy>::type
     >
     struct turn_info_type
     {
-        using ratio_type = typename segment_ratio_type<turn_point_type>::type;
-        using type = overlay::turn_info
+        typedef typename segment_ratio_type<point1_type, RobustPolicy>::type ratio_type;
+        typedef overlay::turn_info
             <
-                turn_point_type,
+                point1_type,
                 ratio_type,
                 typename detail::get_turns::turn_operation_type
                     <
-                        Geometry1, Geometry2, turn_point_type, ratio_type
+                        Geometry1, Geometry2, ratio_type
                     >::type
-            >;
+            > type;
     };
 
     template <typename Turns, typename InterruptPolicy, typename Strategy>
@@ -81,6 +90,23 @@ struct get_turns
                              Geometry2 const& geometry2,
                              InterruptPolicy & interrupt_policy,
                              Strategy const& strategy)
+    {
+        typedef typename robust_policy_type<Strategy>::type robust_policy_t;
+
+        robust_policy_t robust_policy
+                = geometry::get_rescale_policy<robust_policy_t>(
+                    geometry1, geometry2, strategy);
+
+        apply(turns, geometry1, geometry2, interrupt_policy, strategy, robust_policy);
+    }
+
+    template <typename Turns, typename InterruptPolicy, typename Strategy, typename RobustPolicy>
+    static inline void apply(Turns & turns,
+                             Geometry1 const& geometry1,
+                             Geometry2 const& geometry2,
+                             InterruptPolicy & interrupt_policy,
+                             Strategy const& strategy,
+                             RobustPolicy const& robust_policy)
     {
         static const bool reverse1 = detail::overlay::do_reverse
             <
@@ -94,15 +120,15 @@ struct get_turns
 
         dispatch::get_turns
             <
-                geometry::tag_t<Geometry1>,
-                geometry::tag_t<Geometry2>,
+                typename geometry::tag<Geometry1>::type,
+                typename geometry::tag<Geometry2>::type,
                 Geometry1,
                 Geometry2,
                 reverse1,
                 reverse2,
                 GetTurnPolicy
             >::apply(0, geometry1, 1, geometry2,
-                     strategy,
+                     strategy, robust_policy,
                      turns, interrupt_policy);
     }
 };
@@ -141,7 +167,7 @@ struct less_op_xxx_linear
 
 template <std::size_t OpId>
 struct less_op_linear_linear
-    : less_op_xxx_linear< OpId, op_to_int<0,2,3,1,4,0> > // xuic
+    : less_op_xxx_linear< OpId, op_to_int<0,2,3,1,4,0> >
 {};
 
 template <std::size_t OpId>
@@ -218,7 +244,7 @@ struct less_op_areal_areal
                     else if ( right_operation.operation == overlay::operation_intersection )
                         return false;
                 }
-
+                
                 return op_to_int_iuxc(left_operation) < op_to_int_iuxc(right_operation);
             }
         }
@@ -244,7 +270,7 @@ struct less_other_multi_index
 
 // sort turns by G1 - source_index == 0 by:
 // seg_id -> distance and coordinates -> operation
-template <std::size_t OpId, typename LessOp, typename Strategy>
+template <std::size_t OpId, typename LessOp, typename CSTag>
 struct less
 {
     BOOST_STATIC_ASSERT(OpId < 2);
@@ -252,8 +278,14 @@ struct less
     template <typename Turn>
     static inline bool use_fraction(Turn const& left, Turn const& right)
     {
-        using eq_pp_strategy_type = decltype(std::declval<Strategy>().relate(
-            detail::dummy_point(), detail::dummy_point()));
+        typedef typename geometry::strategy::within::services::default_strategy
+            <
+                typename Turn::point_type, typename Turn::point_type,
+                point_tag, point_tag,
+                pointlike_tag, pointlike_tag,
+                typename tag_cast<CSTag, spherical_tag>::type,
+                typename tag_cast<CSTag, spherical_tag>::type
+            >::type eq_pp_strategy_type;
 
         static LessOp less_op;
 

@@ -1,4 +1,4 @@
-// Copyright Antony Polukhin, 2013-2025.
+// Copyright Antony Polukhin, 2013-2021.
 
 // Distributed under the Boost Software License, Version 1.0.
 // (See the accompanying file LICENSE_1_0.txt
@@ -47,11 +47,11 @@ std::string stringize(const Sequence& seq) {
 }
 
 //` Step 3: Using the `stringize` with different types:
-#include <boost/fusion/adapted/std_tuple.hpp>
+#include <boost/fusion/adapted/boost_tuple.hpp>
 #include <boost/fusion/adapted/std_pair.hpp>
 
 int main() {
-    std::tuple<char, int, char, int> decim('-', 10, 'e', 5);
+    boost::tuple<char, int, char, int> decim('-', 10, 'e', 5);
     if (stringize(decim) != "-10e5") {
         return 1;
     }

@@ -8,8 +8,6 @@
 #define BOOST_HISTOGRAM_DETAIL_FILL_N_HPP
 
 #include <algorithm>
-#include <boost/core/make_span.hpp>
-#include <boost/core/span.hpp>
 #include <boost/histogram/axis/option.hpp>
 #include <boost/histogram/axis/traits.hpp>
 #include <boost/histogram/detail/axes.hpp>
@@ -18,6 +16,7 @@
 #include <boost/histogram/detail/linearize.hpp>
 #include <boost/histogram/detail/nonmember_container_access.hpp>
 #include <boost/histogram/detail/optional_index.hpp>
+#include <boost/histogram/detail/span.hpp>
 #include <boost/histogram/detail/static_if.hpp>
 #include <boost/histogram/fwd.hpp>
 #include <boost/mp11/algorithm.hpp>
@@ -219,7 +218,7 @@ void fill_n_nd(const std::size_t offset, S& storage, A& axes, const std::size_t 
   */
 
   for (std::size_t start = 0; start < vsize; start += buffer_size) {
-    const std::size_t n = (std::min)(buffer_size, vsize - start);
+    const std::size_t n = std::min(buffer_size, vsize - start);
     // fill buffer of indices...
     fill_n_indices(indices, start, n, offset, storage, axes, values);
     // ...and fill corresponding storage cells
@@ -261,7 +260,7 @@ void fill_n_1(const std::size_t offset, S& storage, A& axes, const std::size_t v
 }
 
 template <class A, class T, std::size_t N>
-std::size_t get_total_size(const A& axes, const span<const T, N>& values) {
+std::size_t get_total_size(const A& axes, const dtl::span<const T, N>& values) {
   // supported cases (T = value type; CT = containter of T; V<T, CT, ...> = variant):
   // - span<CT, N>: for any histogram, N == rank
   // - span<V<T, CT>, N>: for any histogram, N == rank
@@ -312,7 +311,7 @@ void fill_n_check_extra_args(std::size_t size, weight_type<T>&& w, Ts&&... ts) {
 
 template <class S, class A, class T, std::size_t N, class... Us>
 void fill_n(std::true_type, const std::size_t offset, S& storage, A& axes,
-            const span<const T, N> values, Us&&... us) {
+            const dtl::span<const T, N> values, Us&&... us) {
   // supported cases (T = value type; CT = containter of T; V<T, CT, ...> = variant):
   // - span<T, N>: only valid for 1D histogram, N > 1 allowed
   // - span<CT, N>: for any histogram, N == rank

@@ -1,6 +1,7 @@
-// Copyright 2008-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//Copyright (c) 2008-2016 Emil Dotchevski and Reverge Studios, Inc.
+
+//Distributed under the Boost Software License, Version 1.0. (See accompanying
+//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #ifdef BOOST_QVM_TEST_SINGLE_HEADER
 #   include BOOST_QVM_TEST_SINGLE_HEADER
@@ -12,36 +13,6 @@
 #include <boost/qvm/mat_traits_array.hpp>
 #include "test_qvm_matrix.hpp"
 #include "gold.hpp"
-
-namespace
-    {
-    template <class T>
-    struct test_scalar
-        {
-        T value_;
-        test_scalar( T value ): value_(value) {}
-        }; //No operator==
-
-    struct
-    equal_to
-        {
-        template <class T,class U>
-        bool
-        operator()( T const & a, U const & b )
-            {
-            return a.value_==b.value_;
-            }
-        };
-    }
-
-namespace boost { namespace qvm {
-    template <class T>
-    struct
-    is_scalar<test_scalar<T> >
-        {
-        static bool const value = is_scalar<T>::value;
-        };
-} }
 
 namespace
     {
@@ -68,6 +39,24 @@ namespace
                     }
                 }
         }
+
+    template <class T>
+    struct test_scalar
+    {
+        T value_;
+        test_scalar( T value ): value_(value) {}
+    }; //No operator==
+
+    struct
+    equal_to
+    {
+        template <class T,class U>
+        bool
+        operator()( T const & a, U const & b )
+        {
+            return a.value_==b.value_;
+        }
+    };
 
     template <class A, class B>
     void

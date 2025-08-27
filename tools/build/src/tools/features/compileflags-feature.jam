@@ -7,7 +7,7 @@ import feature ;
 
 #| tag::doc[]
 
-[[b2.builtin.features.compileflags]]`compileflags`::
+[[bbv2.builtin.features.compileflags]]`compileflags`::
 The value of this feature is passed without modification to the corresponding
 tools. The values from the `compileflags` is applied to all compilation of any
 language for the tools.

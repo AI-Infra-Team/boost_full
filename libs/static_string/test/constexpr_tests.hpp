@@ -357,10 +357,8 @@ testConstantEvaluation()
   a.substr(0);
 #endif
 
-#ifdef BOOST_STATIC_STRING_HAS_STRING_VIEW
   // subview
   a.subview(0);
-#endif
 
   // copy
   char k[20]{};

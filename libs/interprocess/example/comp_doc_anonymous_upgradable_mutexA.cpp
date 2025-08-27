@@ -15,9 +15,6 @@
 #include "doc_upgradable_mutex_shared_data.hpp"
 #include <iostream>
 #include <cstdio>
-//<-
-#include "../test/get_process_id_name.hpp"
-//->
 
 using namespace boost::interprocess;
 
@@ -26,7 +23,7 @@ int main ()
    //Remove shared memory on destruction
    struct shm_remove
    {
-      ~shm_remove(){ shared_memory_object::remove(test::get_process_id_name()); }
+      ~shm_remove(){ shared_memory_object::remove("MySharedMemory"); }
    } remover;
    //<-
    (void)remover;
@@ -34,9 +31,9 @@ int main ()
 
    //Create a shared memory object.
    shared_memory_object shm
-      ( create_only                 //only create
-      , test::get_process_id_name() //name
-      , read_write                  //read-write mode
+      (create_only               //only create
+      ,"MySharedMemory"           //name
+      ,read_write   //read-write mode
       );
 
    //Set size

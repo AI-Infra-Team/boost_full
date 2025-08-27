@@ -15,9 +15,6 @@
 #ifndef BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <exception> // std::terminate
 #include <boost/log/detail/config.hpp>
 
@@ -29,12 +26,17 @@
 #error Boost.Log: Asynchronous sink frontend is only supported in multithreaded environment
 #endif
 
+#include <boost/static_assert.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/comparison/equal.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
@@ -132,7 +134,7 @@ class asynchronous_sink :
 
 private:
     //! Backend synchronization mutex type
-    typedef std::recursive_mutex backend_mutex_type;
+    typedef boost::recursive_mutex backend_mutex_type;
     //! Frontend synchronization mutex type
     typedef typename base_type::mutex_type frontend_mutex_type;
 
@@ -165,24 +167,24 @@ private:
     };
 
     //! A scope guard that implements active operation management
-    class scoped_feeding_operation
+    class scoped_feeding_opereation
     {
     private:
         asynchronous_sink& m_self;
 
     public:
         //! Initializing constructor
-        explicit scoped_feeding_operation(asynchronous_sink& self) : m_self(self)
+        explicit scoped_feeding_opereation(asynchronous_sink& self) : m_self(self)
         {
         }
         //! Destructor
-        ~scoped_feeding_operation()
+        ~scoped_feeding_opereation()
         {
             m_self.complete_feeding_operation();
         }
 
-        BOOST_DELETED_FUNCTION(scoped_feeding_operation(scoped_feeding_operation const&))
-        BOOST_DELETED_FUNCTION(scoped_feeding_operation& operator= (scoped_feeding_operation const&))
+        BOOST_DELETED_FUNCTION(scoped_feeding_opereation(scoped_feeding_opereation const&))
+        BOOST_DELETED_FUNCTION(scoped_feeding_opereation& operator= (scoped_feeding_opereation const&))
     };
 
     //! A scope guard that resets a flag on destructor
@@ -190,11 +192,11 @@ private:
     {
     private:
         frontend_mutex_type& m_Mutex;
-        std::condition_variable_any& m_Cond;
+        condition_variable_any& m_Cond;
         boost::atomic< bool >& m_Flag;
 
     public:
-        explicit scoped_flag(frontend_mutex_type& mut, std::condition_variable_any& cond, boost::atomic< bool >& f) :
+        explicit scoped_flag(frontend_mutex_type& mut, condition_variable_any& cond, boost::atomic< bool >& f) :
             m_Mutex(mut), m_Cond(cond), m_Flag(f)
         {
         }
@@ -202,7 +204,7 @@ private:
         {
             try
             {
-                std::lock_guard< frontend_mutex_type > lock(m_Mutex);
+                lock_guard< frontend_mutex_type > lock(m_Mutex);
                 m_Flag.store(false, boost::memory_order_relaxed);
                 m_Cond.notify_all();
             }
@@ -219,7 +221,7 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    static_assert(has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value, "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value), "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -241,9 +243,9 @@ private:
     const shared_ptr< sink_backend_type > m_pBackend;
 
     //! Dedicated record feeding thread
-    std::thread m_DedicatedFeedingThread;
+    thread m_DedicatedFeedingThread;
     //! Condition variable to implement blocking operations
-    std::condition_variable_any m_BlockCond;
+    condition_variable_any m_BlockCond;
 
     //! Currently active operation
     operation m_ActiveOperation;
@@ -317,7 +319,15 @@ public:
      */
     ~asynchronous_sink() BOOST_NOEXCEPT BOOST_OVERRIDE
     {
-        stop();
+        try
+        {
+            boost::this_thread::disable_interruption no_interrupts;
+            stop();
+        }
+        catch (...)
+        {
+            std::terminate();
+        }
     }
 
     /*!
@@ -335,7 +345,7 @@ public:
     {
         if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_acquire)))
         {
-            std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
+            unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             // Wait until flush is done
             while (m_FlushRequested.load(boost::memory_order_acquire))
                 m_BlockCond.wait(lock);
@@ -349,7 +359,9 @@ public:
     bool try_consume(record_view const& rec) BOOST_OVERRIDE
     {
         if (!m_FlushRequested.load(boost::memory_order_acquire))
+        {
             return queue_base_type::try_enqueue(rec);
+        }
         else
             return false;
     }
@@ -357,7 +369,7 @@ public:
     /*!
      * The method starts record feeding loop and effectively blocks until either of this happens:
      *
-     * \li the thread is interrupted due to a call to \c stop
+     * \li the thread is interrupted due to either standard thread interruption or a call to \c stop
      * \li an exception is thrown while processing a log record in the backend, and the exception is
      *     not terminated by the exception handler, if one is installed
      *
@@ -367,12 +379,12 @@ public:
     {
         // First check that no other thread is running
         {
-            std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
+            unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             if (start_feeding_operation(lock, feeding_records))
                 return;
         }
 
-        scoped_feeding_operation guard(*this);
+        scoped_feeding_opereation guard(*this);
 
         // Now start the feeding loop
         while (true)
@@ -415,9 +427,9 @@ public:
      */
     void stop()
     {
-        std::thread feeding_thread;
+        boost::thread feeding_thread;
         {
-            std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
+            lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
 
             m_StopRequested.store(true, boost::memory_order_release);
             queue_base_type::interrupt_dequeue();
@@ -438,12 +450,12 @@ public:
     {
         // First check that no other thread is running
         {
-            std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
+            unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             if (start_feeding_operation(lock, feeding_records))
                 return;
         }
 
-        scoped_feeding_operation guard(*this);
+        scoped_feeding_opereation guard(*this);
 
         // Now start the feeding loop
         do_feed_records();
@@ -457,7 +469,7 @@ public:
     void flush() BOOST_OVERRIDE
     {
         {
-            std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
+            unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             if (static_cast< unsigned int >(m_ActiveOperation & feeding_records) != 0u)
             {
                 // There is already a thread feeding records, let it do the job
@@ -476,7 +488,7 @@ public:
             m_FlushRequested.store(true, boost::memory_order_relaxed);
         }
 
-        scoped_feeding_operation guard(*this);
+        scoped_feeding_opereation guard(*this);
 
         do_feed_records();
     }
@@ -486,11 +498,11 @@ private:
     //! The method spawns record feeding thread
     void start_feeding_thread()
     {
-        std::thread(run_func(this)).swap(m_DedicatedFeedingThread);
+        boost::thread(run_func(this)).swap(m_DedicatedFeedingThread);
     }
 
     //! Starts record feeding operation. The method blocks or throws if another feeding operation is in progress.
-    bool start_feeding_operation(std::unique_lock< frontend_mutex_type >& lock, operation op)
+    bool start_feeding_operation(unique_lock< frontend_mutex_type >& lock, operation op)
     {
         while (m_ActiveOperation != idle)
         {
@@ -516,7 +528,7 @@ private:
     {
         try
         {
-            std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
+            lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
             m_ActiveOperation = idle;
             m_StopRequested.store(false, boost::memory_order_relaxed);
             m_BlockCond.notify_all();

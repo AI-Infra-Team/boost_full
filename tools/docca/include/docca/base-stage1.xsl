@@ -1,28 +1,24 @@
+<!DOCTYPE xsl:stylesheet [
+<!-- TODO: complete this list -->
+<!ENTITY BLOCK_LEVEL_ELEMENT "programlisting
+                            | itemizedlist
+                            | orderedlist
+                            | parameterlist
+                            | simplesect
+                            | para
+                            | table
+                            | linebreak">
+]>
 <xsl:stylesheet version="3.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:d="http://github.com/vinniefalco/docca"
-  xmlns:my="http://localhost"
-  exclude-result-prefixes="xs d my"
+  exclude-result-prefixes="xs d"
   expand-text="yes">
 
   <xsl:include href="common.xsl"/>
 
   <xsl:output indent="yes"/>
-
-  <xsl:function name="my:block-level-element-children">
-    <xsl:param name="context"/>
-    <!-- TODO: complete this list -->
-    <xsl:sequence select="$context/( programlisting
-                                   | itemizedlist
-                                   | orderedlist
-                                   | parameterlist
-                                   | simplesect
-                                   | para
-                                   | table
-                                   | linebreak
-                                   )"/>
-  </xsl:function>
 
   <xsl:template match="/doxygen" priority="1">
     <page id="{@d:page-id}" type="{@d:page-type}">
@@ -188,7 +184,6 @@
                 <xsl:apply-templates select="param"/>
               </params>
               <xsl:apply-templates mode="modifier" select="@const[. eq 'yes']"/>
-              <xsl:apply-templates mode="suffix" select="argsstring"/>
             </overloaded-member>
           </xsl:template>
 
@@ -197,11 +192,6 @@
                   </xsl:template>
                   <xsl:template mode="modifier" match="@virt">
                     <modifier>virtual</modifier>
-                  </xsl:template>
-
-                  <xsl:template mode="suffix" match="argsstring"/>
-                  <xsl:template mode="suffix" match="argsstring[ends-with(., '=delete')]">
-                    <suffix> = delete</suffix>
                   </xsl:template>
 
 
@@ -223,24 +213,7 @@
   <xsl:template mode="section" match="simplesect[matches(title,'Concepts:?')]"/>
 
   <!-- Omit description section if it has no body -->
-  <xsl:template mode="section" match="detaileddescription[not(normalize-space(.))]" priority="2"/>
-
-  <!-- Omit the "Description" heading (only show the body) if it has nothing but a parameterlist or simplesect -->
-  <xsl:template mode="section" match="detaileddescription[not(normalize-space(d:strip-sections(.)))]" priority="1">
-    <xsl:apply-templates mode="section-body" select="."/>
-  </xsl:template>
-
-          <xsl:function name="d:strip-sections" as="element(detaileddescription)">
-            <xsl:param name="desc" as="element(detaileddescription)"/>
-            <xsl:apply-templates mode="strip-sections" select="$desc"/>
-          </xsl:function>
-
-                  <xsl:template mode="strip-sections" match="parameterlist | simplesect"/>
-                  <xsl:template mode="strip-sections" match="@* | node()">
-                    <xsl:copy>
-                      <xsl:apply-templates mode="#current" select="@* | node()"/>
-                    </xsl:copy>
-                  </xsl:template>
+  <xsl:template mode="section" match="detaileddescription[not(normalize-space(.))]" priority="1"/>
 
   <xsl:template mode="section" match="*">
     <section>
@@ -324,20 +297,16 @@
           <xsl:template mode="parameter-row" match="parameteritem">
             <tr>
               <td>
-                <xsl:apply-templates mode="parameter-name" select="parameternamelist/parametername"/>
+                <code>
+                  <!-- ASSUMPTION: <parameternamelist> only ever has one <parametername> child -->
+                  <xsl:apply-templates select="parameternamelist/parametername/node()"/>
+                </code>
               </td>
               <td>
                 <xsl:apply-templates select="parameterdescription/node()"/>
               </td>
             </tr>
           </xsl:template>
-
-                  <xsl:template mode="parameter-name" match="parametername">
-                    <code>
-                      <xsl:apply-templates/>
-                    </code>
-                    <xsl:if test="position() ne last()">, </xsl:if>
-                  </xsl:template>
 
   <xsl:template mode="table-body" match="sectiondef[@kind eq 'enum']">
     <xsl:apply-templates mode="enum-row" select="memberdef/enumvalue"/> <!-- Use input order for enum values -->
@@ -359,10 +328,7 @@
       <xsl:apply-templates mode="member-nodes" select="."/>
     </xsl:variable>
     <xsl:for-each-group select="$member-nodes" group-by="d:member-name(.)">
-      <!-- Sort by member name, but don't change the relative order of a list of operators -->
-      <xsl:sort select="if (matches(current-grouping-key(), '^operator..?$'))
-                        then 'operator'
-                        else current-grouping-key()"/>
+      <xsl:sort select="current-grouping-key()"/>
       <xsl:apply-templates mode="member-row" select="."/>
     </xsl:for-each-group>
   </xsl:template>
@@ -524,7 +490,6 @@
         <xsl:apply-templates select="param"/>
       </params>
       <xsl:apply-templates mode="modifier" select="@const[. eq 'yes']"/>
-      <xsl:apply-templates mode="suffix" select="argsstring"/>
     </function>
   </xsl:template>
 
@@ -556,31 +521,6 @@
   </xsl:template>
 
   <xsl:template match="simplesect/title"/>
-
-  <xsl:template match="table">
-    <table>
-      <xsl:apply-templates select="row"/>
-    </table>
-  </xsl:template>
-
-          <xsl:template match="row">
-            <tr>
-              <xsl:apply-templates select="entry"/>
-            </tr>
-          </xsl:template>
-
-                  <xsl:template match="entry[@thead eq 'yes']">
-                    <th>
-                      <xsl:apply-templates/>
-                    </th>
-                  </xsl:template>
-
-                  <xsl:template match="entry">
-                    <td>
-                      <xsl:apply-templates/>
-                    </td>
-                  </xsl:template>
-
 
   <!-- TODO: verify we don't need this; it was causing duplicate headings in simplesect sections
   <xsl:template match="title">
@@ -622,7 +562,7 @@
 
 
   <!-- When a <para> directly contains a mix of inline nodes and block-level elements, normalize its content -->
-  <xsl:template match="para[my:block-level-element-children(.)]">
+  <xsl:template match="para[&BLOCK_LEVEL_ELEMENT;]">
     <para>
       <xsl:for-each-group select="* | text()" group-adjacent="d:is-inline(.)">
         <xsl:apply-templates mode="capture-ranges" select="."/>
@@ -632,7 +572,7 @@
 
           <xsl:function name="d:is-inline">
             <xsl:param name="node"/>
-            <xsl:sequence select="not($node/../my:block-level-element-children(.)[. is $node])"/>
+            <xsl:sequence select="not($node/../(&BLOCK_LEVEL_ELEMENT;)[. is $node])"/>
           </xsl:function>
 
           <!-- Process the block-level elements as usual -->

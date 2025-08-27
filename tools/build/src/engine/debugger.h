@@ -12,7 +12,6 @@
 #include <setjmp.h>
 #include "object.h"
 #include "frames.h"
-#include "lists.h"
 
 #ifdef JAM_DEBUGGER
 
@@ -20,7 +19,6 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line );
 void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int line );
 void debug_on_exit_function( OBJECT * name );
 int debugger( void );
-void debugger_done();
 
 struct debug_child_data_t
 {
@@ -30,14 +28,15 @@ struct debug_child_data_t
 };
 
 extern struct debug_child_data_t debug_child_data;
-extern b2::list_ref debug_print_result;
+extern LIST * debug_print_result;
 extern const char debugger_opt[];
+extern int debug_interface;
 
-#define DEBUG_INTERFACE_CONSOLE (global_config::debug_interface_console)
-#define DEBUG_INTERFACE_MI (global_config::debug_interface_mi)
-#define DEBUG_INTERFACE_CHILD (global_config::debug_interface_child)
+#define DEBUG_INTERFACE_CONSOLE 1
+#define DEBUG_INTERFACE_MI 2
+#define DEBUG_INTERFACE_CHILD 3
 
-#define debug_is_debugging() ( globs.debug_interface != global_config::debug_interface_no )
+#define debug_is_debugging() ( debug_interface != 0 )
 #define debug_on_enter_function( frame, name, file, line )      \
     ( debug_is_debugging()?                                     \
         debug_on_enter_function( frame, name, file, line ) :    \

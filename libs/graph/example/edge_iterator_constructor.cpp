@@ -60,7 +60,7 @@ public:
     }
     edge_stream_iterator operator++(int)
     {
-        auto tmp = *this;
+        edge_stream_iterator tmp = *this;
         m_read();
         return tmp;
     }

@@ -18,14 +18,11 @@
 #include <boost/beast/core/read_size.hpp>
 #include <boost/beast/_experimental/unit_test/suite.hpp>
 #include <boost/asio/buffer.hpp>
-#include <boost/asio/buffers_iterator.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <iterator>
 
 namespace boost {
 namespace beast {
-
-template class buffers_adaptor<net::mutable_buffer>;
 
 struct buffers_adaptor_test_hook
 {
@@ -115,15 +112,6 @@ public:
         read_size(ba, 1024);
     }
 
-    void
-    testIssue2459()
-    {
-        char s[13];
-        buffers_triple tb(s, sizeof(s));
-        buffers_adaptor<buffers_triple> b(tb);
-        ignore_unused(net::buffers_begin(b.data()));
-    }
-
     template<bool isMutable>
     void
     testSubrange()
@@ -175,7 +163,6 @@ public:
         testDynamicBuffer();
         testSpecial();
         testIssue386();
-        testIssue2459();
         testSubrange<true>();
         testSubrange<false>();
     }

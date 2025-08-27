@@ -18,7 +18,6 @@
 # <target> with the Doxygen html files, and a <target>.html file redirecting to
 # that directory.
 
-import args ;
 import alias ;
 import boostbook ;
 import "class" : new ;
@@ -165,7 +164,7 @@ local rule modify-config ( )
 
 local rule check-doxygen ( )
 {
-    if [ args.get-arg debug-configuration ]
+    if --debug-configuration in [ modules.peek : ARGV ]
     {
         ECHO "notice:" using doxygen ":" $(.doxygen) ;
     }
@@ -310,14 +309,8 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     }
 
     local headers ;
-    for local source in $(sources)
+    for local header in $(sources:G=)
     {
-        local header = $(source:G=) ;
-        local root = [ on $(source) return $(SEARCH) ] ;
-        if $(root)
-        {
-            header = [ path.root $(header) $(root) ] ;
-        }
         header = [ translate-path $(header) ] ;
         headers += \"$(header)\" ;
     }

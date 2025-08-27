@@ -47,7 +47,7 @@ struct test_split_rings
             double precision)
     {
 
-        using ring_type = bg::ring_type_t<Geometry>:;
+        typedef typename bg::ring_type<Geometry>::type ring_type;
         std::vector<ring_type> rings;
         bg::split_rings(geometry, rings);
 

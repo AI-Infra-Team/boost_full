@@ -16,5 +16,3 @@ stdcerr
 
 # JetBrains
 /.idea
-
-!build.jam

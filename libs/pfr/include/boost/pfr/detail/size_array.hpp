@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2025 Antony Polukhin
+// Copyright (c) 2016-2021 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -9,9 +9,7 @@
 
 #include <boost/pfr/detail/config.hpp>
 
-#if !defined(BOOST_PFR_INTERFACE_UNIT)
-#include <cstddef>
-#endif
+#include <cstddef>      // metaprogramming stuff
 
 namespace boost { namespace pfr { namespace detail {
 

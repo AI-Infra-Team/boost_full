@@ -6,17 +6,12 @@
 #ifndef BOOST_MATH_TOOLS_RECURRENCE_HPP_
 #define BOOST_MATH_TOOLS_RECURRENCE_HPP_
 
-#include <type_traits>
-#include <tuple>
-#include <utility>
 #include <boost/math/tools/config.hpp>
 #include <boost/math/tools/precision.hpp>
 #include <boost/math/tools/tuple.hpp>
 #include <boost/math/tools/fraction.hpp>
 #include <boost/math/tools/cxx03_warn.hpp>
 #include <boost/math/tools/assert.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/math/policies/error_handling.hpp>
 
 namespace boost {
    namespace math {
@@ -35,14 +30,14 @@ namespace boost {
             template <class Recurrence>
             struct function_ratio_from_backwards_recurrence_fraction
             {
-               typedef typename std::remove_reference<decltype(std::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
+               typedef typename boost::remove_reference<decltype(boost::math::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
                typedef std::pair<value_type, value_type> result_type;
                function_ratio_from_backwards_recurrence_fraction(const Recurrence& r) : r(r), k(0) {}
 
                result_type operator()()
                {
                   value_type a, b, c;
-                  std::tie(a, b, c) = r(k);
+                  boost::math::tie(a, b, c) = r(k);
                   ++k;
                   // an and bn defined as per Gauchi 1.16, not the same
                   // as the usual continued fraction a' and b's.
@@ -52,7 +47,7 @@ namespace boost {
                }
 
             private:
-               function_ratio_from_backwards_recurrence_fraction operator=(const function_ratio_from_backwards_recurrence_fraction&) = delete;
+               function_ratio_from_backwards_recurrence_fraction operator=(const function_ratio_from_backwards_recurrence_fraction&);
 
                Recurrence r;
                int k;
@@ -62,11 +57,11 @@ namespace boost {
             struct recurrence_reverser
             {
                recurrence_reverser(const R& r) : r(r) {}
-               std::tuple<T, T, T> operator()(int i)
+               boost::math::tuple<T, T, T> operator()(int i)
                {
                   using std::swap;
-                  std::tuple<T, T, T> t = r(-i);
-                  swap(std::get<0>(t), std::get<2>(t));
+                  boost::math::tuple<T, T, T> t = r(-i);
+                  swap(boost::math::get<0>(t), boost::math::get<2>(t));
                   return t;
                }
                R r;
@@ -141,12 +136,11 @@ namespace boost {
          // second: w(0);
          //
          template <class NextCoefs, class T>
-         inline T apply_recurrence_relation_forward(const NextCoefs& get_coefs, unsigned number_of_steps, T first, T second, long long* log_scaling = nullptr, T* previous = nullptr)
+         inline T apply_recurrence_relation_forward(const NextCoefs& get_coefs, unsigned number_of_steps, T first, T second, long long* log_scaling = 0, T* previous = 0)
          {
             BOOST_MATH_STD_USING
-            using std::tuple;
-            using std::get;
-            using std::swap;
+            using boost::math::tuple;
+            using boost::math::get;
 
             T third;
             T a, b, c;
@@ -197,12 +191,11 @@ namespace boost {
          // second: w(0);
          //
          template <class T, class NextCoefs>
-         inline T apply_recurrence_relation_backward(const NextCoefs& get_coefs, unsigned number_of_steps, T first, T second, long long* log_scaling = nullptr, T* previous = nullptr)
+         inline T apply_recurrence_relation_backward(const NextCoefs& get_coefs, unsigned number_of_steps, T first, T second, long long* log_scaling = 0, T* previous = 0)
          {
             BOOST_MATH_STD_USING
-            using std::tuple;
-            using std::get;
-            using std::swap;
+            using boost::math::tuple;
+            using boost::math::get;
 
             T next;
             T a, b, c;
@@ -211,7 +204,7 @@ namespace boost {
             {
                tie(a, b, c) = get_coefs(-static_cast<int>(k));
 
-               if ((log_scaling) && (second != 0) &&
+               if ((log_scaling) && 
                   ( (fabs(tools::max_value<T>() * (a / b) / 2048) < fabs(second))
                      || (fabs(tools::max_value<T>() * (a / c) / 2048) < fabs(first))
                      || (fabs(tools::min_value<T>() * (a / b) * 2048) > fabs(second))
@@ -242,7 +235,7 @@ namespace boost {
          template <class Recurrence>
          struct forward_recurrence_iterator
          {
-            typedef typename std::remove_reference<decltype(std::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
+            typedef typename boost::remove_reference<decltype(std::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
 
             forward_recurrence_iterator(const Recurrence& r, value_type f_n_minus_1, value_type f_n)
                : f_n_minus_1(f_n_minus_1), f_n(f_n), coef(r), k(0) {}
@@ -259,7 +252,7 @@ namespace boost {
             {
                using std::swap;
                value_type a, b, c;
-               std::tie(a, b, c) = coef(k);
+               boost::math::tie(a, b, c) = coef(k);
                value_type f_n_plus_1 = a * f_n_minus_1 / -c + b * f_n / -c;
                swap(f_n_minus_1, f_n);
                swap(f_n, f_n_plus_1);
@@ -284,7 +277,7 @@ namespace boost {
          template <class Recurrence>
          struct backward_recurrence_iterator
          {
-            typedef typename std::remove_reference<decltype(std::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
+            typedef typename boost::remove_reference<decltype(std::get<0>(std::declval<Recurrence&>()(0)))>::type value_type;
 
             backward_recurrence_iterator(const Recurrence& r, value_type f_n_plus_1, value_type f_n)
                : f_n_plus_1(f_n_plus_1), f_n(f_n), coef(r), k(0) {}
@@ -301,7 +294,7 @@ namespace boost {
             {
                using std::swap;
                value_type a, b, c;
-               std::tie(a, b, c) = coef(k);
+               boost::math::tie(a, b, c) = coef(k);
                value_type f_n_minus_1 = c * f_n_plus_1 / -a + b * f_n / -a;
                swap(f_n_plus_1, f_n);
                swap(f_n, f_n_minus_1);

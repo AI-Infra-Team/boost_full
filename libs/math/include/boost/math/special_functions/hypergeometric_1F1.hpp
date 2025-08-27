@@ -80,8 +80,7 @@ namespace boost { namespace math { namespace detail {
          if (a < 0)
          {
             if ((b < a) && (z < -b / 4))
-               // Defensive programming: it is *almost* certain that we can never get here, proving that is hard though...
-               return hypergeometric_1F1_from_function_ratio_negative_ab(a, b, z, pol, log_scaling);  // LCOV_EXCL_LINE
+               return hypergeometric_1F1_from_function_ratio_negative_ab(a, b, z, pol, log_scaling);
             else
             {
                //
@@ -115,7 +114,7 @@ namespace boost { namespace math { namespace detail {
             // At higher than double precision we need to be further away from the crossover location to
             // get full converge, but it's not clear how much further - indeed at quad precision it's
             // basically impossible to ever get forwards iteration to work.  Backwards seems to work
-            // OK as long as a > 1 whatever the precision though.
+            // OK as long as a > 1 whatever the precision tbough.
             //
             int domain = hypergeometric_1F1_negative_b_recurrence_region(a, b, z);
             if ((domain < 0) && ((a > 1) || (boost::math::policies::digits<T, Policy>() <= 64)))
@@ -124,14 +123,10 @@ namespace boost { namespace math { namespace detail {
             {
                if (boost::math::policies::digits<T, Policy>() <= 64)
                   return hypergeometric_1F1_from_function_ratio_negative_b_forwards(a, b, z, pol, log_scaling);
-               // LCOV_EXCL_START, what follows is multiprecision only
-#ifndef BOOST_MATH_NO_EXCEPTIONS
-               try
-#endif
+               try 
                {
                   return hypergeometric_1F1_checked_series_impl(a, b, z, pol, log_scaling);
                }
-#ifndef BOOST_MATH_NO_EXCEPTIONS
                catch (const evaluation_error&)
                {
                   //
@@ -139,8 +134,6 @@ namespace boost { namespace math { namespace detail {
                   //
                   return hypergeometric_1F1_from_function_ratio_negative_b_forwards(a, b, z, pol, log_scaling);
                }
-#endif
-               // LCOV_EXCL_STOP
             }
             //
             // We could fall back to Tricomi's approximation if we're in the transition zone
@@ -163,8 +156,6 @@ namespace boost { namespace math { namespace detail {
       return hypergeometric_1F1_checked_series_impl(a, b, z, pol, log_scaling);
    }
 
-#if 0
-   // Archived, not used, see comments at call site.
    template <class T>
    bool is_convergent_negative_z_series(const T& a, const T& b, const T& z, const T& b_minus_a)
    {
@@ -185,7 +176,7 @@ namespace boost { namespace math { namespace detail {
          // Double check for divergence when we cross the origin on a and b:
          if (a < 0)
          {
-            T n = 3 - floor(a);
+            T n = 300 - floor(a);
             if (fabs((a + n) * z / ((b + n) * n)) < 1)
             {
                if (b < 0)
@@ -230,7 +221,7 @@ namespace boost { namespace math { namespace detail {
       }
       return false;
    }
-#endif
+
    template <class T>
    inline T cyl_bessel_i_shrinkage_rate(const T& z)
    {
@@ -318,33 +309,21 @@ namespace boost { namespace math { namespace detail {
 
       // undefined result:
       if (!detail::check_hypergeometric_1F1_parameters(a, b))
-         return policies::raise_domain_error<T>(function, "Function is indeterminate for negative integer b = %1%.", b, pol);
+         return policies::raise_domain_error<T>(
+            function,
+            "Function is indeterminate for negative integer b = %1%.",
+            b,
+            pol);
 
       // other checks:
       if (a == -1)
-      {
-         T r = 1 - (z / b);
-         if (fabs(r) < 0.5)
-            r = (b - z) / b;
-         return r;
-      }
+         return 1 - (z / b);
 
       const T b_minus_a = b - a;
 
       // 0f0 a == b case;
       if (b_minus_a == 0)
       {
-         if ((a < 0) && (floor(a) == a))
-         {
-            // Special case, use the truncated series to match what Mathematica does.
-            if ((a < -20) && (z > 0) && (z < 1))
-            {
-               // https://functions.wolfram.com/HypergeometricFunctions/Hypergeometric1F1/03/01/04/02/0002/
-               return exp(z) * boost::math::gamma_q(1 - a, z, pol);
-            }
-            // https://functions.wolfram.com/HypergeometricFunctions/Hypergeometric1F1/03/01/04/02/0003/
-            return hypergeometric_1F1_checked_series_impl(a, b, z, pol, log_scaling);
-         }
          long long scale = lltrunc(z, pol);
          log_scaling += scale;
          return exp(z - scale);
@@ -356,9 +335,7 @@ namespace boost { namespace math { namespace detail {
          if ((a < 0) && (a == ceil(a)) && (a > -50))
             return detail::hypergeometric_1F1_generic_series(a, b, z, pol, log_scaling, function);
 
-         log_scaling = lltrunc(floor(z));
-         T local_z = z - log_scaling;
-         return (b + z) * exp(local_z) / b;
+         return (b + z) * exp(z) / b;
       }
 
       if ((a == 1) && (b == 2))
@@ -420,17 +397,13 @@ namespace boost { namespace math { namespace detail {
       if (detail::hypergeometric_1F1_asym_region(a, b, z, pol))
       {
          long long saved_scale = log_scaling;
-#ifndef BOOST_MATH_NO_EXCEPTIONS
          try
-#endif
          {
             return hypergeometric_1F1_asym_large_z_series(a, b, z, pol, log_scaling);
          }
-#ifndef BOOST_MATH_NO_EXCEPTIONS
          catch (const evaluation_error&)
          {
          }
-#endif
          //
          // Very occasionally our convergence criteria don't quite go to full precision
          // and we have to try another method:
@@ -445,12 +418,6 @@ namespace boost { namespace math { namespace detail {
       {
          if (a == 1)
             return detail::hypergeometric_1F1_pade(b, z, pol);
-#if 0
-         //
-         // Commented out: is_convergent_negative_z_series is fine so far as it goes
-         // but there appear to be no cases that use it, and in extremis, we will
-         // fall through to the series evaluation anyway.
-         //
          if (is_convergent_negative_z_series(a, b, z, b_minus_a))
          {
             if ((boost::math::sign(b_minus_a) == boost::math::sign(b)) && ((b > 0) || (b < -200)))
@@ -469,29 +436,13 @@ namespace boost { namespace math { namespace detail {
                return hypergeometric_1F1_checked_series_impl(a, b, z, pol, log_scaling);
             }
          }
-#endif
-         if ((b < 0) && (floor(b) == b))
-         {
-            // Negative integer b, so a must be a negative integer too.
-            // Kummer's transformation fails here!
-            if(a > -50)
-               return detail::hypergeometric_1F1_generic_series(a, b, z, pol, log_scaling, function);
-            // Is there anything better than this??
-            return hypergeometric_1F1_imp(a, float_next(b), z, pol, log_scaling);
-         }
-         else
-         {
-            // Let's otherwise make z positive (almost always)
-            // by Kummer's transformation
-            // (we also don't transform if z belongs to [-1,0])
-            // Also note that Kummer's transformation fails when b is 
-            // a negative integer, although this seems to be unmentioned
-            // in the literature...
-            long long scaling = lltrunc(z);
-            T r = exp(z - scaling) * detail::hypergeometric_1F1_imp<T>(b_minus_a, b, -z, pol, log_scaling);
-            log_scaling += scaling;
-            return r;
-         }
+         // Let's otherwise make z positive (almost always)
+         // by Kummer's transformation
+         // (we also don't transform if z belongs to [-1,0])
+         long long scaling = lltrunc(z);
+         T r = exp(z - scaling) * detail::hypergeometric_1F1_imp<T>(b_minus_a, b, -z, pol, log_scaling);
+         log_scaling += scaling;
+         return r;
       }
       //
       // Check for initial divergence:
@@ -681,26 +632,16 @@ namespace boost { namespace math { namespace detail {
 
       while (scale > max_scaling)
       {
-         if((fabs(result) > 1) && (fabs(tools::max_value<T>()) / result <= max_scale_factor))
-            return policies::raise_overflow_error<T>("hypergeometric_1F1_regularized", nullptr, pol);
-         // This is *probably* unreachable:
-         // LCOV_EXCL_START
          result *= max_scale_factor;
          scale -= max_scaling;
-         // LCOV_EXCL_STOP
       }
       while (scale < -max_scaling)
       {
          result /= max_scale_factor;
-         scale += max_scaling;
+     scale += max_scaling;
       }
       if (scale != 0)
-      {
-         scale = exp(scale);
-         if ((scale > 1) && (fabs(result) > 1) && (fabs(tools::max_value<T>() / result) <= scale))
-            return policies::raise_overflow_error<T>("hypergeometric_1F1_regularized", nullptr, pol);
-         result *= scale;
-      }
+         result *= exp(scale);
       return result * result_sign;
    }
 

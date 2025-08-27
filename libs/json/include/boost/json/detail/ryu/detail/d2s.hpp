@@ -35,8 +35,7 @@ typedef __uint128_t uint128_t;
 #include <boost/json/detail/ryu/detail/d2s_intrinsics.hpp>
 #endif
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 namespace ryu {
@@ -258,7 +257,6 @@ double_computeInvPow5(
 } // ryu
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

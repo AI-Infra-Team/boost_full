@@ -12,6 +12,7 @@
 
 //Robust mutex handling is only supported in conforming POSIX systems
 #if !defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED) || !defined(BOOST_INTERPROCESS_POSIX_ROBUST_MUTEXES)
+
 int main()
 {
    return 0;
@@ -58,7 +59,7 @@ void test_owner_dead_mutex_do_lock(M &mtx, EOwnerDeadLockType lock_type)
       break;
 
       case OwnerDeadTimedLock:
-      mtx.timed_lock(boost_systemclock_delay_ms(10));
+      mtx.timed_lock(boost_systemclock_delay(10));
       break;
    }
 }
@@ -73,17 +74,17 @@ int test_owner_dead_mutex_impl(EOwnerDeadLockType lock_type)
    ipcdetail::OS_thread_t tm1;
    ipcdetail::thread_launch(tm1, thread_adapter<M>(&lock_and_exit, 0, mtx));
    ipcdetail::thread_join(tm1);
-   BOOST_INTERPROCESS_TRY {
+   BOOST_TRY {
       test_owner_dead_mutex_do_lock(mtx, lock_type);
    }
-   BOOST_INTERPROCESS_CATCH(lock_exception& e) {
+   BOOST_CATCH(lock_exception& e) {
       #ifndef BOOST_NO_EXCEPTIONS
       if (e.get_error_code() == not_recoverable){
          //Now try once again to lock it, to make sure it's not recoverable
-         BOOST_INTERPROCESS_TRY {
+         BOOST_TRY {
             test_owner_dead_mutex_do_lock(mtx, lock_type);
          }
-         BOOST_INTERPROCESS_CATCH(lock_exception& e) {
+         BOOST_CATCH(lock_exception& e) {
             if (e.get_error_code() == not_recoverable)
                return 0;
             else{
@@ -91,10 +92,10 @@ int test_owner_dead_mutex_impl(EOwnerDeadLockType lock_type)
                return 3;
             }
          }
-         BOOST_INTERPROCESS_CATCH(...) {
+         BOOST_CATCH(...) {
             std::cerr << "lock_exception not thrown! (2)";
             return 4;
-         } BOOST_INTERPROCESS_CATCH_END
+         } BOOST_CATCH_END
          std::cerr << "Exception not thrown (2)!";
          return 5;
       }
@@ -104,10 +105,10 @@ int test_owner_dead_mutex_impl(EOwnerDeadLockType lock_type)
       }
       #endif   //BOOST_NO_EXCEPTIONS
    }
-   BOOST_INTERPROCESS_CATCH(...) {
+   BOOST_CATCH(...) {
       std::cerr << "lock_exception not thrown!";
       return 2;
-   } BOOST_INTERPROCESS_CATCH_END
+   } BOOST_CATCH_END
    std::cerr << "Exception not thrown!";
    return 3;
 }
@@ -131,13 +132,13 @@ int main ()
 {
    using namespace boost::interprocess;
    int ret;
-   std::cerr << "Testing interprocess_mutex\n";
+   std::cerr << "Testing interprocess_mutex";
    ret = test::test_owner_dead_mutex<interprocess_mutex>();
    if (ret)
       return ret;
 
    #ifdef BOOST_INTERPROCESS_POSIX_RECURSIVE_MUTEXES
-   std::cerr << "Testing interprocess_recursive_mutex\n";
+   std::cerr << "Testing interprocess_recursive_mutex";
    ret = test::test_owner_dead_mutex<interprocess_recursive_mutex>();
    if (ret)
       return ret;

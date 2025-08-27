@@ -80,8 +80,6 @@ public:
             *this, std::move(req)))
     {
         sp->reset(); // VFALCO I don't like this
-        if(res_p)
-            res_p->result(http::status::internal_server_error);
         (*this)({}, 0, false);
     }
 
@@ -95,7 +93,7 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
+            ec = net::error::operation_aborted;
             return this->complete(cont, ec);
         }
         auto& impl = *sp;
@@ -164,7 +162,7 @@ public:
                     }
                     else
                     {
-                        BOOST_BEAST_ASSIGN_EC(ec, http::error::buffer_overflow);
+                        ec = http::error::buffer_overflow;
                     }
                 }
 
@@ -190,19 +188,10 @@ template<class NextLayer, bool deflateSupported>
 struct stream<NextLayer, deflateSupported>::
     run_handshake_op
 {
-    boost::shared_ptr<impl_type> const& self;
-
-    using executor_type = typename stream::executor_type;
-
-    executor_type
-    get_executor() const noexcept
-    {
-        return self->stream().get_executor();
-    }
-
     template<class HandshakeHandler>
     void operator()(
         HandshakeHandler&& h,
+        boost::shared_ptr<impl_type> const& sp,
         request_type&& req,
         detail::sec_ws_key_type key,
         response_type* res_p)
@@ -219,7 +208,7 @@ struct stream<NextLayer, deflateSupported>::
         handshake_op<
             typename std::decay<HandshakeHandler>::type>(
                 std::forward<HandshakeHandler>(h),
-                    self, std::move(req), key, res_p);
+                    sp, std::move(req), key, res_p);
     }
 };
 
@@ -236,9 +225,6 @@ do_handshake(
     RequestDecorator const& decorator,
     error_code& ec)
 {
-    if(res_p)
-        res_p->result(http::status::internal_server_error);
-
     auto& impl = *impl_;
     impl.change_status(status::handshake);
     impl.reset();
@@ -282,25 +268,19 @@ do_handshake(
             }
             else
             {
-                BOOST_BEAST_ASSIGN_EC(ec, http::error::buffer_overflow);
+                ec = http::error::buffer_overflow;
             }
         }
     }
     if(impl.check_stop_now(ec))
         return;
 
-    if (res_p)
-    {
-        // If res_p is not null, move parser's response into it.
-        *res_p = p.release();
-    }
-    else
-    {
-        // Otherwise point res_p at the response in the parser.
-        res_p = &p.get();
-    }
+    impl.on_response(p.get(), key, ec);
+    if(impl.check_stop_now(ec))
+        return;
 
-    impl.on_response(*res_p, key, ec);
+    if(res_p)
+        *res_p = p.release();
 }
 
 //------------------------------------------------------------------------------
@@ -322,8 +302,9 @@ async_handshake(
     return net::async_initiate<
         HandshakeHandler,
         void(error_code)>(
-            run_handshake_op{impl_},
+            run_handshake_op{},
             handler,
+            impl_,
             std::move(req),
             key,
             nullptr);
@@ -347,8 +328,9 @@ async_handshake(
     return net::async_initiate<
         HandshakeHandler,
         void(error_code)>(
-            run_handshake_op{impl_},
+            run_handshake_op{},
             handler,
+            impl_,
             std::move(req),
             key,
             &res);

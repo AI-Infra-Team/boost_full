@@ -32,6 +32,8 @@ sys::error_code make_error_code( E e )
     return e == 0? sys::error_code(): sys::error_code( e, sys::generic_category() );
 }
 
+#if defined(BOOST_SYSTEM_HAS_SYSTEM_ERROR)
+
 enum E2
 {
     e2inval = EINVAL
@@ -54,6 +56,8 @@ std::error_code make_error_code( E2 e )
 {
     return std::error_code( e, std::generic_category() );
 }
+
+#endif
 
 int main()
 {
@@ -80,7 +84,7 @@ int main()
         BOOST_TEST( ec.failed() );
 
         BOOST_TEST( ec.has_location() );
-        BOOST_TEST_EQ( ec.location().line(), 73 );
+        BOOST_TEST_EQ( ec.location().line(), 77 );
     }
 
     {
@@ -130,7 +134,7 @@ int main()
         BOOST_TEST( ec.failed() );
 
         BOOST_TEST( ec.has_location() );
-        BOOST_TEST_EQ( ec.location().line(), 123 );
+        BOOST_TEST_EQ( ec.location().line(), 127 );
     }
 
     {
@@ -178,7 +182,7 @@ int main()
         BOOST_TEST( ec.failed() );
 
         BOOST_TEST( ec.has_location() );
-        BOOST_TEST_EQ( ec.location().line(), 171 );
+        BOOST_TEST_EQ( ec.location().line(), 175 );
     }
 
     {
@@ -204,6 +208,8 @@ int main()
         BOOST_TEST( !ec.has_location() );
         BOOST_TEST_EQ( ec.location().line(), 0 );
     }
+
+#if defined(BOOST_SYSTEM_HAS_SYSTEM_ERROR)
 
     {
         sys::error_code ec( e2inval );
@@ -274,6 +280,8 @@ int main()
         BOOST_TEST( !ec.has_location() );
         BOOST_TEST_EQ( ec.location().line(), 0 );
     }
+
+#endif
 
     return boost::report_errors();
 }

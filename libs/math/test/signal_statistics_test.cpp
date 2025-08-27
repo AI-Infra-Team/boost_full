@@ -10,8 +10,6 @@
 #include <forward_list>
 #include <algorithm>
 #include <random>
-#include <cmath>
-#include <cfloat>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -138,7 +136,6 @@ void test_absolute_gini_coefficient()
 {
     using boost::math::statistics::absolute_gini_coefficient;
     using boost::math::statistics::sample_absolute_gini_coefficient;
-    using std::abs;
     Real tol = std::numeric_limits<Real>::epsilon();
     std::vector<Real> v{-1,0,0};
     Real gini = sample_absolute_gini_coefficient(v.begin(), v.end());
@@ -196,8 +193,7 @@ void test_absolute_gini_coefficient()
     }
     population_gini2 = absolute_gini_coefficient(u);
 
-    std::cout << population_gini2 << std::endl;
-    BOOST_TEST(abs(population_gini2 - 0.5) < 0.012);
+    BOOST_TEST(abs(population_gini2 - 0.5) < 0.01);
 }
 
 

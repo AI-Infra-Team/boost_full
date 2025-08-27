@@ -11,7 +11,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/move/utility_core.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/move/unique_ptr.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/move/adl_move_swap.hpp>
 #include <boost/core/lightweight_test.hpp>
 
@@ -87,7 +89,7 @@ void test()
       bml::unique_ptr<A> p(new A);
       BOOST_TEST(A::count == 1);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset();
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -97,7 +99,7 @@ void test()
       bml::unique_ptr<A> p(new A);
       BOOST_TEST(A::count == 1);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(new A);
       BOOST_TEST(A::count == 1);
       }
@@ -106,7 +108,7 @@ void test()
       bml::unique_ptr<A> p(new A);
       BOOST_TEST(A::count == 1);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(0);
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -120,7 +122,7 @@ void test()
       bml::unique_ptr<A[]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset();
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -130,7 +132,7 @@ void test()
       bml::unique_ptr<A[]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(new A[3]);
       BOOST_TEST(A::count == 3);
       }
@@ -139,7 +141,7 @@ void test()
       bml::unique_ptr<A[]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(0);
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -153,7 +155,7 @@ void test()
       bml::unique_ptr<A[2]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset();
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -163,7 +165,7 @@ void test()
       bml::unique_ptr<A[2]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(new A[3]);
       BOOST_TEST(A::count == 3);
       }
@@ -172,7 +174,7 @@ void test()
       bml::unique_ptr<A[2]> p(new A[2]);
       BOOST_TEST(A::count == 2);
       A* i = p.get();
-      ::boost::movelib::ignore(i);
+      ::boost::ignore_unused(i);
       p.reset(0);
       BOOST_TEST(A::count == 0);
       BOOST_TEST(p.get() == 0);
@@ -198,7 +200,7 @@ void test()
    BOOST_TEST(A::count == 1);
    BOOST_TEST(B::count == 0);
    A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new B);
    BOOST_TEST(A::count == 1);
    BOOST_TEST(B::count == 1);
@@ -210,7 +212,7 @@ void test()
    BOOST_TEST(A::count == 1);
    BOOST_TEST(B::count == 1);
    A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new B);
    BOOST_TEST(A::count == 1);
    BOOST_TEST(B::count == 1);
@@ -223,7 +225,7 @@ void test()
    bml::unique_ptr<const volatile A[2]> p(new const A[2]);
    BOOST_TEST(A::count == 2);
    const volatile A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new volatile A[3]);
    BOOST_TEST(A::count == 3);
    }
@@ -232,7 +234,7 @@ void test()
    bml::unique_ptr<const A[2]> p(new A[2]);
    BOOST_TEST(A::count == 2);
    const A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new const A[3]);
    BOOST_TEST(A::count == 3);
    }
@@ -243,7 +245,7 @@ void test()
    bml::unique_ptr<const volatile A[2]> p(new const A[2]);
    BOOST_TEST(A::count == 2);
    const volatile A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new volatile A[3]);
    BOOST_TEST(A::count == 3);
    }
@@ -252,7 +254,7 @@ void test()
    bml::unique_ptr<const A[2]> p(new A[2]);
    BOOST_TEST(A::count == 2);
    const A* i = p.get();
-   ::boost::movelib::ignore(i);
+   ::boost::ignore_unused(i);
    p.reset(new const A[3]);
    BOOST_TEST(A::count == 3);
    }

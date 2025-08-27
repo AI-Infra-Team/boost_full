@@ -24,6 +24,4 @@ int main(int
 #endif
 }
 
-#else
-int main(void) { return 0; }
 #endif

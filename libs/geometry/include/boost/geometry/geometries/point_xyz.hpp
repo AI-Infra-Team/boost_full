@@ -70,7 +70,7 @@ public:
     /// Set y-value
     void y(CoordinateType const& v)
     { this->template set<1>(v); }
-
+    
     /// Set z-value
     void z(CoordinateType const& v)
     { this->template set<2>(v); }
@@ -88,7 +88,7 @@ namespace traits
 template <typename CoordinateType, typename CoordinateSystem>
 struct tag<model::d3::point_xyz<CoordinateType, CoordinateSystem> >
 {
-    using type = point_tag;
+    typedef point_tag type;
 };
 
 template<typename CoordinateType, typename CoordinateSystem>

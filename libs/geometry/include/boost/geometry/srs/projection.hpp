@@ -1,7 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
 // Copyright (c) 2008-2012 Barend Gehrels, Amsterdam, the Netherlands.
-// Copyright (c) 2023 Adam Wulkiewicz, Lodz, Poland.
 
 // This file was modified by Oracle on 2017-2020.
 // Modifications copyright (c) 2017-2020, Oracle and/or its affiliates.
@@ -15,11 +14,10 @@
 #define BOOST_GEOMETRY_SRS_PROJECTION_HPP
 
 
-#include <memory>
 #include <string>
 #include <type_traits>
 
-#include <boost/range/size.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <boost/geometry/algorithms/convert.hpp>
@@ -43,7 +41,7 @@
 
 namespace boost { namespace geometry
 {
-
+    
 namespace projections
 {
 
@@ -53,7 +51,11 @@ namespace detail
 
 template <typename G1, typename G2>
 struct same_tags
-    : std::is_same<geometry::tag_t<G1>, geometry::tag_t<G2>>
+    : std::is_same
+        <
+            typename geometry::tag<G1>::type,
+            typename geometry::tag<G2>::type
+        >
 {};
 
 template <typename CT>
@@ -197,7 +199,7 @@ template
 <
     typename Geometry,
     typename PointPolicy,
-    typename Tag = geometry::tag_t<Geometry>
+    typename Tag = typename geometry::tag<Geometry>::type
 >
 struct project_geometry
 {};
@@ -376,7 +378,7 @@ private:
         return result;
     }
 
-    std::shared_ptr<vprj_t> m_ptr;
+    boost::shared_ptr<vprj_t> m_ptr;
 };
 
 template <typename StaticParameters, typename CT>
@@ -390,7 +392,7 @@ class static_proj_wrapper_base
         <
             StaticParameters
         >::type proj_tag;
-
+    
     typedef typename projections::detail::static_projection_type
         <
             proj_tag,
@@ -496,7 +498,7 @@ public:
 namespace srs
 {
 
-
+    
 /*!
     \brief Representation of projection
     \details Either dynamic or static projection representation

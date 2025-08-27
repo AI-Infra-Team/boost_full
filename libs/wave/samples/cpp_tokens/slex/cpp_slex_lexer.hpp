@@ -157,13 +157,8 @@ private:
 #define EXTCHAR_SPEC        "(" "[uU]" OR "u8" ")"
 
 #define BACKSLASH           "(" Q("\\") OR TRI(Q("/")) ")"
-#if BOOST_WAVE_USE_STRICT_LEXER != 0
-#define ESCAPECHARS         "[abfnrtv?'\"]"
-#else
-#define ESCAPECHARS         "[abeEfnrtv?'\"]"
-#endif
 #define ESCAPESEQ           "(" BACKSLASH "(" \
-                                ESCAPECHARS OR \
+                                "[abfnrtv?'\"]" OR \
                                 BACKSLASH OR \
                                 "x" HEXDIGIT "+" OR \
                                 OCTALDIGIT OCTALDIGIT "?" OCTALDIGIT "?" \
@@ -441,9 +436,9 @@ lexer<IteratorT, PositionT>::init_data_pp_number[INIT_DATA_PP_NUMBER_SIZE] =
 ///////////////////////////////////////////////////////////////////////////////
 // C++11 only token definitions
 
-constexpr token_id T_EXTCHARLIT = T_CHARLIT | AltTokenType;
-constexpr token_id T_EXTSTRINGLIT = T_STRINGLIT | AltTokenType;
-constexpr token_id T_EXTRAWSTRINGLIT = T_RAWSTRINGLIT | AltTokenType;
+#define T_EXTCHARLIT      token_id(T_CHARLIT|AltTokenType)
+#define T_EXTSTRINGLIT    token_id(T_STRINGLIT|AltTokenType)
+#define T_EXTRAWSTRINGLIT token_id(T_RAWSTRINGLIT|AltTokenType)
 
 template <typename IteratorT, typename PositionT>
 typename lexer_base<IteratorT, PositionT>::lexer_data const
@@ -511,7 +506,6 @@ lexer<IteratorT, PositionT>::init_data_cpp2a[INIT_DATA_CPP2A_SIZE] =
 #undef CHAR_SPEC
 #undef BACKSLASH
 #undef ESCAPESEQ
-#undef ESCAPECHARS
 #undef HEXQUAD
 #undef UNIVERSALCHAR
 #undef PP_NUMBERDEF
@@ -667,8 +661,6 @@ public:
 // get the next token from the input stream
     token_type& get(token_type& result) BOOST_OVERRIDE
     {
-        using namespace cpplexer::slex::lexer;
-
         if (!at_eof) {
             do {
             // generate and return the next token
@@ -810,6 +802,10 @@ private:
 
 template <typename IteratorT, typename PositionT>
 lexer::lexer<IteratorT, PositionT> slex_functor<IteratorT, PositionT>::lexer;
+
+#undef T_EXTCHARLIT
+#undef T_EXTSTRINGLIT
+#undef T_EXTRAWSTRINGLIT
 
 ///////////////////////////////////////////////////////////////////////////////
 //

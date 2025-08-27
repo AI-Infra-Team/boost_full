@@ -262,11 +262,13 @@ string const * path_tmpdir()
 
 OBJECT * path_tmpnam( void )
 {
+    char name_buffer[ 64 ];
     unsigned long const pid = path_get_process_id_();
-    static unsigned long t = 0;
+    static unsigned long t;
     if ( !t ) t = time( 0 ) & 0xffff;
     t += 1;
-    return b2::value::format( "jam%lx%lx.000", pid, t );
+    sprintf( name_buffer, "jam%lx%lx.000", pid, t );
+    return object_new( name_buffer );
 }
 
 
@@ -365,25 +367,6 @@ std::string b2::paths::normalize(const std::string &p)
 }
 
 
-std::string b2::paths::rooted(const std::string & path, const std::string & root)
-{
-    std::string result = path;
-    if (!is_rooted(path))
-    {
-        PATHNAME p(path.c_str());
-        p.f_root.ptr = root.c_str();
-        p.f_root.len = (int32_t)root.length();
-        string s;
-        string_new(&s);
-        path_build(&p, &s);
-        result = s.value;
-        string_free(&s);
-    }
-
-    return b2::paths::normalize(result);
-}
-
-
 /*
  * executable_path()
  */
@@ -412,7 +395,7 @@ char * executable_path( char const * argv0 )
     const char * execname = getexecname();
     return execname ? strdup( execname ) : NULL;
 }
-#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#elif defined(__FreeBSD__)
 # include <sys/sysctl.h>
 char * executable_path( char const * argv0 )
 {

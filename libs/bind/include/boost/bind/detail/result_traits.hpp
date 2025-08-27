@@ -22,7 +22,6 @@
 //
 
 #include <boost/config.hpp>
-#include <boost/core/ref.hpp>
 
 #if BOOST_CXX_VERSION >= 201700L
 #include <functional>
@@ -143,18 +142,10 @@ template<class T> struct result_traits< unspecified, std::bit_xor<T> >
     typedef T type;
 };
 
-#if defined(BOOST_LIBSTDCXX_VERSION) && BOOST_LIBSTDCXX_VERSION < 40900
-
-// libstdc++ 4.8 and below don't have std::bit_not
-
-#else
-
 template<class T> struct result_traits< unspecified, std::bit_not<T> >
 {
     typedef T type;
 };
-
-#endif
 
 #endif
 

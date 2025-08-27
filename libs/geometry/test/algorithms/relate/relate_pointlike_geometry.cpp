@@ -15,6 +15,8 @@
 #include "test_relate.hpp"
 #include "nan_cases.hpp"
 
+//TEST
+//#include <to_svg.hpp>
 
 template <typename P>
 void test_point_point()

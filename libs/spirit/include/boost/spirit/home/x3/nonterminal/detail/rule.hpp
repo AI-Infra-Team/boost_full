@@ -1,7 +1,5 @@
 /*=============================================================================
     Copyright (c) 2001-2014 Joel de Guzman
-    Copyright (c) 2017 wanghan02
-    Copyright (c) 2024 Nana Sakisaka
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -13,8 +11,8 @@
 #include <boost/spirit/home/x3/auxiliary/guard.hpp>
 #include <boost/spirit/home/x3/core/parser.hpp>
 #include <boost/spirit/home/x3/core/skip_over.hpp>
-#include <boost/spirit/home/x3/support/expectation.hpp>
 #include <boost/spirit/home/x3/directive/expect.hpp>
+#include <boost/spirit/home/x3/support/utility/sfinae.hpp>
 #include <boost/spirit/home/x3/nonterminal/detail/transform_attribute.hpp>
 #include <boost/utility/addressof.hpp>
 
@@ -100,14 +98,15 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
     template <typename ID, typename Iterator, typename Context>
     struct has_on_error<ID, Iterator, Context,
-            decltype(void(
+        typename disable_if_substitution_failure<
+            decltype(
                 std::declval<ID>().on_error(
                     std::declval<Iterator&>()
                   , std::declval<Iterator>()
                   , std::declval<expectation_failure<Iterator>>()
                   , std::declval<Context>()
                 )
-            ))
+            )>::type
         >
       : mpl::true_
     {};
@@ -117,14 +116,15 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
     template <typename ID, typename Iterator, typename Attribute, typename Context>
     struct has_on_success<ID, Iterator, Context, Attribute,
-            decltype(void(
+        typename disable_if_substitution_failure<
+            decltype(
                 std::declval<ID>().on_success(
                     std::declval<Iterator&>()
-                  , std::declval<Iterator&>()
+                  , std::declval<Iterator>()
                   , std::declval<Attribute&>()
                   , std::declval<Context>()
                 )
-            ))
+            )>::type
         >
       : mpl::true_
     {};
@@ -161,7 +161,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     {
         template <typename Iterator, typename Context, typename ActualAttribute>
         static bool call_on_success(
-            Iterator& /* before */, Iterator& /* after */
+            Iterator& /* first */, Iterator const& /* last */
           , Context const& /* context */, ActualAttribute& /* attr */
           , mpl::false_ /* No on_success handler */ )
         {
@@ -170,15 +170,14 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
         template <typename Iterator, typename Context, typename ActualAttribute>
         static bool call_on_success(
-            Iterator& before, Iterator& after
+            Iterator& first, Iterator const& last
           , Context const& context, ActualAttribute& attr
           , mpl::true_ /* Has on_success handler */)
         {
-            x3::skip_over(before, after, context);
             bool pass = true;
             ID().on_success(
-                before
-              , after
+                first
+              , last
               , attr
               , make_context<parse_pass_context_tag>(pass, context)
             );
@@ -236,45 +235,25 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         {
             for (;;)
             {
-            #if BOOST_SPIRIT_X3_THROW_EXPECTATION_FAILURE
                 try
-            #endif
                 {
-                    if (parse_rhs_main(
-                        rhs, first, last, context, rcontext, attr, mpl::false_()))
-                    {
-                        return true;
-                    }
+                    return parse_rhs_main(
+                        rhs, first, last, context, rcontext, attr, mpl::false_());
                 }
-
-            #if BOOST_SPIRIT_X3_THROW_EXPECTATION_FAILURE
-                catch (expectation_failure<Iterator> const& x) {
-            #else
-                if (has_expectation_failure(context)) {
-                    auto& x = get_expectation_failure(context);
-            #endif
-                    // X3 developer note: don't forget to sync this implementation with x3::guard
+                catch (expectation_failure<Iterator> const& x)
+                {
                     switch (ID().on_error(first, last, x, context))
                     {
                         case error_handler_result::fail:
-                            clear_expectation_failure(context);
                             return false;
-
                         case error_handler_result::retry:
                             continue;
-
                         case error_handler_result::accept:
                             return true;
-
                         case error_handler_result::rethrow:
-                        #if BOOST_SPIRIT_X3_THROW_EXPECTATION_FAILURE
                             throw;
-                        #else
-                            return false; // TODO: design decision required
-                        #endif
                     }
                 }
-                return false;
             }
         }
 

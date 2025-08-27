@@ -13,6 +13,7 @@
 #endif
 
 #include <boost/container/detail/dlmalloc.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/container/throw_exception.hpp>
 
 #define BOOST_INTERPROCESS_VECTOR_ALLOC_STATS
@@ -62,7 +63,7 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
          dlmalloc_free(first_mem);
          ++numalloc;
 
-         BOOST_CONTAINER_TRY{
+         BOOST_TRY{
             dlmalloc_command_ret_t ret;
             for(size_t e = capacity + 1; e < num_elements; ++e){
                size_t received_size;
@@ -100,11 +101,11 @@ void allocation_timing_test(std::size_t num_iterations, std::size_t num_elements
             }
             dlmalloc_free(addr);
          }
-         BOOST_CONTAINER_CATCH(...){
+         BOOST_CATCH(...){
             dlmalloc_free(addr);
-            BOOST_CONTAINER_RETHROW;
+            BOOST_RETHROW;
          }
-         BOOST_CONTAINER_CATCH_END
+         BOOST_CATCH_END
       }
 
       assert( dlmalloc_allocated_memory() == 0);

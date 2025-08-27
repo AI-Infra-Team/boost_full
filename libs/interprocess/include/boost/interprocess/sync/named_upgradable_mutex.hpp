@@ -28,7 +28,6 @@
 #include <boost/interprocess/sync/interprocess_upgradable_mutex.hpp>
 #include <boost/interprocess/sync/shm/named_creation_functor.hpp>
 #include <boost/interprocess/permissions.hpp>
-#include <boost/interprocess/timed_utils.hpp>
 
 //!\file
 //!Describes a named upgradable mutex class for inter-process synchronization
@@ -58,20 +57,20 @@ class named_upgradable_mutex
 
    //!Creates a global upgradable mutex with a name.
    //!If the upgradable mutex can't be created throws interprocess_exception
-   named_upgradable_mutex(create_only_t, const char *name, const permissions &perm = permissions());
+   named_upgradable_mutex(create_only_t create_only, const char *name, const permissions &perm = permissions());
 
    //!Opens or creates a global upgradable mutex with a name.
    //!If the upgradable mutex is created, this call is equivalent to
    //!named_upgradable_mutex(create_only_t, ...)
    //!If the upgradable mutex is already created, this call is equivalent to
    //!named_upgradable_mutex(open_only_t, ... ).
-   named_upgradable_mutex(open_or_create_t, const char *name, const permissions &perm = permissions());
+   named_upgradable_mutex(open_or_create_t open_or_create, const char *name, const permissions &perm = permissions());
 
    //!Opens a global upgradable mutex with a name if that upgradable mutex
    //!is previously.
    //!created. If it is not previously created this function throws
    //!interprocess_exception.
-   named_upgradable_mutex(open_only_t, const char *name);
+   named_upgradable_mutex(open_only_t open_only, const char *name);
 
    #if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
@@ -80,7 +79,7 @@ class named_upgradable_mutex
    //! 
    //!Note: This function is only available on operating systems with
    //!      native wchar_t APIs (e.g. Windows).
-   named_upgradable_mutex(create_only_t, const wchar_t *name, const permissions &perm = permissions());
+   named_upgradable_mutex(create_only_t create_only, const wchar_t *name, const permissions &perm = permissions());
 
    //!Opens or creates a global upgradable mutex with a name.
    //!If the upgradable mutex is created, this call is equivalent to
@@ -90,7 +89,7 @@ class named_upgradable_mutex
    //! 
    //!Note: This function is only available on operating systems with
    //!      native wchar_t APIs (e.g. Windows).
-   named_upgradable_mutex(open_or_create_t, const wchar_t *name, const permissions &perm = permissions());
+   named_upgradable_mutex(open_or_create_t open_or_create, const wchar_t *name, const permissions &perm = permissions());
 
    //!Opens a global upgradable mutex with a name if that upgradable mutex
    //!is previously.
@@ -99,7 +98,7 @@ class named_upgradable_mutex
    //! 
    //!Note: This function is only available on operating systems with
    //!      native wchar_t APIs (e.g. Windows).
-   named_upgradable_mutex(open_only_t, const wchar_t *name);
+   named_upgradable_mutex(open_only_t open_only, const wchar_t *name);
 
    #endif //defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 

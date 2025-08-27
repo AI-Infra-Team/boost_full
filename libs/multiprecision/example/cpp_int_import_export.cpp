@@ -37,7 +37,7 @@ int main()
    // import back again, and check for equality:
    cpp_int j;
    import_bits(j, v.begin(), v.end());
-   BOOST_MP_ASSERT(i == j);
+   BOOST_ASSERT(i == j);
 }
 
 //]

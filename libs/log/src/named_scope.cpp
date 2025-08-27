@@ -14,7 +14,6 @@
  */
 
 #include <boost/log/detail/config.hpp>
-#include <memory>
 #include <utility>
 #include <algorithm>
 #include <boost/type_index.hpp>
@@ -28,6 +27,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
 #endif
+#include "unique_ptr.hpp"
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -153,7 +153,7 @@ struct BOOST_SYMBOL_VISIBLE named_scope::impl :
 
 #else
     //! Pointer to the scope stack
-    std::unique_ptr< scope_list > pScopes;
+    log::aux::unique_ptr< scope_list > pScopes;
 #endif
 
     //! The method returns current thread scope stack
@@ -166,7 +166,7 @@ struct BOOST_SYMBOL_VISIBLE named_scope::impl :
 #endif
         if (!p)
         {
-            std::unique_ptr< scope_list > pNew(new scope_list());
+            log::aux::unique_ptr< scope_list > pNew(new scope_list());
             pScopes.reset(pNew.get());
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
             pScopesCache = p = pNew.release();

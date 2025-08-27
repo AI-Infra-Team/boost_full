@@ -35,13 +35,15 @@ int main()
     graph_t graph(0);
     dynamic_properties dp;
 
-    auto name = get(vertex_name, graph);
+    property_map< graph_t, vertex_name_t >::type name = get(vertex_name, graph);
     dp.property("node_id", name);
 
-    auto mass = get(vertex_color, graph);
+    property_map< graph_t, vertex_color_t >::type mass
+        = get(vertex_color, graph);
     dp.property("mass", mass);
 
-    auto weight = get(edge_weight, graph);
+    property_map< graph_t, edge_weight_t >::type weight
+        = get(edge_weight, graph);
     dp.property("weight", weight);
 
     // Use ref_property_map to turn a graph property into a property map

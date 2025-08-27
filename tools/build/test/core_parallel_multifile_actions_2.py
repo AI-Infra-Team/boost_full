@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2008 Jurko Gospodnetic, Vladimir Prus
 # Copyright 2011 Steven Watanabe
@@ -65,7 +65,6 @@ link dll
 001 - linked
 install installed_dll
 002 - installed
-
 ...updated 3 targets...
 """)
 

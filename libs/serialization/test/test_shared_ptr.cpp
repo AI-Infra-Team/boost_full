@@ -276,7 +276,7 @@ bool test(){
         // trivial test 1
         save_and_load(spa);
 
-        // trivial test 2
+        //trivival test 2
         spa = SPT<A>(new A);
         save_and_load(spa);
 

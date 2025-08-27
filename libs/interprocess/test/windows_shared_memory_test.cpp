@@ -84,16 +84,16 @@ class shared_memory_creation_test_wrapper_w
 
 int main ()
 {
-   BOOST_INTERPROCESS_TRY{
+   BOOST_TRY{
       test::test_named_creation<shared_memory_creation_test_wrapper>();
       #ifdef BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES
       test::test_named_creation<shared_memory_creation_test_wrapper_w>();
       #endif
    }
-   BOOST_INTERPROCESS_CATCH(std::exception &ex){
+   BOOST_CATCH(std::exception &ex){
       std::cout << ex.what() << std::endl;
       return 1;
-   } BOOST_INTERPROCESS_CATCH_END
+   } BOOST_CATCH_END
 
    return 0;
 }

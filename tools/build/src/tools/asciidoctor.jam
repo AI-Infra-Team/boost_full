@@ -130,13 +130,6 @@ rule init ( command * )
         # TODO: Design and implement a mechanism to resolve generator conflicts.
         generators.override asciidoctor.convert : boostbook.docbook-to-onehtml ;
     }
-    else
-    {
-        if ! $(command)
-        {
-            return ;
-        }
-    }
 
     # The command.. Default is bare asciidoctor.
     command ?= asciidoctor ;
@@ -193,13 +186,11 @@ class asciidoctor-generator : generator
         for local p in [ $(property-set).raw ]
         {
             if $(p:G) in <asciidoctor-attribute> <asciidoctor-doctype>
-                <flags> <location>
+                <flags>
             {
                 raw-set += $(p) ;
             }
         }
-        local relevant-ps = [ $(property-set).relevant $(property-set) ] ;
-        raw-set += [ $(relevant-ps).raw ] ;
         raw-set = [ feature.expand-composites $(raw-set) ] ;
         raw-set += [ $(property-set).incidental ] ;
         property-set = [ property-set.create $(raw-set) ] ;

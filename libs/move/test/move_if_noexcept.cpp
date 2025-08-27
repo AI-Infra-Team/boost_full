@@ -14,6 +14,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include "../example/movable.hpp"
 #include "../example/copymovable.hpp"
+#include <boost/static_assert.hpp>
 
 //////////////////////////////////////////////////////////////////////////////
 //A copy_movable_noexcept class

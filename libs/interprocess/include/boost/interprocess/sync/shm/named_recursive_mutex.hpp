@@ -28,7 +28,6 @@
 #include <boost/interprocess/sync/interprocess_recursive_mutex.hpp>
 #include <boost/interprocess/sync/shm/named_creation_functor.hpp>
 #include <boost/interprocess/permissions.hpp>
-#include <boost/interprocess/timed_utils.hpp>
 
 //!\file
 //!Describes a named shm_named_recursive_mutex class for inter-process synchronization
@@ -53,7 +52,7 @@ class shm_named_recursive_mutex
 
    //!Creates a global recursive_mutex with a name.
    //!If the recursive_mutex can't be created throws interprocess_exception
-   shm_named_recursive_mutex(create_only_t, const char *name, const permissions &perm = permissions());
+   shm_named_recursive_mutex(create_only_t create_only, const char *name, const permissions &perm = permissions());
 
    //!Opens or creates a global recursive_mutex with a name.
    //!If the recursive_mutex is created, this call is equivalent to
@@ -61,18 +60,18 @@ class shm_named_recursive_mutex
    //!If the recursive_mutex is already created, this call is equivalent
    //!shm_named_recursive_mutex(open_only_t, ... )
    //!Does not throw
-   shm_named_recursive_mutex(open_or_create_t, const char *name, const permissions &perm = permissions());
+   shm_named_recursive_mutex(open_or_create_t open_or_create, const char *name, const permissions &perm = permissions());
 
    //!Opens a global recursive_mutex with a name if that recursive_mutex is previously
    //!created. If it is not previously created this function throws
    //!interprocess_exception.
-   shm_named_recursive_mutex(open_only_t, const char *name);
+   shm_named_recursive_mutex(open_only_t open_only, const char *name);
 
    #if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
    //!Creates a global recursive_mutex with a name.
    //!If the recursive_mutex can't be created throws interprocess_exception
-   shm_named_recursive_mutex(create_only_t, const wchar_t *name, const permissions &perm = permissions());
+   shm_named_recursive_mutex(create_only_t create_only, const wchar_t *name, const permissions &perm = permissions());
 
    //!Opens or creates a global recursive_mutex with a name.
    //!If the recursive_mutex is created, this call is equivalent to
@@ -80,12 +79,12 @@ class shm_named_recursive_mutex
    //!If the recursive_mutex is already created, this call is equivalent
    //!shm_named_recursive_mutex(open_only_t, ... )
    //!Does not throw
-   shm_named_recursive_mutex(open_or_create_t, const wchar_t *name, const permissions &perm = permissions());
+   shm_named_recursive_mutex(open_or_create_t open_or_create, const wchar_t *name, const permissions &perm = permissions());
 
    //!Opens a global recursive_mutex with a name if that recursive_mutex is previously
    //!created. If it is not previously created this function throws
    //!interprocess_exception.
-   shm_named_recursive_mutex(open_only_t, const wchar_t *name);
+   shm_named_recursive_mutex(open_only_t open_only, const wchar_t *name);
 
    #endif   //defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
@@ -154,7 +153,7 @@ inline void shm_named_recursive_mutex::dont_close_on_destruction()
 {  interprocess_tester::dont_close_on_destruction(m_shmem);  }
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(create_only_t, const char *name, const permissions &perm)
-   :  m_shmem  (create_only_t()
+   :  m_shmem  (create_only
                ,name
                ,sizeof(interprocess_recursive_mutex) +
                   open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -165,7 +164,7 @@ inline shm_named_recursive_mutex::shm_named_recursive_mutex(create_only_t, const
 {}
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_or_create_t, const char *name, const permissions &perm)
-   :  m_shmem  (open_or_create_t()
+   :  m_shmem  (open_or_create
                ,name
                ,sizeof(interprocess_recursive_mutex) +
                   open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -176,7 +175,7 @@ inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_or_create_t, co
 {}
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_only_t, const char *name)
-   :  m_shmem  (open_only_t()
+   :  m_shmem  (open_only
                ,name
                ,read_write
                ,0
@@ -186,7 +185,7 @@ inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_only_t, const c
 #if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(create_only_t, const wchar_t *name, const permissions &perm)
-   :  m_shmem  (create_only_t()
+   :  m_shmem  (create_only
                ,name
                ,sizeof(interprocess_recursive_mutex) +
                   open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -197,7 +196,7 @@ inline shm_named_recursive_mutex::shm_named_recursive_mutex(create_only_t, const
 {}
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_or_create_t, const wchar_t *name, const permissions &perm)
-   :  m_shmem  (open_or_create_t()
+   :  m_shmem  (open_or_create
                ,name
                ,sizeof(interprocess_recursive_mutex) +
                   open_create_impl_t::ManagedOpenOrCreateUserOffset
@@ -208,7 +207,7 @@ inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_or_create_t, co
 {}
 
 inline shm_named_recursive_mutex::shm_named_recursive_mutex(open_only_t, const wchar_t *name)
-   :  m_shmem  (open_only_t()
+   :  m_shmem  (open_only
                ,name
                ,read_write
                ,0

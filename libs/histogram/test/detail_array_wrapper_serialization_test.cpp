@@ -9,11 +9,10 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/core/make_span.hpp>
 #include <boost/histogram/detail/array_wrapper.hpp>
 #include <sstream>
 #include <vector>
-#include "ostream.hpp"
+#include "std_ostream.hpp"
 #include "throw_exception.hpp"
 
 namespace dtl = boost::histogram::detail;
@@ -25,7 +24,7 @@ struct dummy_array_wrapper {
   std::size_t size;
   template <class Archive>
   void serialize(Archive& ar, unsigned /* version */) {
-    for (auto&& x : boost::make_span(ptr, size)) ar & x;
+    for (auto&& x : dtl::make_span(ptr, size)) ar& x;
   }
 };
 

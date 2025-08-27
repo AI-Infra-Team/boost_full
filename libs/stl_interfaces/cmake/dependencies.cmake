@@ -11,7 +11,6 @@ if (NOT BOOST_BRANCH)
   set(BOOST_BRANCH master)
 endif()
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/boost_root)
-  message("Dir \"${CMAKE_BINARY_DIR}/boost_root\" does not exist!  Cloning Boost from sources.")
   add_custom_target(
     boost_root_clone
     git clone --depth 100 -b ${BOOST_BRANCH}
@@ -27,11 +26,10 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/boost_root)
     COMMAND git submodule init libs/assert
     COMMAND git submodule init libs/config
     COMMAND git submodule init libs/core
-    COMMAND git submodule init libs/type_traits
     COMMAND git submodule init tools/build
     COMMAND git submodule init libs/headers
     COMMAND git submodule init tools/boost_install
-    COMMAND git submodule update --jobs 3 --depth 100
+    COMMAND git submodule update --jobs 3
     COMMAND ${bootstrap_cmd}
     COMMAND ./b2 headers
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/boost_root

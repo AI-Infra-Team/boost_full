@@ -105,9 +105,6 @@ struct box_tag : single_tag, areal_tag {};
 /// Convenience segment (2-points) identifying tag
 struct segment_tag : single_tag, linear_tag {};
 
-/// OGC Polyhedral surface identifying tag
-struct polyhedral_surface_tag : single_tag, volumetric_tag {};
-
 
 /// OGC Multi point identifying tag
 struct multi_point_tag : multi_tag, pointlike_tag  {};
@@ -138,25 +135,22 @@ struct single_tag_of
 template <>
 struct single_tag_of<multi_point_tag>
 {
-    using type = point_tag;
+    typedef point_tag type;
 };
 
 template <>
 struct single_tag_of<multi_linestring_tag>
 {
-    using type = linestring_tag;
+    typedef linestring_tag type;
 };
 
 template <>
 struct single_tag_of<multi_polygon_tag>
 {
-    using type = polygon_tag;
+    typedef polygon_tag type;
 };
 
 #endif
-
-template <typename Tag>
-using single_tag_of_t = typename single_tag_of<Tag>::type;
 
 
 }} // namespace boost::geometry

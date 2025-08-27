@@ -29,10 +29,6 @@
 
 #include <boost/interprocess/detail/win32_api.hpp>
 
-#else
-
-#include <sys/stat.h>
-
 #endif
 
 #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED

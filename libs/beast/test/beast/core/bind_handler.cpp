@@ -23,7 +23,6 @@
 #include <boost/asio/post.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/bind/placeholders.hpp>
-#include <boost/bind/std_placeholders.hpp>
 #include <boost/core/exchange.hpp>
 #include <memory>
 #include <string>
@@ -187,7 +186,7 @@ public:
             if (blocking_ == net::execution::blocking.possibly)
             {
                 s_.on_invoke();
-                ex_.execute(std::forward<F>(f));
+                net::execution::execute(ex_, std::forward<F>(f));
             }
             else
             {
@@ -221,16 +220,18 @@ public:
         dispatch(F&& f, Alloc const& a)
         {
             s_.on_invoke();
-            net::prefer(ex_,
-                net::execution::blocking.possibly,
-                net::execution::allocator(a)).execute(std::forward<F>(f));
+            net::execution::execute(
+                net::prefer(ex_,
+                    net::execution::blocking.possibly,
+                    net::execution::allocator(a)),
+                std::forward<F>(f));
             // previously equivalent to
             // ex_.dispatch(std::forward<F>(f), a);
         }
 
         template<class F, class Alloc>
         void
-        post(F&&, Alloc const&)
+        post(F&& f, Alloc const& a)
         {
             // shouldn't be called since the enclosing
             // networking wrapper only uses dispatch
@@ -239,7 +240,7 @@ public:
 
         template<class F, class Alloc>
         void
-        defer(F&&, Alloc const&)
+        defer(F&& f, Alloc const& a)
         {
             // shouldn't be called since the enclosing
             // networking wrapper only uses dispatch

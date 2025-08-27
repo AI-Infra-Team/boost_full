@@ -24,8 +24,7 @@
 
 #include <boost/json/detail/config.hpp>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 namespace ryu {
@@ -359,7 +358,6 @@ std::uint64_t const
 } // ryu
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

@@ -47,7 +47,8 @@ template < class MutableGraph > void modify_demo(MutableGraph& g)
     typename GraphTraits::edges_size_type m = 0;
     typename GraphTraits::vertex_descriptor u, v, w;
     edge_descriptor e, e1, e2;
-    auto name_map = get(edge_name, g);
+    typename property_map< MutableGraph, edge_name_t >::type name_map
+        = get(edge_name, g);
     bool added;
     typename GraphTraits::vertex_iterator vi, vi_end;
 

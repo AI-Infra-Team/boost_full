@@ -1,12 +1,10 @@
-// Copyright Antony Polukhin, 2013-2025.
+// Copyright Antony Polukhin, 2013-2021.
 
 // Distributed under the Boost Software License, Version 1.0.
 // (See the accompanying file LICENSE_1_0.txt
 // or a copy at <http://www.boost.org/LICENSE_1_0.txt>.)
 
 #include <boost/lexical_cast.hpp>
-
-#include <array>
 #include <string>
 #include <cstdio>
 
@@ -32,9 +30,9 @@ void log_errno(int yoko)
 
 void number_to_file(int number, std::FILE* file)
 {
-    using buf_t = std::array<char, 50>;
+    typedef boost::array<char, 50> buf_t; // You can use std::array if your compiler supports it
     buf_t buffer = boost::lexical_cast<buf_t>(number); // No dynamic memory allocation
-    std::fputs(buffer.data(), file);
+    std::fputs(buffer.begin(), file);
 }
 
 //] [/lexical_cast_fixed_buffer]

@@ -7,7 +7,7 @@
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/lightweight_test_trait.hpp>
 #include <boost/histogram/detail/replace_type.hpp>
-#include "ostream.hpp"
+#include "std_ostream.hpp"
 
 using namespace boost::histogram::detail;
 

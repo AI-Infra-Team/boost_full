@@ -16,8 +16,7 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 BOOST_STATIC_ASSERT( std::is_nothrow_destructible<static_resource>::value );
 
@@ -127,5 +126,4 @@ public:
 
 TEST_SUITE(static_resource_test, "boost.json.static_resource");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

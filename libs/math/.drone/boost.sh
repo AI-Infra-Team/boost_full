@@ -15,12 +15,7 @@ echo '==================================> BEFORE_INSTALL'
 echo '==================================> INSTALL'
 
 cd ..
-if [ "$DRONE_BRANCH" == "master" ] || [[ "$DRONE_BRANCH" == */master ]]; then
-    export BOOST_BRANCH="master"
-else
-    export BOOST_BRANCH="develop"
-fi
-git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
+git clone -b $TRAVIS_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
 cd boost-root
 git submodule update --init tools/build
 git submodule update --init libs/config
@@ -40,7 +35,7 @@ echo '==================================> BEFORE_SCRIPT'
 echo '==================================> SCRIPT'
 
 echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD $OPTIONS ;" > ~/user-config.jam
-(cd libs/config/test && ../../../b2 print_config_info print_math_info toolset=$TOOLSET)
+(cd libs/config/test && ../../../b2 config_info_travis_install toolset=$TOOLSET && ./config_info_travis)
 (cd libs/math/test && ../../../b2 -j3 toolset=$TOOLSET $TEST_SUITE)
 
 echo '==================================> AFTER_SUCCESS'

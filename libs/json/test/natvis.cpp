@@ -14,8 +14,7 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 class natvis_test
 {
@@ -113,5 +112,4 @@ public:
 
 TEST_SUITE(natvis_test, "json.natvis");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

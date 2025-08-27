@@ -15,7 +15,6 @@ set(_boost_test_dependencies
   Boost::config
   Boost::core
   Boost::detail
-  Boost::describe
   Boost::exception
   Boost::function
   Boost::io

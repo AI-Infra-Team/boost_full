@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2013 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
@@ -40,7 +40,6 @@ update x1
 updating x1 x2
 update x2
 updating x2 x3
-
 ...updated 3 targets...
 """)
 
@@ -60,7 +59,6 @@ update x1
 updating x1 x2
 update x2
 updating x2 x3
-
 ...updated 3 targets...
 """)
 
@@ -98,11 +96,8 @@ failed x1
 ...failed fail x1...
 update x2
 updating x2
-
+...failed updating 2 targets...
 ...updated 1 target...
-
-...failed updating 1 target...
-   fail x1
 """)
 
 # Make sure that dependencies of targets that are
@@ -129,7 +124,6 @@ update x2
 updating x2
 update x2
 updating x2 x3
-
 ...updated 3 targets...
 """)
 
@@ -153,7 +147,6 @@ t.run_build_system(["-ffile.jam", "x1"], stdout="""\
 ...updating 2 targets...
 update x1
 updating x1 x2
-
 ...updated 2 targets...
 """)
 
@@ -171,7 +164,6 @@ t.run_build_system(["-ffile.jam", "x1"], stdout="""\
 ...updating 1 target...
 update x1
 updating x1 x1
-
 ...updated 1 target...
 """)
 
@@ -202,7 +194,6 @@ update x3
 updating x3 x4 : s4
 update x4
 updating x4 x3 : s5
-
 ...updated 4 targets...
 """)
 

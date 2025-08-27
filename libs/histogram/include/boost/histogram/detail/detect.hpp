@@ -66,8 +66,6 @@ struct detect_base {
 // reset has overloads, trying to get pmf in this case always fails
 BOOST_HISTOGRAM_DETAIL_DETECT(has_method_reset, t.reset(0));
 
-BOOST_HISTOGRAM_DETAIL_DETECT(has_method_push_back, (&T::push_back));
-
 BOOST_HISTOGRAM_DETAIL_DETECT(is_indexable, t[0]);
 
 BOOST_HISTOGRAM_DETAIL_DETECT_BINARY(is_transform, (t.inverse(t.forward(u))));
@@ -94,8 +92,6 @@ BOOST_HISTOGRAM_DETAIL_DETECT(is_iterator,
                               (typename std::iterator_traits<T>::iterator_category{}));
 
 BOOST_HISTOGRAM_DETAIL_DETECT(is_streamable, (std::declval<std::ostream&>() << t));
-
-BOOST_HISTOGRAM_DETAIL_DETECT(is_allocator, (&T::allocate, &T::deallocate));
 
 BOOST_HISTOGRAM_DETAIL_DETECT(has_operator_preincrement, ++t);
 
@@ -168,8 +164,7 @@ template <class T>
 using is_sequence_of_any_axis =
     mp11::mp_and<is_iterable<T>, is_any_axis<mp11::mp_first<T>>>;
 
-// Poor-mans concept checks.
-// These must be structs not aliases, so their names pop up in compiler errors.
+// poor-mans concept checks
 template <class T, class = std::enable_if_t<is_storage<std::decay_t<T>>::value>>
 struct requires_storage {};
 
@@ -208,9 +203,6 @@ struct requires_axes {};
 template <class T, class U,
           class = std::enable_if_t<is_transform<std::decay_t<T>, U>::value>>
 struct requires_transform {};
-
-template <class T, class = std::enable_if_t<is_allocator<std::decay_t<T>>::value>>
-struct requires_allocator {};
 
 } // namespace detail
 } // namespace histogram

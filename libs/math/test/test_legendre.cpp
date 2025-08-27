@@ -52,7 +52,7 @@ void expected_results()
    //
    // Linux:
    //
-   BOOST_MATH_IF_CONSTEXPR((std::numeric_limits<long double>::digits <= 64)
+   if((std::numeric_limits<long double>::digits <= 64)
       && (std::numeric_limits<long double>::digits != std::numeric_limits<double>::digits))
    {
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
@@ -65,7 +65,7 @@ void expected_results()
          ".*", 10, 5);                  // test function
 #endif
    }
-   BOOST_MATH_IF_CONSTEXPR(std::numeric_limits<long double>::digits == 64)
+   if(std::numeric_limits<long double>::digits == 64)
    {
       add_expected_result(
          ".*",                          // compiler
@@ -200,9 +200,7 @@ BOOST_AUTO_TEST_CASE( test_main )
    test_spots(0.0, "double");
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
    test_spots(0.0L, "long double");
-#ifndef BOOST_MATH_NO_REAL_CONCEPT_TESTS
    test_spots(boost::math::concepts::real_concept(0.1), "real_concept");
-#endif
 #endif
 
    expected_results();

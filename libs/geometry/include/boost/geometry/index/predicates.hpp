@@ -2,7 +2,7 @@
 //
 // Spatial query predicates
 //
-// Copyright (c) 2011-2022 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2011-2018 Adam Wulkiewicz, Lodz, Poland.
 //
 // This file was modified by Oracle on 2019-2021.
 // Modifications copyright (c) 2019-2021 Oracle and/or its affiliates.
@@ -14,12 +14,6 @@
 
 #ifndef BOOST_GEOMETRY_INDEX_PREDICATES_HPP
 #define BOOST_GEOMETRY_INDEX_PREDICATES_HPP
-
-#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
-#ifndef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
-#define BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
-#endif
-#endif
 
 #include <boost/geometry/index/detail/predicates.hpp>
 #include <boost/geometry/util/tuples.hpp>
@@ -218,7 +212,7 @@ overlaps(Geometry const& g)
                 >(g);
 }
 
-#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
+#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
 
 /*!
 \brief Generate \c touches() predicate.
@@ -246,7 +240,7 @@ touches(Geometry const& g)
                 >(g);
 }
 
-#endif // BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
+#endif // BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
 
 /*!
 \brief Generate \c within() predicate.
@@ -300,8 +294,10 @@ std::back_inserter(result));
 rt.query(index::intersects(box) && index::satisfies(is_red_o()),
 std::back_inserter(result));
 
+#ifndef BOOST_NO_CXX11_LAMBDAS
 rt.query(index::intersects(box) && index::satisfies([](Value const& v) { return v.is_red(); }),
 std::back_inserter(result));
+#endif
 \endverbatim
 
 \ingroup predicates
@@ -347,7 +343,7 @@ nearest(Geometry const& geometry, std::size_t k)
     return detail::predicates::nearest<Geometry>(geometry, k);
 }
 
-#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
+#ifdef BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
 
 /*!
 \brief Generate path() predicate.
@@ -377,7 +373,7 @@ path(SegmentOrLinestring const& linestring, std::size_t k)
     return detail::predicates::path<SegmentOrLinestring>(linestring, k);
 }
 
-#endif // BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL_PREDICATES
+#endif // BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL
 
 namespace detail { namespace predicates {
 
@@ -421,7 +417,7 @@ operator&&(std::tuple<Preds...> const& t, Pred const& p)
                 std::tuple<Preds...>, Pred
             >::apply(t, p);
 }
-
+    
 }} // namespace detail::predicates
 
 }}} // namespace boost::geometry::index

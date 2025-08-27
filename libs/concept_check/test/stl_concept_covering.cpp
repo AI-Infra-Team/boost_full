@@ -548,10 +548,9 @@ main()
     unary_predicate_archetype<PredArg> pred(dummy_cons);
     bi = std::partition(bi, bi, pred);
   }
-#if !defined(BOOST_MSVC) && !defined(BOOST_EMBTC) && !defined(_MSC_VER)
+#if !defined(BOOST_MSVC) && !defined(BOOST_EMBTC)
   {
-    // fails on MSVC and clang-win; stl headers come from Visual Studio and
-    // they attempt to reverse the iterator
+    // fails on MSVC
     typedef null_archetype<> PredArg;
     typedef sgi_assignable_archetype<convertible_to_archetype<PredArg> > FT;
     mutable_forward_iterator_archetype<FT> fi;

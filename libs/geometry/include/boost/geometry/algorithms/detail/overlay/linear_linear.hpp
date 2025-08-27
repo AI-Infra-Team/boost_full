@@ -1,7 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014-2024, Oracle and/or its affiliates.
-// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// Copyright (c) 2014-2020, Oracle and/or its affiliates.
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -31,7 +30,7 @@
 
 #include <boost/geometry/algorithms/convert.hpp>
 
-#include <boost/geometry/geometries/helper_geometry.hpp>
+
 
 namespace boost { namespace geometry
 {
@@ -83,7 +82,9 @@ struct linear_linear_no_intersections
     static inline OutputIterator apply(MultiLineString const& multilinestring,
                                        OutputIterator oit)
     {
-        for (auto it = boost::begin(multilinestring); it != boost::end(multilinestring); ++it)
+        for (typename boost::range_iterator<MultiLineString const>::type
+                 it = boost::begin(multilinestring);
+             it != boost::end(multilinestring); ++it)
         {
             LineStringOut ls_out;
             geometry::convert(*it, ls_out);
@@ -146,12 +147,14 @@ protected:
         typename Turns,
         typename LinearGeometry1,
         typename LinearGeometry2,
-        typename Strategy
+        typename Strategy,
+        typename RobustPolicy
     >
     static inline void compute_turns(Turns& turns,
                                      LinearGeometry1 const& linear1,
                                      LinearGeometry2 const& linear2,
-                                     Strategy const& strategy)
+                                     Strategy const& strategy,
+                                     RobustPolicy const& robust_policy)
     {
         turns.clear();
 
@@ -167,7 +170,7 @@ protected:
                     LinearGeometry2,
                     assign_policy
                 >
-            >::apply(turns, linear1, linear2, interrupt_policy, strategy);
+            >::apply(turns, linear1, linear2, interrupt_policy, strategy, robust_policy);
     }
 
 
@@ -203,7 +206,7 @@ protected:
         turns::remove_duplicate_turns
             <
                 Turns, EnableRemoveDuplicateTurns
-            >::apply(turns, strategy);
+            >::apply(turns);
 
         return detail::overlay::following::linear::follow
             <
@@ -220,14 +223,15 @@ protected:
 public:
     template
     <
-        typename OutputIterator, typename Strategy
+        typename RobustPolicy, typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(Linear1 const& linear1,
                                        Linear2 const& linear2,
+                                       RobustPolicy const& robust_policy,
                                        OutputIterator oit,
                                        Strategy const& strategy)
     {
-        using turn_info = typename detail::relate::turns::get_turns
+        typedef typename detail::relate::turns::get_turns
             <
                 Linear1,
                 Linear2,
@@ -237,12 +241,12 @@ public:
                         Linear2,
                         assign_policy
                     >
-            >::template turn_info_type<Strategy>::type;
+            >::template turn_info_type<Strategy, RobustPolicy>::type turn_info;
 
-        using turns_container = std::vector<turn_info>;
+        typedef std::vector<turn_info> turns_container;
 
         turns_container turns;
-        compute_turns(turns, linear1, linear2, strategy);
+        compute_turns(turns, linear1, linear2, strategy, robust_policy);
 
         if ( turns.empty() )
         {
@@ -252,7 +256,7 @@ public:
                     LinestringOut,
                     OverlayType,
                     Linear1,
-                    tag_t<Linear1>
+                    typename tag<Linear1>::type
                 >::apply(linear1, oit);
         }
 
@@ -287,10 +291,11 @@ struct linear_linear_linestring
 {
     template
     <
-        typename OutputIterator, typename Strategy
+        typename RobustPolicy, typename OutputIterator, typename Strategy
     >
     static inline OutputIterator apply(Linear1 const& linear1,
                                        Linear2 const& linear2,
+                                       RobustPolicy const& robust_policy,
                                        OutputIterator oit,
                                        Strategy const& strategy)
     {
@@ -299,7 +304,7 @@ struct linear_linear_linestring
                 LinestringOut,
                 overlay_difference,
                 Linear1,
-                tag_t<Linear1>
+                typename tag<Linear1>::type
             >::apply(linear1, oit);
 
         return linear_linear_linestring
@@ -307,7 +312,7 @@ struct linear_linear_linestring
                 Linear2, Linear1, LinestringOut, overlay_difference,
                 EnableFilterContinueTurns, EnableRemoveDuplicateTurns,
                 EnableDegenerateTurns, EnableFollowIsolatedPoints
-            >::apply(linear2, linear1, oit, strategy);
+            >::apply(linear2, linear1, robust_policy, oit, strategy);
     }
 };
 

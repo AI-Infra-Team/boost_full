@@ -981,7 +981,6 @@ void test_values(double, const char* name)
 
 void test_values(long double, const char* name)
 {
-   (void)name;
 #ifdef TEST_LD
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
    std::cout << "Testing type " << name << std::endl;
@@ -1624,6 +1623,6 @@ BOOST_AUTO_TEST_CASE( test_main )
    test_values(1.0L, "long double");
 #endif
 #endif
-
+   
 }
 

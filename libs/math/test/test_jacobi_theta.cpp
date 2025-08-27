@@ -33,7 +33,7 @@ void expected_results()
       ".*",                          // stdlib
       ".*",                          // platform
       ".*",                  // test type(s)
-      ".*WolframAlpha.*",      // test data group
+      ".*Wolfram Alpha.*",      // test data group
       ".*", 60, 15);  // test function
 
    // Catch all cases come last:

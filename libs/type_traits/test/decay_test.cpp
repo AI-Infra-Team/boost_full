@@ -127,7 +127,6 @@ TT_TEST_BEGIN(decay)
           ::tt::decay<f2_type>::type,int (*)(int)>::value),
                                   true );
 
-#ifndef TEST_CUDA_DEVICE
 #ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
    //
    // Don't test this if the std lib has no templated constructors (Oracle+STLPort):
@@ -137,7 +136,6 @@ TT_TEST_BEGIN(decay)
 #ifndef BOOST_NO_STD_WSTRING
    std::pair<std::wstring,std::string> p3  = boost::make_pair( L"foo", "bar" );
    std::pair<std::wstring, int>        p4  = boost::make_pair( L"foo", 1 );
-#endif
 #endif
 #endif
    //

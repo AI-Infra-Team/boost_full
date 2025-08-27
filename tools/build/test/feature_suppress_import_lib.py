@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # Copyright 2018 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
@@ -26,7 +26,7 @@ __declspec(dllexport)
 f() {}
 """)
 
-t.run_build_system(["link=shared"])
+t.run_build_system()
 t.expect_addition("bin/$toolset/debug*/l.obj")
 t.expect_addition("bin/$toolset/debug*/l.dll")
 

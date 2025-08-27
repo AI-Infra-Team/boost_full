@@ -17,40 +17,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - toolset: gcc-14  # Do not remove! It is the only toolset that tests CMake tests down below
-            cxxstd: "03,11,14,17,20"
-            os: ubuntu-24.04
-          - toolset: gcc-12
+          - toolset: gcc-7
+            cxxstd: "03,11,14,17"
+            os: ubuntu-18.04
+          - toolset: gcc-9  # Do not remove! It is the only toolset that tests misc/strip_boost_namespace.sh
             cxxstd: "03,11,14,17,2a"
-            os: ubuntu-22.04
-            cxxflags: "cxxflags=--coverage -fsanitize=address,leak,undefined -fno-sanitize-recover=undefined"
-            linkflags: "linkflags=--coverage -lasan -lubsan"
-            gcov_tool: "gcov-12"
-          - toolset: gcc-11
-            cxxstd: "03,11,14,17,2a"
-            os: ubuntu-22.04
-            cxxflags: "cxxflags=--coverage -fsanitize=address,leak,undefined -fno-sanitize-recover=undefined"
-            linkflags: "linkflags=--coverage -lasan -lubsan"
-            gcov_tool: "gcov-11"
+            os: ubuntu-18.04
           - toolset: gcc-10
             cxxstd: "03,11,14,17,2a"
-            os: ubuntu-22.04
+            os: ubuntu-18.04
             cxxflags: "cxxflags=--coverage -fsanitize=address,leak,undefined -fno-sanitize-recover=undefined"
             linkflags: "linkflags=--coverage -lasan -lubsan"
             gcov_tool: "gcov-10"
-          - toolset: gcc-9
+          - toolset: clang
+            compiler: clang++-10
             cxxstd: "03,11,14,17,2a"
-            os: ubuntu-22.04
-            cxxflags: "cxxflags=--coverage -fsanitize=address,leak,undefined -fno-sanitize-recover=undefined"
-            linkflags: "linkflags=--coverage -lasan -lubsan"
-            gcov_tool: "gcov-9"
-          - toolset: clang-15
-            cxxstd: "03,11,14,17,20"
-            os: ubuntu-22.04
-          - toolset: clang-19   # tests misc/strip_boost_namespace.sh and modules
-            cxxstd: "20,23"
-            os: ubuntu-24.04
-            install: clang-19 llvm-19 libclang-rt-19-dev libc++-19-dev libc++abi-19-dev clang-tools-19
+            os: ubuntu-20.04
+            cxxflags: "cxxflags=-fsanitize=address,undefined,integer -fno-sanitize-recover=undefined"
+            linkflags: "linkflags=-fsanitize=address,undefined,integer"
+          - toolset: clang
+            cxxstd: "03,11,14,17,2a"
+            os: macos-10.15
+            cxxflags: "cxxflags=-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+            linkflags: "linkflags=-fsanitize=address,undefined"
 
     runs-on: ${{matrix.os}}
 
@@ -77,60 +66,28 @@ jobs:
           cd ..
           git clone -b $BOOST_BRANCH --depth 10 https://github.com/boostorg/boost.git boost-root
           cd boost-root
-          git submodule update --init --depth 10 --jobs 2 tools/boostdep libs/filesystem tools/inspect
+          git submodule update --init --depth 10 --jobs 2 tools/boostdep tools/inspect libs/filesystem
           python tools/boostdep/depinst/depinst.py --git_args "--depth 10 --jobs 3" filesystem
           rm -rf libs/$LIBRARY/*
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           python tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --git_args "--depth 10 --jobs 3" $LIBRARY
           ./bootstrap.sh
-          ./b2 variant=debug tools/inspect
+          ./b2 -d0 headers
+          ./b2 -j4 variant=debug tools/inspect/build
 
-      - name: Run CMake tests
-        if: ${{matrix.toolset == 'gcc-14'}}
+      - name: Create user-config.jam
+        if: matrix.compiler
         run: |
-          cd ../boost-root/
-          mkdir __build
-          cd __build
-          cmake -DBUILD_TESTING=1 -DBOOST_INCLUDE_LIBRARIES=pfr -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_C_COMPILER=gcc-14 ..
-          cmake --build . --target tests
-          ctest --output-on-failure --no-tests=error
-          cd ..
-          rm -rf __build
-
-      - name: Run modules tests
-        if: false
-        # if: ${{matrix.toolset == 'clang-19'}}
-        run: |
-          cd ../boost-root/libs/pfr
-          mkdir build_module
-          cd build_module
-          cmake -DBUILD_TESTING=1 -DBOOST_USE_MODULES=1 -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++ -DCMAKE_CXX_STANDARD=23 -DCMAKE_EXPERIMENTAL_CXX_IMPORT_STD=0e5b6991-d74f-4b3d-a41c-cf096e0b2508 -G Ninja ../test/cmake_subdir_test
-          cmake --build .
-          ctest -V
-          cd ..
-          rm -rf build_module
-
-      - name: Run modules tests wihtout 'import std;'
-        if: ${{matrix.toolset == 'clang-19'}}
-        run: |
-          cd ../boost-root/libs/pfr
-          mkdir build_module
-          cd build_module
-          cmake -DBOOST_USE_MODULES=1 -DBUILD_TESTING=1 -GNinja -DCMAKE_CXX_COMPILER=clang++-19 ../test/cmake_subdir_test
-          cmake --build .
-          ctest -V
-          cd ..
-          rm -rf build_module
+          echo "using ${{matrix.toolset}} : : ${{matrix.compiler}} ;" > ~/user-config.jam
 
       - name: Run tests
         run: |
           cd ../boost-root
-          ./b2 -d0 headers
-          ./b2 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} variant=debug,release "${{matrix.cxxflags}}" "${{matrix.linkflags}}" "${{matrix.launcher}}"
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} variant=debug,release "${{matrix.cxxflags}}" "${{matrix.linkflags}}" "${{matrix.launcher}}"
           dist/bin/inspect libs/$LIBRARY
 
       - name: Test boost namespace stripping
-        if: ${{matrix.toolset == 'clang-19'}}
+        if: ${{matrix.toolset == 'gcc-9'}}
         run: ../boost-root/libs/$LIBRARY/misc/strip_boost_namespace.sh
 
       - name: Prepare coverage data
@@ -140,9 +97,9 @@ jobs:
 
           echo -e "#!/bin/bash\nexec ${{matrix.gcov_tool}} \"\$@\"" > $GITHUB_WORKSPACE/coveralls/gcov_wrapper.sh
           chmod +x $GITHUB_WORKSPACE/coveralls/gcov_wrapper.sh
-          wget https://github.com/linux-test-project/lcov/archive/v1.16.zip
-          unzip v1.16.zip
-          LCOV="`pwd`/lcov-1.16/bin/lcov --gcov-tool $GITHUB_WORKSPACE/coveralls/gcov_wrapper.sh"
+          wget https://github.com/linux-test-project/lcov/archive/v1.15.zip
+          unzip v1.15.zip
+          LCOV="`pwd`/lcov-1.15/bin/lcov --gcov-tool $GITHUB_WORKSPACE/coveralls/gcov_wrapper.sh"
 
           echo "$LCOV --directory ../boost-root/bin.v2/libs/$LIBRARY/ --base-directory `pwd`/libs/$LIBRARY/test --capture --output-file $GITHUB_WORKSPACE/coveralls/coverage.info"
           $LCOV --directory ../boost-root/bin.v2/libs/$LIBRARY/ --base-directory ../boost-root/ --capture --output-file $GITHUB_WORKSPACE/coveralls/coverage.info
@@ -166,26 +123,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - toolset: msvc-14.3        # tests CMake tests down below, does not run b2 tests
-            cxxstd: "14,17,20,latest"
-            addrmd: 64
-            os: windows-2025
-            threads: "-j3"
+          - toolset: msvc-14.1
+            cxxstd: "14,17,latest"
+            addrmd: 32,64
+            os: windows-2016
+          # TODO: fails the loophole tests
+          #- toolset: msvc-14.2
+          #  cxxstd: "14,17,latest"
+          #  addrmd: 32,64
+          #  os: windows-2019
           - toolset: gcc
             cxxstd: "03,11,14,17,2a"
             addrmd: 64
-            os: windows-2025
-            threads: "-j3"
-          - toolset: msvc-14.3  # tests CMake tests down below
-            cxxstd: "20,latest"
-            addrmd: 64
-            os: windows-2022
-            threads: "-j1"
-            # Fails with "Unexpected compiler version, expected Clang 19.0.0 or newer."
-            # - toolset: clang-win
-            #   cxxstd: "14,17,2a,latest"
-            #   addrmd: 32,64
-            #   os: windows-2022
+            os: windows-2019
 
     runs-on: ${{matrix.os}}
 
@@ -209,63 +159,16 @@ jobs:
           git clone -b %BOOST_BRANCH% --depth 10 https://github.com/boostorg/boost.git boost-root
           cd boost-root
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
-          git submodule update --init --depth 10 --jobs 2 tools/boostdep
+          git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --git_args "--jobs 3" %LIBRARY%
           cmd /c bootstrap
-
-      - name: Run CMake tests
-        if: ${{matrix.toolset == 'msvc-14.3'}}
-        shell: cmd
-        run: |
-          choco install --no-progress ninja
-          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x64
-          cd ../boost-root/
-          mkdir __build
-          cd __build
-          cmake -DBUILD_TESTING=1 -DBOOST_INCLUDE_LIBRARIES=pfr ..
-          cmake --build . --target tests --config Debug
-          ctest --output-on-failure --no-tests=error -C Debug
-          cd ..
-          rm -rf __build
-
-      - name: Run modules tests
-        if: false
-        # if: ${{matrix.toolset == 'msvc-14.3'}}
-        shell: cmd
-        run: |
-          choco install --no-progress ninja
-          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x64
-          cd ../boost-root/libs/pfr
-          mkdir build_module
-          cd build_module
-          cmake -DBOOST_USE_MODULES=1 -DBUILD_TESTING=1 -DCMAKE_CXX_STANDARD=23 -DCMAKE_EXPERIMENTAL_CXX_IMPORT_STD=0e5b6991-d74f-4b3d-a41c-cf096e0b2508 -G Ninja ../test/cmake_subdir_test
-          cmake --build .
-          ctest --no-tests=error -V
-          cd ..
-          rm -rf build_module
-
-      - name: Run modules tests wihtout 'import std;'
-        if: ${{matrix.toolset == 'msvc-14.3'}}
-        shell: cmd
-        run: |
-          choco install --no-progress ninja
-          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x64
-          cd ../boost-root/libs/pfr
-          mkdir build_module
-          cd build_module
-          cmake -DBOOST_USE_MODULES=1 -DBUILD_TESTING=1 -DCMAKE_CXX_STANDARD=20 -G Ninja ../test/cmake_subdir_test
-          cmake --build .
-          ctest --no-tests=error -V
-          cd ..
-          rm -rf build_module
+          b2 -d0 headers
 
       - name: Run tests
-        if: ${{matrix.os != 'windows-2025'}}  # TODO: workaround issues
         shell: cmd
         run: |
           cd ../boost-root
-          b2 -d0 headers
-          b2 ${{matrix.threads}} libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} variant=debug,release
+          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} variant=debug,release
 
   finish:
     needs: posix

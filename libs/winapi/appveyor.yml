@@ -14,7 +14,6 @@ branches:
   only:
     - develop
     - master
-    - /feature\/.*/
 
 matrix:
   allow_failures:
@@ -33,31 +32,31 @@ environment:
   matrix:
   # test UWP Windows SDK 10
     - COMMENT: UWP _WIN32_WINNT=0x0A00 (WIN10) DESKTOP
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0A00" define="WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: UWP _WIN32_WINNT=0x0A00 (WIN10) SYSTEM
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0A00" define="WINAPI_FAMILY=WINAPI_FAMILY_SYSTEM"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: UWP _WIN32_WINNT=0x0A00 (WIN10) PHONE
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0A00" define="WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: UWP _WIN32_WINNT=0x0A00 (WIN10) APP
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0A00" define="WINAPI_FAMILY=WINAPI_FAMILY_PC_APP"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   # test UWP Windows SDK 8.1 (Visual Studio 2013)
-    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8.1) DESKTOP
+    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8) DESKTOP
       TOOLSET: msvc-12.0
       DEFINES: define="_WIN32_WINNT=0x0603" define="WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8.1) PHONE
+    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8) PHONE
       TOOLSET: msvc-12.0
       DEFINES: define="_WIN32_WINNT=0x0603" define="WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8.1) APP
+    - COMMENT: UWP _WIN32_WINNT=0x0603 (WIN8) APP
       TOOLSET: msvc-12.0
       DEFINES: define="_WIN32_WINNT=0x0603" define="WINAPI_FAMILY=WINAPI_FAMILY_PC_APP"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
@@ -94,22 +93,17 @@ environment:
     - COMMENT: Visual Studio 2017
       TOOLSET: msvc-14.1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    - COMMENT: Visual Studio 2019
-      TOOLSET: msvc-14.2
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: Visual Studio 2017 (clang-cl)
       TOOLSET: clang-win
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - COMMENT: Cygwin
       TOOLSET: gcc
       B2_ADDRESS_MODEL: address-model=32 # 32-bit Cygwin only supports 32 bits
-      DEFINES: define="_WIN32_WINNT=0x0603" define="WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP" # Appveyor installation of Cygwin is outdated and does not support Windows 10 APIs
       ADDPATH: C:\cygwin\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - COMMENT: Cygwin 64
       TOOLSET: gcc
       B2_ADDRESS_MODEL: address-model=64 # Appveyor installation of 64-bit Cygwin only supports 64 bits
-      DEFINES: define="_WIN32_WINNT=0x0603" define="WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP" # Appveyor installation of Cygwin is outdated and does not support Windows 10 APIs
       ADDPATH: C:\cygwin64\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - COMMENT: MinGW
@@ -134,49 +128,47 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   # test platform targets
     - COMMENT: _WIN32_WINNT=0x0400 (NT4)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0400"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0500 (2K)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0500"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0501 (XP)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0501"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0502 (WS03)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0502"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0600 (VISTA/WS08)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0600"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0601 (WIN7)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0601"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0602 (WIN8)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0602"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0603 (WIN8.1)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0603"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - COMMENT: _WIN32_WINNT=0x0A00 (WIN10)
-      TOOLSET: msvc-14.3
+      TOOLSET: msvc-14.2
       DEFINES: define="_WIN32_WINNT=0x0A00"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 install:
   - set SELF=winapi
   - set GIT_FETCH_JOBS=8
-  - set BOOST_BRANCH=develop
-  - if "%APPVEYOR_REPO_BRANCH%" == "master" set BOOST_BRANCH=master
   - cd ..
-  - git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
+  - git clone -b %APPVEYOR_REPO_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
   - git submodule init tools/boostdep
   - git submodule init tools/build

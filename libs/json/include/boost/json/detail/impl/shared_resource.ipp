@@ -12,8 +12,7 @@
 
 #include <boost/json/detail/shared_resource.hpp>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 namespace detail {
 
 // these are here so that ~memory_resource
@@ -31,7 +30,6 @@ shared_resource::
 }
 
 } // detail
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

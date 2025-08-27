@@ -1,6 +1,6 @@
 name: deploy documentation
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   deploy:

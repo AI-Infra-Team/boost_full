@@ -76,7 +76,8 @@ int main(int argc, const char** argv)
         exit(-1);
     }
     // Obtain internal property map from the graph
-    auto name_map = get(vertex_name, g);
+    property_map< graph_type, vertex_name_t >::type name_map
+        = get(vertex_name, g);
     read_graph_file(file_in, name_in, g, name_map);
 
     // Create storage for last modified times
@@ -88,7 +89,7 @@ int main(int argc, const char** argv)
     // Create last modified time property map
     iter_map_t mod_time_map(last_mod_vec.begin(), get(vertex_index, g));
 
-    auto name = get(vertex_name, g);
+    property_map< graph_type, vertex_name_t >::type name = get(vertex_name, g);
     struct stat stat_buf;
     graph_traits< graph_type >::vertex_descriptor u;
     typedef graph_traits< graph_type >::vertex_iterator vertex_iter_t;

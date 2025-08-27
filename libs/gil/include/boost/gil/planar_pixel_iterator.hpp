@@ -201,16 +201,10 @@ struct channel_type<planar_pixel_iterator<IC, C>>
 /////////////////////////////
 
 template <typename IC, typename C>
-inline auto memunit_step(planar_pixel_iterator<IC,C> const&)
-    -> std::ptrdiff_t
-{
-    return sizeof(typename std::iterator_traits<IC>::value_type);
-}
+inline std::ptrdiff_t memunit_step(const planar_pixel_iterator<IC,C>&) { return sizeof(typename std::iterator_traits<IC>::value_type); }
 
 template <typename IC, typename C>
-inline auto memunit_distance(planar_pixel_iterator<IC,C> const& p1, planar_pixel_iterator<IC,C> const& p2)
-    -> std::ptrdiff_t
-{
+inline std::ptrdiff_t memunit_distance(const planar_pixel_iterator<IC,C>& p1, const planar_pixel_iterator<IC,C>& p2) {
     return memunit_distance(gil::at_c<0>(p1),gil::at_c<0>(p2));
 }
 
@@ -228,18 +222,15 @@ inline void memunit_advance(planar_pixel_iterator<IC,C>& p, std::ptrdiff_t diff)
 }
 
 template <typename IC, typename C>
-inline auto memunit_advanced(planar_pixel_iterator<IC,C> const& p, std::ptrdiff_t diff)
-    -> planar_pixel_iterator<IC,C>
-{
+inline planar_pixel_iterator<IC,C> memunit_advanced(const planar_pixel_iterator<IC,C>& p, std::ptrdiff_t diff) {
     planar_pixel_iterator<IC,C> ret=p;
     memunit_advance(ret, diff);
     return ret;
 }
 
 template <typename ChannelPtr, typename ColorSpace>
-inline auto memunit_advanced_ref(planar_pixel_iterator<ChannelPtr,ColorSpace> const& ptr, std::ptrdiff_t diff)
-    -> planar_pixel_reference<typename std::iterator_traits<ChannelPtr>::reference,ColorSpace>
-{
+inline planar_pixel_reference<typename std::iterator_traits<ChannelPtr>::reference,ColorSpace>
+    memunit_advanced_ref(const planar_pixel_iterator<ChannelPtr,ColorSpace>& ptr, std::ptrdiff_t diff) {
     return planar_pixel_reference<typename std::iterator_traits<ChannelPtr>::reference,ColorSpace>(ptr, diff);
 }
 

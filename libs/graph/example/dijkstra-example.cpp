@@ -39,10 +39,11 @@ int main(int, char*[])
     int weights[] = { 1, 2, 1, 2, 7, 3, 1, 1, 1 };
     int num_arcs = sizeof(edge_array) / sizeof(Edge);
     graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-    auto weightmap = get(edge_weight, g);
+    property_map< graph_t, edge_weight_t >::type weightmap
+        = get(edge_weight, g);
     std::vector< vertex_descriptor > p(num_vertices(g));
     std::vector< int > d(num_vertices(g));
-    auto s = vertex(A, g);
+    vertex_descriptor s = vertex(A, g);
 
     dijkstra_shortest_paths(g, s,
         predecessor_map(boost::make_iterator_property_map(
@@ -72,8 +73,9 @@ int main(int, char*[])
     graph_traits< graph_t >::edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei)
     {
-        auto e = *ei;
-        auto u = source(e, g), v = target(e, g);
+        graph_traits< graph_t >::edge_descriptor e = *ei;
+        graph_traits< graph_t >::vertex_descriptor u = source(e, g),
+                                                   v = target(e, g);
         dot_file << name[u] << " -> " << name[v] << "[label=\""
                  << get(weightmap, e) << "\"";
         if (p[v] == u)

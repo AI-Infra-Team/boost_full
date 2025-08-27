@@ -4,7 +4,6 @@
 
 # Automatic configuration for BoostBook tools. To use, just import this module.
 
-import args ;
 import os ;
 import toolset : using ;
 
@@ -22,7 +21,7 @@ if [ os.name ] = NT
 
     if $(quickbook-path)
     {
-        if [ args.get-arg debug-configuration ]
+        if --debug-configuration in [ modules.peek : ARGV ]
         {
             ECHO "notice:" using quickbook ":" $(quickbook-path) ;
         }
@@ -36,7 +35,7 @@ else
 
     if $(quickbook-path)
     {
-        if [ args.get-arg debug-configuration ]
+        if --debug-configuration in [ modules.peek : ARGV ]
         {
             ECHO "notice:" using quickbook ":" $(quickbook-path) ;
         }

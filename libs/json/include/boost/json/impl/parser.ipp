@@ -17,8 +17,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 parser::
 parser(
@@ -61,7 +60,7 @@ parser::
 write_some(
     char const* data,
     std::size_t size,
-    system::error_code& ec)
+    error_code& ec)
 {
     auto const n = p_.write_some(
         false, data, size, ec);
@@ -73,26 +72,14 @@ std::size_t
 parser::
 write_some(
     char const* data,
-    std::size_t size,
-    std::error_code& ec)
-{
-    system::error_code jec;
-    std::size_t const result = write_some(data, size, jec);
-    ec = jec;
-    return result;
-}
-
-std::size_t
-parser::
-write_some(
-    char const* data,
     std::size_t size)
 {
-    system::error_code ec;
+    error_code ec;
     auto const n = write_some(
         data, size, ec);
     if(ec)
-        detail::throw_system_error( ec );
+        detail::throw_system_error(ec,
+            BOOST_JSON_SOURCE_POS);
     return n;
 }
 
@@ -101,13 +88,13 @@ parser::
 write(
     char const* data,
     std::size_t size,
-    system::error_code& ec)
+    error_code& ec)
 {
     auto const n = write_some(
         data, size, ec);
     if(! ec && n < size)
     {
-        BOOST_JSON_FAIL(ec, error::extra_data);
+        ec = error::extra_data;
         p_.fail(ec);
     }
     return n;
@@ -117,26 +104,14 @@ std::size_t
 parser::
 write(
     char const* data,
-    std::size_t size,
-    std::error_code& ec)
-{
-    system::error_code jec;
-    std::size_t const result = write(data, size, jec);
-    ec = jec;
-    return result;
-}
-
-std::size_t
-parser::
-write(
-    char const* data,
     std::size_t size)
 {
-    system::error_code ec;
+    error_code ec;
     auto const n = write(
         data, size, ec);
     if(ec)
-        detail::throw_system_error( ec );
+        detail::throw_system_error(ec,
+            BOOST_JSON_SOURCE_POS);
     return n;
 }
 
@@ -148,18 +123,14 @@ release()
     {
         // prevent undefined behavior
         if(! p_.last_error())
-        {
-            system::error_code ec;
-            BOOST_JSON_FAIL(ec, error::incomplete);
-            p_.fail(ec);
-        }
+            p_.fail(error::incomplete);
         detail::throw_system_error(
-            p_.last_error());
+            p_.last_error(),
+            BOOST_JSON_SOURCE_POS);
     }
     return p_.handler().st.release();
 }
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #endif

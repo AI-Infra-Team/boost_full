@@ -1,6 +1,6 @@
 
-// Copyright 2011 - 2025 John Maddock.
-// Copyright Christopher Kormanyos 2002 - 2025.
+// Copyright Christopher Kormanyos 2002 - 2013.
+// Copyright 2011 - 2013 John Maddock.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
@@ -18,9 +18,7 @@
 #pragma warning(disable : 4127) // conditional expression is constant
 #endif
 
-#include <boost/multiprecision/detail/standalone_config.hpp>
-#include <boost/multiprecision/detail/no_exceptions_support.hpp>
-#include <boost/multiprecision/detail/assert.hpp>
+#include <boost/core/no_exceptions_support.hpp> // BOOST_TRY
 
 namespace detail {
 
@@ -41,29 +39,6 @@ inline void pow_imp(T& result, const T& t, const U& p, const std::integral_const
       pow_imp(temp, t, p, std::integral_constant<bool, false>());
       result = temp;
       return;
-   }
-
-   switch (p)
-   {
-   case 0:
-      result = int_type(1);
-      return;
-   case 1:
-      result = t;
-      return;
-   case 2:
-      eval_multiply(result, t, t);
-      return;
-   case 3:
-      eval_multiply(result, t, t);
-      eval_multiply(result, t);
-      return;
-   case 4:
-      eval_multiply(result, t, t);
-      eval_multiply(result, result);
-      return;
-   default:
-      break;
    }
 
    // This will store the result.
@@ -130,15 +105,16 @@ void hyp0F0(T& H0F0, const T& x)
 
    using ui_type = typename std::tuple_element<0, typename T::unsigned_types>::type;
 
-   BOOST_MP_ASSERT(&H0F0 != &x);
+   BOOST_ASSERT(&H0F0 != &x);
    long tol = boost::multiprecision::detail::digits2<number<T, et_on> >::value();
+   T    t;
 
    T x_pow_n_div_n_fact(x);
 
    eval_add(H0F0, x_pow_n_div_n_fact, ui_type(1));
 
    T lim;
-   eval_ldexp(lim, H0F0, static_cast<int>(1L - tol));
+   eval_ldexp(lim, H0F0, 1 - tol);
    if (eval_get_sign(lim) < 0)
       lim.negate();
 
@@ -163,7 +139,7 @@ void hyp0F0(T& H0F0, const T& x)
          x_pow_n_div_n_fact.negate();
    }
    if (n >= series_limit)
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("H0F0 failed to converge"));
+      BOOST_THROW_EXCEPTION(std::runtime_error("H0F0 failed to converge"));
 }
 
 template <class T>
@@ -176,8 +152,8 @@ void hyp1F0(T& H1F0, const T& a, const T& x)
 
    using si_type = typename boost::multiprecision::detail::canonical<int, T>::type;
 
-   BOOST_MP_ASSERT(&H1F0 != &x);
-   BOOST_MP_ASSERT(&H1F0 != &a);
+   BOOST_ASSERT(&H1F0 != &x);
+   BOOST_ASSERT(&H1F0 != &a);
 
    T x_pow_n_div_n_fact(x);
    T pochham_a(a);
@@ -191,7 +167,7 @@ void hyp1F0(T& H1F0, const T& a, const T& x)
       lim.negate();
 
    si_type n;
-   T       term;
+   T       term, part;
 
    const si_type series_limit =
        boost::multiprecision::detail::digits2<number<T, et_on> >::value() < 100
@@ -212,7 +188,7 @@ void hyp1F0(T& H1F0, const T& a, const T& x)
          break;
    }
    if (n >= series_limit)
-      BOOST_MP_THROW_EXCEPTION(std::runtime_error("H1F0 failed to converge"));
+      BOOST_THROW_EXCEPTION(std::runtime_error("H1F0 failed to converge"));
 }
 
 template <class T>
@@ -234,13 +210,13 @@ void eval_exp(T& result, const T& x)
    // Handle special arguments.
    int  type  = eval_fpclassify(x);
    bool isneg = eval_get_sign(x) < 0;
-   if (type == static_cast<int>(FP_NAN))
+   if (type == (int)FP_NAN)
    {
       result = x;
       errno  = EDOM;
       return;
    }
-   else if (type == static_cast<int>(FP_INFINITE))
+   else if (type == (int)FP_INFINITE)
    {
       if (isneg)
          result = ui_type(0u);
@@ -248,7 +224,7 @@ void eval_exp(T& result, const T& x)
          result = x;
       return;
    }
-   else if (type == static_cast<int>(FP_ZERO))
+   else if (type == (int)FP_ZERO)
    {
       result = ui_type(1);
       return;
@@ -393,8 +369,6 @@ void eval_log(T& result, const T& arg)
       result.negate();
       errno = ERANGE;
       return;
-   default:
-      break;
    }
    if (s)
    {
@@ -525,7 +499,7 @@ inline void eval_pow(T& result, const T& x, const T& a)
          break;
       case FP_NORMAL: {
          // Need to check for a an odd integer as a special case:
-         BOOST_MP_TRY
+         BOOST_TRY
          {
             typename boost::multiprecision::detail::canonical<std::intmax_t, T>::type i;
             eval_convert_to(&i, a);
@@ -555,11 +529,11 @@ inline void eval_pow(T& result, const T& x, const T& a)
                return;
             }
          }
-         BOOST_MP_CATCH(const std::exception&)
+         BOOST_CATCH(const std::exception&)
          {
             // fallthrough..
          }
-         BOOST_MP_CATCH_END
+         BOOST_CATCH_END
          BOOST_FALLTHROUGH;
       }
       default:
@@ -604,7 +578,7 @@ inline void eval_pow(T& result, const T& x, const T& a)
        std::numeric_limits<typename boost::multiprecision::detail::canonical<std::intmax_t, T>::type>::is_specialized ? (std::numeric_limits<typename boost::multiprecision::detail::canonical<std::intmax_t, T>::type>::min)() : -min_an;
 
    T fa;
-   BOOST_MP_TRY
+   BOOST_TRY
    {
       eval_convert_to(&an, a);
       if (a.compare(an) == 0)
@@ -613,16 +587,16 @@ inline void eval_pow(T& result, const T& x, const T& a)
          return;
       }
    }
-   BOOST_MP_CATCH(const std::exception&)
+   BOOST_CATCH(const std::exception&)
    {
       // conversion failed, just fall through, value is not an integer.
       an = (std::numeric_limits<std::intmax_t>::max)();
    }
-   BOOST_MP_CATCH_END
+   BOOST_CATCH_END
    if ((eval_get_sign(x) < 0))
    {
       typename boost::multiprecision::detail::canonical<std::uintmax_t, T>::type aun;
-      BOOST_MP_TRY
+      BOOST_TRY
       {
          eval_convert_to(&aun, a);
          if (a.compare(aun) == 0)
@@ -635,11 +609,11 @@ inline void eval_pow(T& result, const T& x, const T& a)
             return;
          }
       }
-      BOOST_MP_CATCH(const std::exception&)
+      BOOST_CATCH(const std::exception&)
       {
          // conversion failed, just fall through, value is not an integer.
       }
-      BOOST_MP_CATCH_END
+      BOOST_CATCH_END
 
       eval_floor(result, a);
       // -1^INF is a special case in C99:
@@ -670,7 +644,7 @@ inline void eval_pow(T& result, const T& x, const T& a)
       }
       else
       {
-         BOOST_MP_THROW_EXCEPTION(std::domain_error("Result of pow is undefined or non-real and there is no NaN for this number type."));
+         BOOST_THROW_EXCEPTION(std::domain_error("Result of pow is undefined or non-real and there is no NaN for this number type."));
       }
       return;
    }
@@ -773,7 +747,7 @@ void eval_exp2(T& result, const T& arg)
    // Check for pure-integer arguments which can be either signed or unsigned.
    typename boost::multiprecision::detail::canonical<typename T::exponent_type, T>::type i;
    T                                                                                     temp;
-   BOOST_MP_TRY
+   BOOST_TRY
    {
       eval_trunc(temp, arg);
       eval_convert_to(&i, temp);
@@ -784,15 +758,13 @@ void eval_exp2(T& result, const T& arg)
          return;
       }
    }
-   #ifdef BOOST_MP_MATH_AVAILABLE
-   BOOST_MP_CATCH(const boost::math::rounding_error&)
+   BOOST_CATCH(const boost::math::rounding_error&)
    { /* Fallthrough */
    }
-   #endif
-   BOOST_MP_CATCH(const std::runtime_error&)
+   BOOST_CATCH(const std::runtime_error&)
    { /* Fallthrough */
    }
-   BOOST_MP_CATCH_END
+   BOOST_CATCH_END
 
    temp = static_cast<typename std::tuple_element<0, typename T::unsigned_types>::type>(2u);
    eval_pow(result, temp, arg);

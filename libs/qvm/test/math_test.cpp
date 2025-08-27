@@ -1,6 +1,7 @@
-// Copyright 2008-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//Copyright (c) 2008-2016 Emil Dotchevski and Reverge Studios, Inc.
+
+//Distributed under the Boost Software License, Version 1.0. (See accompanying
+//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #ifdef BOOST_QVM_TEST_SINGLE_HEADER
 #   include BOOST_QVM_TEST_SINGLE_HEADER
@@ -9,7 +10,6 @@
 #endif
 
 #include <boost/core/lightweight_test.hpp>
-#include "test_qvm.hpp"
 #include <stdlib.h>
 
 namespace
@@ -21,7 +21,7 @@ namespace
         for( int i=0; i!=100; ++i )
             {
             T a = T(rand()) / T(RAND_MAX);
-            BOOST_QVM_TEST_CLOSE(double(f1(a)), double(f2(a)),0.00001);
+            BOOST_TEST_EQ(f1(a), f2(a));
             }
         }
     template <class T,class U>
@@ -32,7 +32,7 @@ namespace
             {
             T a = T(rand()) / T(RAND_MAX);
             T b = T(rand()) / T(RAND_MAX);
-            BOOST_QVM_TEST_CLOSE(double(f1(a,b)), double(f2(a,b)),0.00001);
+            BOOST_TEST_EQ(f1(a,b), f2(a,b));
             }
         }
     }

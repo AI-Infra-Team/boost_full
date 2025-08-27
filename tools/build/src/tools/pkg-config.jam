@@ -154,15 +154,7 @@ using pkg-config : [config] : [command] ... : [ options ] ... ;
 
 rule init ( config ? : command * : options * )
 {
-    if ! $(config)
-    {
-        config = [ default-config ] ;
-        if ( $(config) in [ $(.configs).all ] )
-           && ! ( $(command) || $(options) )
-        {
-            return ;
-        }
-    }
+    config ?= [ default-config ] ;
 
     local tool = [ os.environ PKG_CONFIG ] ;
     tool ?= pkg-config ;

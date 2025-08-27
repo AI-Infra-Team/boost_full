@@ -12,6 +12,15 @@
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
+#if defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+
+int main()
+{
+    return 0;
+}
+
+#else // !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+
 class myarg
 {
 public:
@@ -85,3 +94,5 @@ int main()
 
     return boost::report_errors();
 }
+
+#endif // !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )

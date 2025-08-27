@@ -16,11 +16,6 @@
 #include <type_traits>
 #include <iosfwd>
 
-#if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(push)
-# pragma warning(disable: 4100) // unreferenced formal parameter
-#endif
-
 namespace boost
 {
 namespace describe
@@ -30,8 +25,8 @@ namespace detail
 {
 
 template<class T,
-    class Bd = describe::describe_bases<T, mod_any_access>,
-    class Md = describe::describe_members<T, mod_any_access>>
+    class Bd = describe_bases<T, mod_any_access>,
+    class Md = describe_members<T, mod_any_access>>
 bool eq( T const& t1, T const& t2 )
 {
     bool r = true;
@@ -53,8 +48,8 @@ bool eq( T const& t1, T const& t2 )
 }
 
 template<class T,
-    class Bd = describe::describe_bases<T, mod_any_access>,
-    class Md = describe::describe_members<T, mod_any_access>>
+    class Bd = describe_bases<T, mod_any_access>,
+    class Md = describe_members<T, mod_any_access>>
 bool lt( T const& t1, T const& t2 )
 {
     int r = 0;
@@ -78,8 +73,8 @@ bool lt( T const& t1, T const& t2 )
 }
 
 template<class Os, class T,
-    class Bd = describe::describe_bases<T, mod_any_access>,
-    class Md = describe::describe_members<T, mod_any_access>>
+    class Bd = describe_bases<T, mod_any_access>,
+    class Md = describe_members<T, mod_any_access>>
 void print( Os& os, T const& t )
 {
     os << "{";
@@ -114,49 +109,49 @@ namespace operators
 {
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator==( T const& t1, T const& t2 )
 {
     return detail::eq( t1, t2 );
 }
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator!=( T const& t1, T const& t2 )
 {
     return !detail::eq( t1, t2 );
 }
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator<( T const& t1, T const& t2 )
 {
     return detail::lt( t1, t2 );
 }
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator>=( T const& t1, T const& t2 )
 {
     return !detail::lt( t1, t2 );
 }
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator>( T const& t1, T const& t2 )
 {
     return detail::lt( t2, t1 );
 }
 
 template<class T> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value, bool>
+    has_describe_bases<T>::value && has_describe_members<T>::value, bool>
     operator<=( T const& t1, T const& t2 )
 {
     return !detail::lt( t2, t1 );
 }
 
 template<class T, class Ch, class Tr> std::enable_if_t<
-    has_describe_bases<T>::value && has_describe_members<T>::value && !std::is_union<T>::value,
+    has_describe_bases<T>::value && has_describe_members<T>::value,
     std::basic_ostream<Ch, Tr>&>
     operator<<( std::basic_ostream<Ch, Tr>& os, T const& t )
 {
@@ -169,10 +164,6 @@ template<class T, class Ch, class Tr> std::enable_if_t<
 
 } // namespace describe
 } // namespace boost
-
-#if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(pop)
-#endif
 
 #endif // defined(BOOST_DESCRIBE_CXX14)
 

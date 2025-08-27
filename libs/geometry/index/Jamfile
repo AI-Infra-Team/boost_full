@@ -11,7 +11,6 @@
 project boost-geometry-index
     :
     requirements
-        <library>/boost/geometry//boost_geometry
         <toolset>msvc:<asynch-exceptions>on
     ;
 

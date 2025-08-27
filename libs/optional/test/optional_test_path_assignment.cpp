@@ -66,7 +66,7 @@ int main()
     optFs1 = optFs2;
 
     // the following still fails although it shouldn't
-    //static_assert((std::is_copy_constructible<boost::optional<Path>>::value), "ERROR");
+    //BOOST_STATIC_ASSERT((std::is_copy_constructible<boost::optional<Path>>::value));
 
 #endif
 #endif

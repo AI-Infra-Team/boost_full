@@ -43,14 +43,7 @@ jobs:
             layout: tagged
             python: ON
             mpi: OFF
-          - os: ubuntu-latest
-            shared: ON
-            testing: ON
-            layout: system
-            python: OFF
-            mpi: OFF
-            exclude: "process;geometry"
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: assert
             testing: ON
             test_install: ON
@@ -58,7 +51,7 @@ jobs:
             include: assert
             testing: ON
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: mp11
             testing: ON
             test_install: ON
@@ -66,21 +59,13 @@ jobs:
             include: mp11
             testing: ON
             test_install: ON
-          - os: ubuntu-latest
-            include: preprocessor
-            testing: ON
-            test_install: ON
-          - os: macos-latest
-            include: preprocessor
-            testing: ON
-            test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: timer
             testing: ON
             layout: versioned
             shared: OFF
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: timer
             testing: ON
             layout: versioned
@@ -98,12 +83,12 @@ jobs:
             layout: versioned
             shared: ON
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: iostreams
             layout: versioned
             shared: OFF
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: iostreams
             layout: versioned
             shared: ON
@@ -118,12 +103,12 @@ jobs:
             layout: versioned
             shared: ON
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: locale
             layout: versioned
             shared: OFF
             test_install: ON
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             include: locale
             layout: versioned
             shared: ON
@@ -137,38 +122,12 @@ jobs:
             include: locale
             layout: versioned
             shared: ON
-            test_install: ON
-          - os: ubuntu-latest
-            include: mysql
-            testing: ON
-            install: libssl-dev
-          - os: ubuntu-latest
-            include: mysql
-            test_install: ON
-            install: libssl-dev
-          - os: ubuntu-latest
-            include: bind
-            testing: ON
-          - os: ubuntu-latest
-            include: bind
-            test_install: ON
-          - os: ubuntu-latest
-            include: endian
-            testing: ON
-          - os: ubuntu-latest
-            include: endian
-            test_install: ON
-          - os: ubuntu-latest
-            include: system
-            testing: ON
-          - os: ubuntu-latest
-            include: system
             test_install: ON
 
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Install packages
         if: matrix.install
@@ -194,7 +153,7 @@ jobs:
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=${{matrix.testing}} -DBOOST_INCLUDE_LIBRARIES="${{matrix.include}}" -DBOOST_EXCLUDE_LIBRARIES="${{matrix.exclude}}" -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_INSTALL_LAYOUT=${{matrix.layout}} -DBOOST_ENABLE_MPI=${{matrix.mpi}} -DBOOST_ENABLE_PYTHON=${{matrix.python}} ..
+          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=${{matrix.testing}} -DBOOST_INCLUDE_LIBRARIES=${{matrix.include}} -DBOOST_EXCLUDE_LIBRARIES=${{matrix.exclude}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_INSTALL_LAYOUT=${{matrix.layout}} -DBOOST_ENABLE_MPI=${{matrix.mpi}} -DBOOST_ENABLE_PYTHON=${{matrix.python}} ..
 
       - name: Build Boost
         run: |
@@ -211,7 +170,7 @@ jobs:
         run: |
           cd ../boost-root/__build__
           cmake --build . --target tests -- -j 3
-          ctest --output-on-failure --no-tests=error -j 3
+          ctest --output-on-failure -j 3
 
       - name: Test installed Boost library
         if: matrix.test_install
@@ -228,19 +187,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-2019
+          - os: windows-2016
             shared: OFF
             python: ON
             mpi: OFF
-          - os: windows-2019
+          - os: windows-2016
             shared: ON
             python: ON
             mpi: OFF
-          - os: windows-2022
+          - os: windows-2019
             shared: OFF
             python: ON
             mpi: OFF
-          - os: windows-2022
+          - os: windows-2019
             shared: ON
             python: ON
             mpi: OFF
@@ -270,54 +229,6 @@ jobs:
             include: iostreams
             shared: ON
             test_install: ON
-          - os: windows-2019
-            include: bind
-            testing: ON
-          - os: windows-2019
-            include: bind
-            test_install: ON
-          - os: windows-2019
-            include: endian
-            testing: ON
-          - os: windows-2019
-            include: endian
-            test_install: ON
-          - os: windows-2019
-            include: system
-            testing: ON
-          - os: windows-2019
-            include: system
-            test_install: ON
-
-            # mingw
-
-          - os: windows-latest
-            include: timer
-            shared: OFF
-            testing: ON
-            test_install: ON
-            opts: "-G \"MinGW Makefiles\""
-          - os: windows-latest
-            include: timer
-            shared: ON
-            testing: ON
-            test_install: ON
-            opts: "-G \"MinGW Makefiles\""
-
-            # clang-cl
-
-          - os: windows-latest
-            include: timer
-            shared: OFF
-            testing: ON
-            test_install: ON
-            opts: "-T clangcl"
-          - os: windows-latest
-            include: timer
-            shared: ON
-            testing: ON
-            test_install: ON
-            opts: "-T clangcl"
 
     runs-on: ${{matrix.os}}
 
@@ -326,7 +237,7 @@ jobs:
         shell: cmd
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Setup Boost
         run: |
@@ -347,7 +258,7 @@ jobs:
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=${{matrix.testing}} -DBOOST_INCLUDE_LIBRARIES=${{matrix.include}} -DBOOST_EXCLUDE_LIBRARIES=${{matrix.exclude}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_ENABLE_MPI=${{matrix.mpi}} -DBOOST_ENABLE_PYTHON=${{matrix.python}} -DCMAKE_IGNORE_PREFIX_PATH="C:/Strawberry/c" ${{matrix.opts}} ..
+          cmake -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=${{matrix.testing}} -DBOOST_INCLUDE_LIBRARIES=${{matrix.include}} -DBOOST_EXCLUDE_LIBRARIES=${{matrix.exclude}} -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_ENABLE_MPI=${{matrix.mpi}} -DBOOST_ENABLE_PYTHON=${{matrix.python}} ..
 
       - name: Build Boost (Debug)
         run: cmake --build ../boost-root/__build__ --config Debug
@@ -363,41 +274,41 @@ jobs:
 
       - name: Test Boost (Debug)
         if: matrix.testing
-        run: cd ../boost-root/__build__ && cmake --build . --target tests --config Debug && ctest --output-on-failure --no-tests=error -j 3 -C Debug
+        run: cd ../boost-root/__build__ && cmake --build . --target tests --config Debug && ctest --output-on-failure -j 3 -C Debug
 
       - name: Test Boost (Release)
         if: matrix.testing
-        run: cd ../boost-root/__build__ && cmake --build . --target tests --config Release && ctest --output-on-failure --no-tests=error -j 3 -C Release
+        run: cd ../boost-root/__build__ && cmake --build . --target tests --config Release && ctest --output-on-failure -j 3 -C Release
 
       - name: Configure test project
         if: matrix.test_install
         run: |
           cd ../boost-root/tools/cmake/test/${{matrix.include}}
           mkdir __build__ && cd __build__
-          cmake -DCMAKE_PREFIX_PATH=C:/Boost ${{matrix.opts}} ..
+          cmake -DCMAKE_PREFIX_PATH=C:/Boost ..
 
       - name: Test installed Boost library (Debug)
         if: matrix.test_install
         run: |
           cd ../boost-root/tools/cmake/test/${{matrix.include}}/__build__
           PATH C:\Boost\bin;%PATH%
-          cmake --build . --config Debug && ctest --output-on-failure --no-tests=error -j 3 -C Debug
+          cmake --build . --config Debug && ctest --output-on-failure -j 3 -C Debug
 
       - name: Test installed Boost library (Release)
         if: matrix.test_install
         run: |
           cd ../boost-root/tools/cmake/test/${{matrix.include}}/__build__
           PATH C:\Boost\bin;%PATH%
-          cmake --build . --config Release && ctest --output-on-failure --no-tests=error -j 3 -C Release
+          cmake --build . --config Release && ctest --output-on-failure -j 3 -C Release
 
   BoostTest:
     strategy:
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Setup Boost
         run: |
@@ -421,16 +332,16 @@ jobs:
           mkdir __build__ && cd __build__
           cmake -DBoost_VERBOSE=ON ..
           cmake --build . --target tests -j 3
-          ctest --output-on-failure --no-tests=error -j 3
+          ctest --output-on-failure -j 3
 
   BoostFetch:
     strategy:
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Test BoostFetch
         run: |
@@ -444,13 +355,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15 ]
-        shared: [ ON, OFF ]
+        include:
+          - os: ubuntu-18.04
+            shared: OFF
+          - os: ubuntu-18.04
+            shared: ON
+          - os: ubuntu-20.04
+            shared: OFF
+          - os: ubuntu-20.04
+            shared: ON
+          - os: macos-10.15
+            shared: OFF
+          - os: macos-10.15
+            shared: ON
 
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Install packages
         if: matrix.install
@@ -487,215 +409,3 @@ jobs:
           cmake -DBoost_VERBOSE=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
           cmake --build .
           ctest --output-on-failure --no-tests=error
-
-      - name: Test installation with add_subdirectory
-        run: |
-          cd ../boost-root/tools/cmake/test/add_subdir
-          mkdir __build2__ && cd __build2__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-          cmake --build . --target install
-          cmake --install .
-
-      - name: Test installation with add_subdirectory(EXCLUDE_FROM_ALL)
-        run: |
-          cd ../boost-root/tools/cmake/test/add_subdir_exc
-          mkdir __build2__ && cd __build2__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-          cmake --build . --target install
-          cmake --install .
-
-      - name: Test add_subdirectory compatibility targets
-        run: |
-          cd ../boost-root/tools/cmake/test/add_subdir_compat
-          mkdir __build__ && cd __build__
-          cmake -DBoost_VERBOSE=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-          cmake --build .
-          ctest --output-on-failure --no-tests=error
-
-      - name: Test add_subdirectory(EXCLUDE_FROM_ALL) compatibility targets
-        run: |
-          cd ../boost-root/tools/cmake/test/add_subdir_exc_compat
-          mkdir __build__ && cd __build__
-          cmake -DBoost_VERBOSE=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-          cmake --build .
-          ctest --output-on-failure --no-tests=error
-
-  posix-target-check:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            include: timer
-            shared: ON
-          - os: ubuntu-24.04
-            include: timer
-            shared: ON
-          - os: macos-13
-            include: timer
-            shared: ON
-          - os: macos-14
-            include: timer
-            shared: ON
-          - os: macos-15
-            include: timer
-            shared: ON
-
-    runs-on: ${{matrix.os}}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install packages
-        if: matrix.install
-        run: sudo apt install ${{matrix.install}}
-
-      - name: Setup Boost
-        run: |
-          echo GITHUB_BASE_REF: $GITHUB_BASE_REF
-          echo GITHUB_REF: $GITHUB_REF
-          REF=${GITHUB_BASE_REF:-$GITHUB_REF}
-          REF=${REF#refs/heads/}
-          echo REF: $REF
-          BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
-          echo BOOST_BRANCH: $BOOST_BRANCH
-          cd ..
-          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
-          cd boost-root
-          git submodule update --init --jobs 3
-          rm -rf tools/cmake/*
-          cp -r $GITHUB_WORKSPACE/* tools/cmake
-
-      - name: Configure Boost
-        run: |
-          cd ../boost-root
-          mkdir __build__ && cd __build__
-          cmake -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=ON -DBOOST_INCLUDE_LIBRARIES=${{matrix.include}} -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-
-      - name: Test Boost
-        run: |
-          cd ../boost-root/__build__
-          cmake --build . --target check
-
-  posix-check-quick:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, macos-15 ]
-        shared: [ ON, OFF ]
-
-    runs-on: ${{matrix.os}}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install packages
-        if: matrix.install
-        run: sudo apt install ${{matrix.install}}
-
-      - name: Setup Boost
-        run: |
-          echo GITHUB_BASE_REF: $GITHUB_BASE_REF
-          echo GITHUB_REF: $GITHUB_REF
-          REF=${GITHUB_BASE_REF:-$GITHUB_REF}
-          REF=${REF#refs/heads/}
-          echo REF: $REF
-          BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
-          echo BOOST_BRANCH: $BOOST_BRANCH
-          cd ..
-          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
-          cd boost-root
-          git submodule update --init --jobs 3
-          rm -rf tools/cmake/*
-          cp -r $GITHUB_WORKSPACE/* tools/cmake
-
-      - name: Configure Boost
-        run: |
-          cd ../boost-root
-          mkdir __build__ && cd __build__
-          cmake -DBoost_VERBOSE=${{matrix.verbose}} -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
-
-      - name: Test Boost
-        run: |
-          cd ../boost-root/__build__
-          cmake --build . --target check-quick
-
-  posix-install:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-latest ]
-        include_libraries: [ timer ]
-        layout: [ system, versioned ]
-        verbose: [ ON ]
-
-    runs-on: ${{matrix.os}}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Boost
-        run: |
-          echo GITHUB_BASE_REF: $GITHUB_BASE_REF
-          echo GITHUB_REF: $GITHUB_REF
-          REF=${GITHUB_BASE_REF:-$GITHUB_REF}
-          REF=${REF#refs/heads/}
-          echo REF: $REF
-          BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
-          echo BOOST_BRANCH: $BOOST_BRANCH
-          cd ..
-          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
-          cd boost-root
-          git submodule update --init --jobs 3
-          rm -rf tools/cmake/*
-          cp -r $GITHUB_WORKSPACE/* tools/cmake
-
-      - name: Configure (Static)
-        run: |
-          cd ../boost-root
-          mkdir __build_static__ && cd __build_static__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBOOST_INCLUDE_LIBRARIES="${{matrix.include_libraries}}" -DBOOST_EXCLUDE_LIBRARIES="${{matrix.exclude_libraries}}" -DBUILD_SHARED_LIBS=OFF -DBOOST_INSTALL_LAYOUT=${{matrix.layout}} ..
-
-      - name: Build (Static)
-        run: |
-          cd ../boost-root/__build_static__
-          cmake --build .
-
-      - name: Install (Static)
-        run: |
-          cd ../boost-root/__build_static__
-          cmake --build . --target install
-
-      - name: Configure (Shared)
-        run: |
-          cd ../boost-root
-          mkdir __build_shared__ && cd __build_shared__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBOOST_INCLUDE_LIBRARIES="${{matrix.include_libraries}}" -DBOOST_EXCLUDE_LIBRARIES="${{matrix.exclude_libraries}}" -DBUILD_SHARED_LIBS=ON -DBOOST_INSTALL_LAYOUT=${{matrix.layout}} ..
-
-      - name: Build (Shared)
-        run: |
-          cd ../boost-root/__build_shared__
-          cmake --build .
-
-      - name: Install (Shared)
-        run: |
-          cd ../boost-root/__build_shared__
-          cmake --build . --target install
-
-      - name: Test (Static)
-        run: |
-          cd ../boost-root/tools/cmake/test/${{matrix.include_libraries}}
-          mkdir __build_static__ && cd __build_static__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBoost_USE_STATIC_LIBS=ON ..
-          cmake --build .
-          export LD_LIBRARY_PATH=$HOME/.local/lib:$LD_LIBRARY_PATH
-          cmake --build . --target check
-
-      - name: Test (Shared)
-        run: |
-          cd ../boost-root/tools/cmake/test/${{matrix.include_libraries}}
-          mkdir __build_shared__ && cd __build_shared__
-          cmake -DCMAKE_INSTALL_PREFIX=~/.local -DBoost_VERBOSE=${{matrix.verbose}} -DBoost_USE_STATIC_LIBS=OFF ..
-          cmake --build .
-          export LD_LIBRARY_PATH=$HOME/.local/lib:$LD_LIBRARY_PATH
-          cmake --build . --target check

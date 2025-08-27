@@ -33,17 +33,10 @@ class CustomAllocator
 	typedef short difference_type;
 
 	pointer allocate(size_type count)
-   {  return static_cast<value_type*>(::operator new(count * sizeof(value_type))); }
+   {  return (pointer)new char[sizeof(value_type)*count]; }
 
-	void deallocate(pointer ptr, size_type n)
-   {
-      (void)n;
-      # if __cpp_sized_deallocation
-      ::operator delete((void*)ptr, n * sizeof(value_type));
-      #else
-      ::operator delete((void*)ptr);
-      # endif
-   }
+	void deallocate(pointer ptr, size_type )
+   {  delete [](char*)ptr; }
 
    friend bool operator==(CustomAllocator const&, CustomAllocator const&) BOOST_NOEXCEPT
    {  return true;   }

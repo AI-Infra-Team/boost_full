@@ -17,8 +17,7 @@
 
 #include "test_suite.hpp"
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 //----------------------------------------------------------
 
@@ -26,18 +25,18 @@ static void set1() {
 
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_1[]
+//[doc_storage_ptr_1
 storage_ptr sp1;
 storage_ptr sp2;
 
 assert( sp1.get() != nullptr );                         // always points to a valid resource
 assert( sp1.get() == sp2.get() );                       // both point to the default resource
 assert( *sp1.get() == *sp2.get() );                     // the default resource compares equal
-// end::doc_storage_ptr_1[]
+//]
 }
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_2[]
+//[doc_storage_ptr_2
 array arr;                                              // default construction
 object obj;
 string str;
@@ -46,15 +45,15 @@ value jv;
 assert( jv.storage().get() == storage_ptr().get() );    // uses the default memory resource
 assert( jv.storage().get() == arr.storage().get() );    // both point to the default resource
 assert( *arr.storage() == *obj.storage() );             // containers use equivalent resources
-// end::doc_storage_ptr_2[]
+//]
 }
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_3[]
+//[doc_storage_ptr_3
 monotonic_resource mr;
 
 value const jv = parse( "[1,2,3]", &mr );
-// end::doc_storage_ptr_3[]
+//]
 }
 //----------------------------------------------------------
 
@@ -62,16 +61,16 @@ value const jv = parse( "[1,2,3]", &mr );
 
 //----------------------------------------------------------
 
-// tag::doc_storage_ptr_4[]
+//[doc_storage_ptr_4
 value parse_value( string_view s)
 {
     return parse( s, make_shared_resource< monotonic_resource >() );
 }
-// end::doc_storage_ptr_4[]
+//]
 
 //----------------------------------------------------------
 
-// tag::doc_storage_ptr_5[]
+//[doc_storage_ptr_5
 template< class Handler >
 void do_rpc( string_view s, Handler&& h )
 {
@@ -80,7 +79,7 @@ void do_rpc( string_view s, Handler&& h )
     value const jv = parse( s, &mr );                   // Parse the input string into a value that uses our resource
     h( jv );                                            // Call the handler to perform the RPC command
 }
-// end::doc_storage_ptr_5[]
+//]
 
 //----------------------------------------------------------
 
@@ -88,23 +87,23 @@ void set2() {
 
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_6[]
+//[doc_storage_ptr_6
 unsigned char buffer[ 8192 ];
 static_resource mr( buffer );                           // The resource will use our local buffer
-// end::doc_storage_ptr_6[]
+//]
 }
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_7[]
+//[doc_storage_ptr_7
 monotonic_resource mr;
 array arr( &mr );                                       // construct an array using our resource
 arr.emplace_back( "boost" );                            // insert a string
 assert( *arr[0].as_string().storage() == mr );          // the resource is propagated to the string
-// end::doc_storage_ptr_7[]
+//]
 }
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_8[]
+//[doc_storage_ptr_8
 {
     monotonic_resource mr;
 
@@ -112,26 +111,26 @@ assert( *arr[0].as_string().storage() == mr );          // the resource is propa
 
     assert( ! arr.storage().is_shared() );              // no shared ownership
 }
-// end::doc_storage_ptr_8[]
+//]
 }
 //----------------------------------------------------------
 {
-// tag::doc_storage_ptr_9[]
+//[doc_storage_ptr_9
 storage_ptr sp = make_shared_resource< monotonic_resource >();
 
 string str( sp );
 
 assert( sp.is_shared() );                               // shared ownership
 assert( str.storage().is_shared() );                    // shared ownership
-// end::doc_storage_ptr_9[]
+//]
 }
 //----------------------------------------------------------
 
 } // set2
 
 //----------------------------------------------------------
-// tag::doc_storage_ptr_10[]
-class logging_resource : public boost::container::pmr::memory_resource
+//[doc_storage_ptr_10
+class logging_resource : public memory_resource
 {
 private:
     void* do_allocate( std::size_t bytes, std::size_t align ) override
@@ -157,7 +156,7 @@ private:
         return dynamic_cast< logging_resource const* >( &other ) != nullptr;
     }
 };
-// end::doc_storage_ptr_10[]
+//]
 
 //----------------------------------------------------------
 
@@ -174,5 +173,4 @@ public:
 
 TEST_SUITE(doc_storage_ptr_test, "boost.json.doc_storage_ptr");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END

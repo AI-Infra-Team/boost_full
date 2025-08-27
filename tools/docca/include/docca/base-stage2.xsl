@@ -1,8 +1,19 @@
+<!DOCTYPE xsl:stylesheet [
+<!ENTITY SYNTAX_BLOCK "*[ self::compound
+                        | self::function
+                        | self::typedef
+                        | self::enum
+                        | self::variable
+                        | self::overloaded-member
+                        ]">
+<!ENTITY CODE_BLOCK "*[ self::computeroutput[not(ref)]
+                      | self::code
+                      ]">
+]>
 <xsl:stylesheet version="3.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:d="http://github.com/vinniefalco/docca"
-  xmlns:my="http://localhost"
   expand-text="yes">
 
   <xsl:import href="common.xsl"/>
@@ -15,24 +26,6 @@
   <xsl:variable name="emphasized-template-parameter-types" select="()"/>
 
   <xsl:variable name="list-indent-width" select="4"/>
-
-  <xsl:function name="my:is-syntax-block">
-    <xsl:param name="element" as="element()"/>
-    <xsl:sequence select="exists($element/( self::compound
-                                          | self::function
-                                          | self::typedef
-                                          | self::enum
-                                          | self::variable
-                                          | self::overloaded-member
-                                          ))"/>
-  </xsl:function>
-
-  <xsl:function name="my:is-code-block">
-    <xsl:param name="element" as="element()"/>
-    <xsl:sequence select="exists($element/( self::computeroutput[not(ref)]
-                                          | self::code
-                                          ))"/>
-  </xsl:function>
 
   <xsl:template mode="before" match="/page">
     <xsl:text>{$nl}</xsl:text>
@@ -63,8 +56,8 @@
     <xsl:apply-templates mode="includes-template-footer" select="."/>
   </xsl:template>
 
-  <xsl:template mode="before" match="*[my:is-syntax-block(.)]">{$nl}```{$nl}</xsl:template>
-  <xsl:template mode="after"  match="*[my:is-syntax-block(.)]">{$nl}```{$nl}</xsl:template>
+  <xsl:template mode="before" match="&SYNTAX_BLOCK;">{$nl}```{$nl}</xsl:template>
+  <xsl:template mode="after"  match="&SYNTAX_BLOCK;">{$nl}```{$nl}</xsl:template>
 
   <!-- Merge adjacent overloaded-members into one syntax block, separated by one blank line -->
   <xsl:template mode="after"  match="overloaded-member[following-sibling::*[1]/self::overloaded-member]" priority="1"/>
@@ -87,16 +80,12 @@
   </xsl:template>
 
   <xsl:template priority="1"
-                match="*[my:is-syntax-block(.)]//ref">``[link {$doc-ref}.{@d:refid} {d:qb-escape(.)}]``</xsl:template>
-  <xsl:template match="td[1]//ref"                     >[link {$doc-ref}.{@d:refid} {d:qb-escape(.)}]</xsl:template>
-  <!--
-  <xsl:template match="codeline//ref"                  >[link {$doc-ref}.{@d:refid} {d:qb-escape(.)}]</xsl:template>
-  -->
-  <xsl:template match="codeline//ref"                  >{.}</xsl:template>
-  <xsl:template match="ref"                            >[link {$doc-ref}.{@d:refid} `{.}`]</xsl:template>
+                match="&SYNTAX_BLOCK;//ref">``[link {$doc-ref}.{@d:refid} {d:qb-escape(.)}]``</xsl:template>
+  <xsl:template match="td[1]//ref"           >[link {$doc-ref}.{@d:refid} {d:qb-escape(.)}]</xsl:template>
+  <xsl:template match="ref"                  >[link {$doc-ref}.{@d:refid} `{.}`]</xsl:template>
 
-  <xsl:template mode="before" match="*[my:is-code-block(.)]">`</xsl:template>
-  <xsl:template mode="after"  match="*[my:is-code-block(.)]">`</xsl:template>
+  <xsl:template mode="before" match="&CODE_BLOCK;">`</xsl:template>
+  <xsl:template mode="after"  match="&CODE_BLOCK;">`</xsl:template>
 
   <xsl:template mode="before" match="enum/name">enum </xsl:template>
 
@@ -104,16 +93,9 @@
   <xsl:template mode="after"  match="typedef/name"> = </xsl:template>
   <xsl:template mode="after"  match="typedef/type">;</xsl:template>
 
-  <xsl:template match="type[string(.)]">
-    <xsl:sequence select="d:perform-replacements(., $qb-type-replacements)"/>
-  </xsl:template>
-
-  <xsl:variable name="qb-type-replacements" as="element(replace)*">
-    <replace pattern="__implementation_defined__" with="``['implementation-defined]``"/>
-    <replace pattern="__see_below__"              with="``['see-below]``"/>
-    <replace pattern="__deduced__"                with="``__deduced__``"/>
-    <replace pattern="void_or_deduced"            with="``__deduced__``"/>
-  </xsl:variable>
+  <xsl:template match="type[. eq '__implementation_defined__'    ]">``['implementation-defined]``</xsl:template>
+  <xsl:template match="type[. eq '__see_below__'                 ]">``['see-below]``</xsl:template>
+  <xsl:template match="type[. = ('__deduced__','void_or_deduced')]">``__deduced__``</xsl:template>
 
   <xsl:template mode="before" match="variable/name | variable/initializer">{' '}</xsl:template>
   <xsl:template mode="append" match="variable">;</xsl:template>
@@ -234,8 +216,7 @@
 
   <xsl:template match="linebreak">{$nl}{$nl}</xsl:template>
 
-  <!-- Using escaped markup instead of [br] to circumvent Quickbook warnings -->
-  <xsl:template match="br">'''&lt;sbr/>'''</xsl:template>
+  <xsl:template match="br">[br]</xsl:template>
 
   <xsl:template mode="before" match="programlisting">{$nl}```{$nl}</xsl:template>
   <xsl:template mode="after"  match="programlisting"     >```{$nl}</xsl:template>
@@ -251,8 +232,9 @@
   </xsl:template>
 
   <!-- But don't escape them in these contexts -->
-  <xsl:template match="*[my:is-syntax-block(.)]//text()
-                     | *[my:is-code-block(.)]//text()">
+  <xsl:template match="&SYNTAX_BLOCK;//text()
+                     | &CODE_BLOCK;//text()
+                     | programlisting//text()">
     <!--
       This implementation (using <xsl:sequence> returning a string, instead of <xsl:value-of>) can
       result in a contiguous sequence of strings, which gets converted to a text node having space
@@ -262,13 +244,6 @@
       strip them out (probably by using <xsl:value-of> for the rules matching text nodes).
     -->
     <xsl:sequence select="string(.)"/>
-  </xsl:template>
-
-  <!-- See comment above about returning a sequence of strings; the same consideration may apply here,
-       as this pattern used to share the same rule above, i.e. with <xsl:sequence select="string(.)"/> -->
-  <xsl:template match="programlisting//text()">
-    <!-- Perform the same Quickbook macro replacements as we do for <type> values -->
-    <xsl:sequence select="d:perform-replacements(string(.), $qb-type-replacements)"/>
   </xsl:template>
 
   <!-- Boilerplate default rules for elements -->

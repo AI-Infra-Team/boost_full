@@ -22,7 +22,6 @@ import modules ;
 import indirect ;
 import property ;
 import property-set ;
-import args ;
 
 header = png.h ;
 
@@ -36,7 +35,10 @@ sources =   png.c pngerror.c pngget.c pngmem.c pngpread.c pngread.c pngrio.c png
 
 library-id = 0 ;
 
-.debug =  [ args.get-arg debug-configuration ] ;
+if --debug-configuration in [ modules.peek : ARGV ]
+{
+    .debug =  true ;
+}
 
 # Initializes the libpng library.
 #
@@ -51,9 +53,6 @@ library-id = 0 ;
 #       Overrides the default library name.
 #   <include>
 #       The directory containing the libpng headers.
-#   <dll-path>
-#       Extra directories to add to library search paths of consumers during
-#       runtime (multiple instances are allowed).
 #
 # If none of these options is specified, then the environmental
 # variables LIBPNG_LIBRARY_PATH, LIBPNG_NAME, and LIBPNG_INCLUDE will
@@ -119,7 +118,6 @@ rule init (
     local include-path = [ feature.get-values <include> : $(options) ] ;
     local source-path = [ feature.get-values <source> : $(options) ] ;
     local library-name = [ feature.get-values <name> : $(options) ] ;
-    local dll-paths = [ property.select <dll-path> : $(options) ] ;
     local tag = [ feature.get-values <tag> : $(options) ] ;
     local build-name = [ feature.get-values <build-name> : $(options) ] ;
 
@@ -206,7 +204,6 @@ rule init (
         local mt = [ new ac-library libpng : $(.project) : $(condition) ] ;
         $(mt).set-header $(header) ;
         $(mt).set-default-names $(names) ;
-        $(mt).add-usage-requirements $(dll-paths) ;
         if $(target)
         {
             $(mt).set-target $(target) ;

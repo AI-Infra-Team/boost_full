@@ -22,8 +22,7 @@
 #pragma warning(disable: 4702) // unreachable code
 #endif
 
-namespace boost {
-namespace json {
+BOOST_JSON_NS_BEGIN
 
 BOOST_STATIC_ASSERT(
     std::is_nothrow_move_constructible<storage_ptr>::value);
@@ -35,7 +34,7 @@ public:
     static value jv2;
 
     struct throwing
-        : container::pmr::memory_resource
+        : memory_resource
     {
         throwing()
         {
@@ -154,7 +153,7 @@ public:
 
         struct my_resource
             : other
-            , container::pmr::memory_resource
+            , memory_resource
         {
             void*
             do_allocate(
@@ -208,8 +207,7 @@ value storage_ptr_test::jv2 = {1, 2, 3};
 
 TEST_SUITE(storage_ptr_test, "boost.json.storage_ptr");
 
-} // namespace json
-} // namespace boost
+BOOST_JSON_NS_END
 
 #ifdef _MSC_VER
 #pragma warning(pop)

@@ -2,8 +2,8 @@
 
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2014-2023.
-// Modifications copyright (c) 2014-2023, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014-2021.
+// Modifications copyright (c) 2014-2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -17,8 +17,11 @@
 
 #include <boost/geometry/algorithms/not_implemented.hpp>
 
+#include <boost/geometry/core/cs.hpp>
+#include <boost/geometry/core/access.hpp>
 #include <boost/geometry/core/radian_access.hpp>
 #include <boost/geometry/core/tag.hpp>
+#include <boost/geometry/core/tags.hpp>
 
 #include <boost/geometry/geometries/concepts/check.hpp>
 
@@ -27,6 +30,9 @@
 #include <boost/geometry/strategies/azimuth/geographic.hpp>
 #include <boost/geometry/strategies/azimuth/spherical.hpp>
 
+#include <boost/geometry/util/math.hpp>
+
+
 namespace boost { namespace geometry
 {
 
@@ -34,7 +40,7 @@ namespace boost { namespace geometry
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail
 {
-
+       
 } // namespace detail
 #endif // DOXYGEN_NO_DETAIL
 
@@ -46,8 +52,8 @@ namespace dispatch
 template
 <
     typename Geometry1, typename Geometry2,
-    typename Tag1 = tag_t<Geometry1>,
-    typename Tag2 = tag_t<Geometry2>
+    typename Tag1 = typename tag<Geometry1>::type,
+    typename Tag2 = typename tag<Geometry2>::type
 >
 struct azimuth : not_implemented<Tag1, Tag2>
 {};
@@ -58,12 +64,11 @@ struct azimuth<Point1, Point2, point_tag, point_tag>
     template <typename Strategy>
     static auto apply(Point1 const& p1, Point2 const& p2, Strategy const& strategy)
     {
-        auto azimuth_strategy = strategy.azimuth();
-        using calc_t = typename decltype(azimuth_strategy)::template result_type
+        typedef typename decltype(strategy.azimuth())::template result_type
             <
-                coordinate_type_t<Point1>,
-                coordinate_type_t<Point2>
-            >::type;
+                typename coordinate_type<Point1>::type,
+                typename coordinate_type<Point2>::type
+            >::type calc_t;
 
         calc_t result = 0;
         calc_t const x1 = geometry::get_as_radian<0>(p1);
@@ -71,7 +76,7 @@ struct azimuth<Point1, Point2, point_tag, point_tag>
         calc_t const x2 = geometry::get_as_radian<0>(p2);
         calc_t const y2 = geometry::get_as_radian<1>(p2);
 
-        azimuth_strategy.apply(x1, y1, x2, y2, result);
+        strategy.azimuth().apply(x1, y1, x2, y2, result);
 
         // NOTE: It is not clear which units we should use for the result.
         //   For now radians are always returned but a user could expect
@@ -178,7 +183,7 @@ inline auto azimuth(Point1 const& point1, Point2 const& point2)
 {
     concepts::check<Point1 const>();
     concepts::check<Point2 const>();
-
+    
     return resolve_strategy::azimuth
             <
                 default_strategy

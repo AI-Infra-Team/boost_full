@@ -1,5 +1,5 @@
 // Copyright 2016 Klemens Morgenstern
-// Copyright Antony Polukhin, 2017-2025
+// Copyright 2017-2021 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt
@@ -8,6 +8,8 @@
 // For more information, see http://www.boost.org
 
 #include <boost/config.hpp>
+
+#if (__cplusplus >= 201402L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
 
 #include <boost/dll/config.hpp>
 #include <boost/variant.hpp>
@@ -97,7 +99,7 @@ struct BOOST_SYMBOL_EXPORT some_class : some_father
 some_class::some_class(some_class &&){}
 
 
-some_class& some_class::operator=(some_class &&) {return *this;}
+some_class& some_class::operator=(some_class &&ref) {return ref;}
 
 
 BOOST_SYMBOL_EXPORT extern std::size_t size_of_some_class;
@@ -196,3 +198,6 @@ namespace space {
   template BOOST_SYMBOL_EXPORT int my_plugin::Func2<::space::my_plugin>();
   template BOOST_SYMBOL_EXPORT int my_plugin::AFunc<::space::my_plugin>();
 }
+
+
+#endif

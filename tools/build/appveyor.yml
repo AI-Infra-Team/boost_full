@@ -2,65 +2,33 @@
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# Copyright Rene Ferdinand Rivera Morell 2015-2023.
+# Copyright Rene Ferdinand Rivera Morell 2015-2020.
 
 branches:
   only:
     - /main/
     - /release/
     - /feature\/.*/
-    - /backport-.*/
-    - /version\/.*/
-
-skip_commits:
-  files:
-    - ".circleci/*"
-    - ".cirrus.yml"
-    - ".drone.star"
-    - ".github/workflows/*"
-    - ".semaphore/*"
-    - "azure-pipelines.yml"
 
 environment:
   matrix:
-  - job_name: 'Visual Studio 2022, Test'
-    job_group: 'Test'
-    TOOLSET: vc143
-    TEST_TOOLSET: msvc-14.3
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-  - job_name: 'Visual Studio 2019, Test'
-    job_group: 'Test'
-    TOOLSET: vc142
-    TEST_TOOLSET: msvc-14.2
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  - job_name: 'Visual Studio 2017, Test'
-    job_group: 'Test'
-    TOOLSET: vc141
-    TEST_TOOLSET: msvc-14.1
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - job_name: 'Visual Studio 2015, Test'
     job_group: 'Test'
     TOOLSET: vc14
-    TEST_TOOLSET: msvc-14.0
+    TEST_TOOLSET: msvc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - job_name: 'Clang 18 (VS2022), Test'
+  - job_name: 'Visual Studio 2013, Test'
     job_group: 'Test'
-    TOOLSET: clang-win
-    TEST_TOOLSET: clang-win
-    B2_DONT_EMBED_MANIFEST: true  # lld-link: error: unable to find mt.exe in PATH: no such file or directory
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-  - job_name: 'Clang 9 (VS2015), Test'
-    job_group: 'Test'
-    TOOLSET: clang-win
-    TEST_TOOLSET: clang-win
-    B2_DONT_EMBED_MANIFEST: true  # lld-link: error: unable to find mt.exe in PATH: no such file or directory
+    TOOLSET: vc12
+    TEST_TOOLSET: msvc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - job_name: 'Cygwin 3.4.6 x64, Test'
+  - job_name: 'Cygwin 3.1.7 x64, Test'
     job_group: 'TestCygwin'
     TOOLSET: gcc
     TEST_TOOLSET: gcc
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     B2_CXX_PATH: C:/cygwin64/bin
+    B2_CXX: C:/cygwin64/bin/g++.exe
 
 build_script:
   - cmd: |
@@ -71,6 +39,11 @@ build_script:
   - cmd: |
       cd ../..
       src\engine\b2.exe -v
+
+before_test:
+  - cmd: |
+      set HOME=%HOMEDRIVE%%HOMEPATH%
+      echo using %TEST_TOOLSET% : : %B2_CXX% ; > "%HOME%/user-config.jam"
 
 for:
   - matrix:
@@ -83,7 +56,7 @@ for:
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEST"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           cd test
-          py -X utf8 test_all.py %TEST_TOOLSET%
+          python test_all.py %TEST_TOOLSET%
           cd ..
       - cmd: |
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"

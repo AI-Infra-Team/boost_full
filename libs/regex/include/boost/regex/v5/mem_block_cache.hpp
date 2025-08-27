@@ -18,8 +18,6 @@
 #ifndef BOOST_REGEX_V5_MEM_BLOCK_CACHE_HPP
 #define BOOST_REGEX_V5_MEM_BLOCK_CACHE_HPP
 
-#include <boost/regex/config.hpp>
-#ifndef BOOST_REGEX_AS_MODULE
 #include <new>
 #ifdef BOOST_HAS_THREADS
 #include <mutex>
@@ -32,13 +30,10 @@
     #define BOOST_REGEX_ATOMIC_POINTER std::atomic
   #endif
 #endif
-#endif
-
 
 namespace boost{
 namespace BOOST_REGEX_DETAIL_NS{
 
-#if BOOST_REGEX_MAX_CACHE_BLOCKS != 0
 #ifdef BOOST_REGEX_MEM_BLOCK_CACHE_LOCK_FREE /* lock free implementation */
 struct mem_block_cache
 {
@@ -142,7 +137,6 @@ struct mem_block_cache
       return block_cache;
    }
 };
-#endif
 #endif
 
 #if BOOST_REGEX_MAX_CACHE_BLOCKS == 0
