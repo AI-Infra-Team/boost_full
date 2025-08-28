@@ -2,10 +2,6 @@
 
 // Copyright (c) 2020 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2020.
-// Modifications copyright (c) 2020, Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -24,6 +20,7 @@
 #include <boost/geometry/algorithms/comparable_distance.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
 #include <boost/geometry/algorithms/expand.hpp>
+#include <boost/geometry/algorithms/detail/buffer/buffer_box.hpp>
 #include <boost/geometry/algorithms/detail/buffer/buffer_policies.hpp>
 #include <boost/geometry/algorithms/detail/expand_by_epsilon.hpp>
 #include <boost/geometry/strategies/cartesian/turn_in_ring_winding.hpp>
@@ -166,11 +163,9 @@ struct piece_border
         return result;
     }
 
-    template <typename Strategy>
-    void get_properties_of_border(bool is_point_buffer, Point const& center,
-                                  Strategy const& strategy)
+    void get_properties_of_border(bool is_point_buffer, Point const& center)
     {
-        m_has_envelope = calculate_envelope(m_envelope, strategy);
+        m_has_envelope = calculate_envelope(m_envelope);
         if (m_has_envelope)
         {
             // Take roundings into account, enlarge box
@@ -183,8 +178,8 @@ struct piece_border
         }
     }
 
-    template <typename Strategy>
-    void get_properties_of_offsetted_ring_part(Strategy const& strategy)
+    template <typename SideStrategy>
+    void get_properties_of_offsetted_ring_part(SideStrategy const& strategy)
     {
         if (! ring_or_original_empty())
         {
@@ -210,16 +205,16 @@ struct piece_border
         m_originals[m_original_size++] = point;
     }
 
-    template <typename Box, typename Strategy>
-    bool calculate_envelope(Box& envelope, Strategy const& strategy) const
+    template <typename Box>
+    bool calculate_envelope(Box& envelope) const
     {
         geometry::assign_inverse(envelope);
         if (ring_or_original_empty())
         {
             return false;
         }
-        expand_envelope(envelope, m_ring->begin() + m_begin, m_ring->begin() + m_end, strategy);
-        expand_envelope(envelope, m_originals.begin(), m_originals.begin() + m_original_size, strategy);
+        expand_envelope(envelope, m_ring->begin() + m_begin, m_ring->begin() + m_end);
+        expand_envelope(envelope, m_originals.begin(), m_originals.begin() + m_original_size);
         return true;
     }
 
@@ -334,8 +329,8 @@ private :
         return true;
     }
 
-    template <typename TurnPoint, typename TiRStrategy, typename State>
-    bool step(TurnPoint const& point, Point const& p1, Point const& p2, TiRStrategy const & strategy,
+    template <typename TurnPoint, typename Strategy, typename State>
+    bool step(TurnPoint const& point, Point const& p1, Point const& p2, Strategy const & strategy,
               geometry::strategy::buffer::place_on_ring_type place_on_ring, State& state) const
     {
         // A step between original/offsetted ring is always convex
@@ -358,17 +353,22 @@ private :
         return strategy.apply(point, p1, p2, dm, place_on_ring, state);
     }
 
-    template <typename It, typename Box, typename Strategy>
-    void expand_envelope(Box& envelope, It begin, It end, Strategy const& strategy) const
+    template <typename It, typename Box>
+    void expand_envelope(Box& envelope, It begin, It end) const
     {
+        typedef typename strategy::expand::services::default_strategy
+            <
+                point_tag, typename cs_tag<Box>::type
+            >::type expand_strategy_type;
+
         for (It it = begin; it != end; ++it)
         {
-            geometry::expand(envelope, *it, strategy);
+            geometry::expand(envelope, *it, expand_strategy_type());
         }
     }
 
-    template <typename Strategy>
-    bool is_convex(Strategy const& strategy) const
+    template <typename SideStrategy>
+    bool is_convex(SideStrategy const& strategy) const
     {
         if (ring_or_original_empty())
         {
@@ -412,8 +412,8 @@ private :
         return result;
     }
 
-    template <typename It, typename Strategy>
-    bool is_convex(Point& previous, Point& current, It begin, It end, Strategy const& strategy) const
+    template <typename It, typename SideStrategy>
+    bool is_convex(Point& previous, Point& current, It begin, It end, SideStrategy const& strategy) const
     {
         for (It it = begin; it != end; ++it)
         {
@@ -425,16 +425,19 @@ private :
         return true;
     }
 
-    template <typename Strategy>
-    bool is_convex(Point& previous, Point& current, Point const& next, Strategy const& strategy) const
+    template <typename SideStrategy>
+    bool is_convex(Point& previous, Point& current, Point const& next, SideStrategy const& strategy) const
     {
-        int const side = strategy.side().apply(previous, current, next);
+        typename SideStrategy::equals_point_point_strategy_type const
+            eq_pp_strategy = strategy.get_equals_point_point_strategy();
+
+        int const side = strategy.apply(previous, current, next);
         if (side == 1)
         {
             // Next is on the left side of clockwise ring: piece is not convex
             return false;
         }
-        if (! equals::equals_point_point(current, next, strategy))
+        if (! equals::equals_point_point(current, next, eq_pp_strategy))
         {
             previous = current;
             current = next;
@@ -485,9 +488,7 @@ private :
         It it = begin;
         for (It previous = it++; it != end; ++previous, ++it)
         {
-            Point const& p0 = *previous;
-            Point const& p1 = *it;
-            segment_type const s(p0, p1);
+            segment_type const s(*previous, *it);
             radius_type const d = geometry::comparable_distance(center, s);
 
             if (first || d < m_min_comparable_radius)

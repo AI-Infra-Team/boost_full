@@ -11,6 +11,5 @@
   "description": "Library to create processes in a portable way.",
   "category": [
     "System"
-  ],
-  "cxxstd": "11"
+  ]
 }

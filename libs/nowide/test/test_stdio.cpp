@@ -10,10 +10,11 @@
 #include <boost/nowide/cstdio.hpp>
 
 #include <boost/nowide/convert.hpp>
-#include "test.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+
+#include "test.hpp"
 
 bool file_exists(const std::string& filename)
 {
@@ -46,10 +47,10 @@ void create_test_file(const std::string& filename)
 #if BOOST_MSVC
 #include <crtdbg.h> // For _CrtSetReportMode
 void noop_invalid_param_handler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned, uintptr_t)
-{} // LCOV_EXCL_LINE
+{}
 #endif
 
-void test_main(int, char** argv, char**) // coverity [root_function]
+void test_main(int, char** argv, char**)
 {
     const std::string prefix = argv[0];
     const std::string filename = prefix + "\xd7\xa9-\xd0\xbc-\xce\xbd.txt";

@@ -204,12 +204,12 @@ int main ()
    delete stdlist;
 
    //Fill heap buffer until is full
-   BOOST_TRY{
+   try{
       while(1){
          heaplist->insert(heaplist->end(), 0);
       }
    }
-   BOOST_CATCH(boost::interprocess::bad_alloc &){} BOOST_CATCH_END
+   catch(boost::interprocess::bad_alloc &){}
 
    MyHeapList::size_type heap_list_size = heaplist->size();
 
@@ -237,12 +237,12 @@ int main ()
    }
 
    //Fill user buffer until is full
-   BOOST_TRY{
+   try{
       while(1){
          userlist->insert(userlist->end(), 0);
       }
    }
-   BOOST_CATCH(boost::interprocess::bad_alloc &){} BOOST_CATCH_END
+   catch(boost::interprocess::bad_alloc &){}
 
    MyUserList::size_type user_list_size = userlist->size();
 

@@ -840,7 +840,7 @@ int cpp_main( int argc_param, char * argv_param[] )
   if ( invalid_options ) {
       std::cerr << "\nvalid options are:\n"
                 << options();
-      return 2;
+      return 1;
   }
 
   if (options_not_set) {

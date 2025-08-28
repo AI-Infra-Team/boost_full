@@ -8,11 +8,12 @@
 // if a token matched at the beginning of a line is discarded using 
 // lex::pass_fail.
 
+#include <boost/config/warning_disable.hpp>
+#include <boost/detail/lightweight_test.hpp>
+
 #include <boost/spirit/include/support_multi_pass.hpp>
 #include <boost/spirit/include/classic_position_iterator.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-
-#include <boost/core/lightweight_test.hpp>
 #include <boost/phoenix/operator/self.hpp>
 #include <boost/phoenix/statement/sequence.hpp>
 

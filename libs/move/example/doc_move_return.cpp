@@ -9,7 +9,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <boost/core/ignore_unused.hpp>
+#include <boost/move/detail/config_begin.hpp>
 
 //[move_return_example
 #include "movable.hpp"
@@ -61,8 +61,10 @@ int main()
    copyable c           = lock_wrapper(factory_functor<copyable>    ());
    non_copy_movable &mr = lock_wrapper(return_reference             ());
    //<-
-   boost::ignore_unused(m); boost::ignore_unused(cm); boost::ignore_unused(c); boost::ignore_unused(mr);
+   (void)m; (void)cm; (void)c; (void)mr;
    //->
    return 0;
 }
 //]
+
+#include <boost/move/detail/config_end.hpp>

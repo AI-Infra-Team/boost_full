@@ -12,6 +12,8 @@
 #include <boost/config.hpp>
 #include <vector>
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+
 #if !defined(TEST_GMP) && !defined(TEST_MPFR) && !defined(TEST_TOMMATH) && !defined(TEST_CPP_INT) && !defined(TEST_MPC)
 #define TEST_GMP
 #define TEST_MPFR
@@ -379,3 +381,13 @@ int main()
    return boost::report_errors();
 }
 
+#else
+//
+// No rvalue refs, nothing to test:
+//
+int main()
+{
+   return 0;
+}
+
+#endif

@@ -1,8 +1,10 @@
-// Copyright 2019 Peter Dimov.
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/variant2.hpp>
+// Copyright 2019 Peter Dimov.
+//
+// Distributed under the Boost Software License, Version 1.0.
+// http://www.boost.org/LICENSE_1_0.txt
+
+#include <boost/variant2/variant.hpp>
 
 using namespace boost::variant2;
 

@@ -102,7 +102,6 @@ struct file_descriptor
         if (_handle != ::boost::winapi::INVALID_HANDLE_VALUE_)
             ::boost::winapi::CloseHandle(_handle);
         _handle = boost::exchange(other._handle, ::boost::winapi::INVALID_HANDLE_VALUE_);
-        return *this;
     }
 
     ~file_descriptor()

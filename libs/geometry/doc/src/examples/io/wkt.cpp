@@ -42,9 +42,7 @@ int main()
 /*`
 Output:
 [pre
-POINT(3 2)
-POLYGON((0 0,0 4,4 4,4 0,0 0))
-POINT(3.14 27.2)
+POINT(3 6)
 POLYGON((0 0,0 4,4 4,4 0,0 0))
 ]
 

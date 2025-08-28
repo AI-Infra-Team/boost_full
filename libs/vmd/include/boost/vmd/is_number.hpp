@@ -27,7 +27,7 @@
     \brief Tests whether a sequence is a Boost PP number.
 
     The macro checks to see if a sequence is a Boost PP number.
-    A Boost PP number is a value from 0 to BOOST_PP_LIMIT_MAG.
+    A Boost PP number is a value from 0 to 256.
     
     sequence = a possible number
 

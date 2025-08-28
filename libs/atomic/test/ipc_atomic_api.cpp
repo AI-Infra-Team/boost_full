@@ -11,7 +11,6 @@
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
 
-#include "atomic_wrapper.hpp"
 #include "api_test_helpers.hpp"
 
 int main(int, char *[])

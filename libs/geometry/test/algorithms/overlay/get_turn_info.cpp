@@ -3,24 +3,26 @@
 
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2017-2021.
-// Modifications copyright (c) 2017-2021, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2017.
+// Modifications copyright (c) 2017, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-
 #include <iostream>
 
 #include <geometry_test_common.hpp>
 
-#include <boost/geometry/algorithms/detail/overlay/get_turn_info.hpp>
-#include <boost/geometry/algorithms/detail/overlay/debug_turn_info.hpp>
+#include <boost/array.hpp>
+#include <boost/foreach.hpp>
+
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/geometry/algorithms/make.hpp>
 
+#include <boost/geometry/algorithms/detail/overlay/get_turn_info.hpp>
+#include <boost/geometry/algorithms/detail/overlay/debug_turn_info.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 
 #if defined(TEST_WITH_SVG)
@@ -52,7 +54,7 @@ struct sub_range_from_points
     }
 
 private :
-    Point m_points[3];
+    boost::array<Point, 3> m_points;
 };
 
 template <typename P, typename T>
@@ -72,9 +74,9 @@ void test_with_point(std::string const& caseid,
     P qj = bg::make<P>(qj_x, qj_y);
     P qk = bg::make<P>(qk_x, qk_y);
 
-    typedef typename bg::strategies::relate::services::default_strategy
+    typedef typename bg::strategy::intersection::services::default_strategy
         <
-            P, P
+            typename bg::cs_tag<P>::type
         >::type strategy_type;
 
     typedef typename bg::detail::no_rescale_policy rescale_policy_type;

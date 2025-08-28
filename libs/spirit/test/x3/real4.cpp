@@ -10,8 +10,6 @@
 
 #include "real.hpp"
 
-#include <boost/math/concepts/real_concept.hpp>
-
 int
 main()
 {

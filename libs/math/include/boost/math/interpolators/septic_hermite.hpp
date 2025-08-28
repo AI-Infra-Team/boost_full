@@ -11,9 +11,7 @@
 #include <memory>
 #include <boost/math/interpolators/detail/septic_hermite_detail.hpp>
 
-namespace boost {
-namespace math {
-namespace interpolators {
+namespace boost::math::interpolators {
 
 template<class RandomAccessContainer>
 class septic_hermite
@@ -141,6 +139,4 @@ private:
 };
 
 }
-}
-}
-#endif
+#endif 

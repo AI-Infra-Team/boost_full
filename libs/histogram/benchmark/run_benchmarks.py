@@ -26,6 +26,7 @@ The script leaves the include folder in a modified state. To clean up, do:
 """
 import subprocess as subp
 import tempfile
+import os
 import shelve
 import json
 import argparse
@@ -34,14 +35,12 @@ import argparse
 def get_commits():
     commits = []
     comments = {}
-    for line in (
-        subp.check_output(("git", "log", "--oneline")).decode("ascii").split("\n")
-    ):
+    for line in subp.check_output(("git", "log", "--oneline")).decode("ascii").split("\n"):
         if line:
             ispace = line.index(" ")
             hash = line[:ispace]
             commits.append(hash)
-            comments[hash] = line[ispace + 1 :]
+            comments[hash] = line[ispace+1:]
     commits = commits[::-1]
     return commits, comments
 
@@ -73,9 +72,7 @@ def run(results, comments, hash, update):
             print(out.read().decode("utf-8") + "\n")
             return
     print(hash, "run")
-    s = subp.check_output(
-        ("./histogram_filling", "--benchmark_format=json", "--benchmark_filter=normal")
-    )
+    s = subp.check_output(("./histogram_filling", "--benchmark_format=json", "--benchmark_filter=normal"))
     d = json.loads(s)
     if update and hash in results and results[hash] is not None:
         d2 = results[hash]
@@ -89,22 +86,14 @@ def run(results, comments, hash, update):
 def main():
     commits, comments = get_commits()
 
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        "first",
-        type=str,
-        default="begin",
-        help="first commit in range, special value `begin` is allowed",
-    )
-    parser.add_argument(
-        "last",
-        type=str,
-        default="end",
-        help="last commit in range, special value `end` is allowed",
-    )
-    parser.add_argument("-f", action="store_true", help="override previous results")
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("first", type=str, default="begin",
+                        help="first commit in range, special value `begin` is allowed")
+    parser.add_argument("last", type=str, default="end",
+                        help="last commit in range, special value `end` is allowed")
+    parser.add_argument("-f", action="store_true",
+                        help="override previous results")
 
     args = parser.parse_args()
 
@@ -117,12 +106,11 @@ def main():
         a = commits.index(args.first)
         b = commits.index(args.last)
         if args.f:
-            for hash in commits[a : b + 1]:
+            for hash in commits[a:b+1]:
                 del results[hash]
         run(results, comments, args.first, False)
         run(results, comments, args.last, False)
         recursion(results, commits, comments, a, b)
-
 
 if __name__ == "__main__":
     main()

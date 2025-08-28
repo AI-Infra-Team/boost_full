@@ -2,7 +2,7 @@
 // execution/connect.hpp
 // ~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -132,7 +132,7 @@ using connect_result_t = typename connect_result<S, R>::type;
 
 #else // defined(GENERATING_DOCUMENTATION)
 
-namespace boost_asio_execution_connect_fn {
+namespace asio_execution_connect_fn {
 
 using boost::asio::conditional;
 using boost::asio::declval;
@@ -159,8 +159,7 @@ enum overload_type
   ill_formed
 };
 
-template <typename S, typename R, typename = void,
-   typename = void, typename = void, typename = void>
+template <typename S, typename R, typename = void>
 struct call_traits
 {
   BOOST_ASIO_STATIC_CONSTEXPR(overload_type, overload = ill_formed);
@@ -171,13 +170,13 @@ struct call_traits
 template <typename S, typename R>
 struct call_traits<S, void(R),
   typename enable_if<
-    connect_member<S, R>::is_valid
-  >::type,
-  typename enable_if<
-    is_operation_state<typename connect_member<S, R>::result_type>::value
-  >::type,
-  typename enable_if<
-    is_sender<typename remove_cvref<S>::type>::value
+    (
+      connect_member<S, R>::is_valid
+      &&
+      is_operation_state<typename connect_member<S, R>::result_type>::value
+      &&
+      is_sender<typename remove_cvref<S>::type>::value
+    )
   >::type> :
   connect_member<S, R>
 {
@@ -187,16 +186,15 @@ struct call_traits<S, void(R),
 template <typename S, typename R>
 struct call_traits<S, void(R),
   typename enable_if<
-    !connect_member<S, R>::is_valid
-  >::type,
-  typename enable_if<
-    connect_free<S, R>::is_valid
-  >::type,
-  typename enable_if<
-    is_operation_state<typename connect_free<S, R>::result_type>::value
-  >::type,
-  typename enable_if<
-    is_sender<typename remove_cvref<S>::type>::value
+    (
+      !connect_member<S, R>::is_valid
+      &&
+      connect_free<S, R>::is_valid
+      &&
+      is_operation_state<typename connect_free<S, R>::result_type>::value
+      &&
+      is_sender<typename remove_cvref<S>::type>::value
+    )
   >::type> :
   connect_free<S, R>
 {
@@ -206,25 +204,24 @@ struct call_traits<S, void(R),
 template <typename S, typename R>
 struct call_traits<S, void(R),
   typename enable_if<
-    !connect_member<S, R>::is_valid
-  >::type,
-  typename enable_if<
-    !connect_free<S, R>::is_valid
-  >::type,
-  typename enable_if<
-    is_receiver<R>::value
-  >::type,
-  typename enable_if<
-    conditional<
-      !is_as_receiver<
-        typename remove_cvref<R>::type
-      >::value,
-      is_executor_of<
-        typename remove_cvref<S>::type,
-        as_invocable<typename remove_cvref<R>::type, S>
-      >,
-      false_type
-    >::type::value
+    (
+      !connect_member<S, R>::is_valid
+      &&
+      !connect_free<S, R>::is_valid
+      &&
+      is_receiver<R>::value
+      &&
+      conditional<
+        !is_as_receiver<
+          typename remove_cvref<R>::type
+        >::value,
+        is_executor_of<
+          typename remove_cvref<S>::type,
+          as_invocable<typename remove_cvref<R>::type, S>
+        >,
+        false_type
+      >::type::value
+    )
   >::type>
 {
   BOOST_ASIO_STATIC_CONSTEXPR(overload_type, overload = adapter);
@@ -427,22 +424,22 @@ struct static_instance
 template <typename T>
 const T static_instance<T>::instance = {};
 
-} // namespace boost_asio_execution_connect_fn
+} // namespace asio_execution_connect_fn
 namespace boost {
 namespace asio {
 namespace execution {
 namespace {
 
-static BOOST_ASIO_CONSTEXPR const boost_asio_execution_connect_fn::impl&
-  connect = boost_asio_execution_connect_fn::static_instance<>::instance;
+static BOOST_ASIO_CONSTEXPR const asio_execution_connect_fn::impl&
+  connect = asio_execution_connect_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S, typename R>
 struct can_connect :
   integral_constant<bool,
-    boost_asio_execution_connect_fn::call_traits<S, void(R)>::overload !=
-      boost_asio_execution_connect_fn::ill_formed>
+    asio_execution_connect_fn::call_traits<S, void(R)>::overload !=
+      asio_execution_connect_fn::ill_formed>
 {
 };
 
@@ -456,7 +453,7 @@ constexpr bool can_connect_v = can_connect<S, R>::value;
 template <typename S, typename R>
 struct is_nothrow_connect :
   integral_constant<bool,
-    boost_asio_execution_connect_fn::call_traits<S, void(R)>::is_noexcept>
+    asio_execution_connect_fn::call_traits<S, void(R)>::is_noexcept>
 {
 };
 
@@ -471,7 +468,7 @@ constexpr bool is_nothrow_connect_v
 template <typename S, typename R>
 struct connect_result
 {
-  typedef typename boost_asio_execution_connect_fn::call_traits<
+  typedef typename asio_execution_connect_fn::call_traits<
       S, void(R)>::result_type type;
 };
 

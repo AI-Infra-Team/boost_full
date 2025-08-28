@@ -5,10 +5,6 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2021.
-// Modifications copyright (c) 2021 Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -226,18 +222,6 @@ void test_all()
         "POINT(0 0)",
         "POINT(0 0)", 1.0);
 
-    test_geometry<bg::model::segment<P> >(
-        "SEGMENT(0 0, 1 1)",
-        "SEGMENT(0 0, 1 1)", 1.0);
-
-    test_geometry<bg::model::box<P> >(
-        "BOX(0 0, 1 1)",
-        "BOX(0 0, 1 1)", 1.0);
-
-    test_geometry<bg::model::multi_point<P> >(
-        "MULTIPOINT(0 0, 1 1, 2 2)",
-        "MULTIPOINT(0 0, 1 1, 2 2)", 1.0);
-
 
     // RING: check compilation and behaviour
     test_geometry<bg::model::ring<P> >(
@@ -316,6 +300,10 @@ int test_main(int, char* [])
 
     test_zigzag<bg::model::d2::point_xy<double> >();
 
+#if defined(HAVE_TTMATH)
+    test_all<bg::model::d2::point_xy<ttmath_big> >();
+    test_spherical<bg::model::point<ttmath_big, 2, bg::cs::spherical_equatorial<bg::degree> > >();
+#endif
 #endif
 
 

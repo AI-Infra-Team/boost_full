@@ -45,7 +45,6 @@ project boost/context
       <link>shared:<define>BOOST_CONTEXT_DYN_LINK=1
       <define>BOOST_CONTEXT_SOURCE
       <threading>multi
-      <toolset>msvc,<address-model>32:<asmflags>/safeseh
     : usage-requirements
       <link>shared:<define>BOOST_CONTEXT_DYN_LINK=1
       <optimization>speed:<define>BOOST_DISABLE_ASSERTS
@@ -237,7 +236,7 @@ alias asm_sources
      asm/ontop_mips32_o32_elf_gas.S
    : <abi>o32
      <address-model>32
-     <architecture>mips
+     <architecture>mips1
      <binary-format>elf
      <toolset>clang
    ;
@@ -248,7 +247,7 @@ alias asm_sources
      asm/ontop_mips32_o32_elf_gas.S
    : <abi>o32
      <address-model>32
-     <architecture>mips
+     <architecture>mips1
      <binary-format>elf
      <toolset>gcc
    ;
@@ -260,7 +259,7 @@ alias asm_sources
      asm/ontop_mips64_n64_elf_gas.S
    : <abi>n64
      <address-model>64
-     <architecture>mips
+     <architecture>mips1
      <binary-format>elf
      <toolset>clang
    ;
@@ -271,7 +270,7 @@ alias asm_sources
      asm/ontop_mips64_n64_elf_gas.S
    : <abi>n64
      <address-model>64
-     <architecture>mips
+     <architecture>mips1
      <binary-format>elf
      <toolset>gcc
    ;
@@ -422,17 +421,6 @@ alias asm_sources
 
 # RISCV64
 # RISCV64/SYSV/ELF
-alias asm_sources
-   : asm/make_riscv64_sysv_elf_gas.S
-     asm/jump_riscv64_sysv_elf_gas.S
-     asm/ontop_riscv64_sysv_elf_gas.S
-   : <abi>sysv
-     <address-model>64
-     <architecture>riscv
-     <binary-format>elf
-     <toolset>clang
-   ;
-
 alias asm_sources
    : asm/make_riscv64_sysv_elf_gas.S
      asm/jump_riscv64_sysv_elf_gas.S
@@ -665,17 +653,6 @@ alias asm_sources
      <address-model>64
      <architecture>x86
      <binary-format>mach-o
-     <toolset>gcc
-   ;
-
-alias asm_sources
-   : asm/make_x86_64_sysv_macho_gas.S
-     asm/jump_x86_64_sysv_macho_gas.S
-     asm/ontop_x86_64_sysv_macho_gas.S
-   : <abi>sysv
-     <address-model>64
-     <architecture>x86
-     <binary-format>mach-o
      <toolset>darwin
    ;
 
@@ -872,13 +849,26 @@ alias impl_sources
 
 explicit impl_sources ;
 
+obj cxx11_hdr_mutex_check : ../build/cxx11_hdr_mutex.cpp ;
+explicit cxx11_hdr_mutex_check ;
+local cxx11_mutex = [ check-target-builds
+      cxx11_hdr_mutex_check "C++11 mutex"
+    :
+    : <library>/boost/thread//boost_thread
+  ] ;
+
 alias stack_traits_sources
     : windows/stack_traits.cpp
     : <target-os>windows
+    :
+    : $(cxx11_mutex)
     ;
 
 alias stack_traits_sources
     : posix/stack_traits.cpp
+    :
+    :
+    : $(cxx11_mutex)
     ;
 
 explicit stack_traits_sources ;

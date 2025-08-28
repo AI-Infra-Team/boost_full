@@ -22,7 +22,6 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef BOOST_REGEX_CXX03
 //
 // we cannot use the regular Boost.Test in here: it is not thread safe
 // and calls to BOOST_CHECK will eventually crash on some compilers 
@@ -206,6 +205,3 @@ int main()
 
    return total_failures;
 }
-#else
-int main() {}
-#endif

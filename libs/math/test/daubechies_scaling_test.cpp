@@ -11,14 +11,15 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
-#include <boost/assert.hpp>
 #include <boost/core/demangle.hpp>
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/ext/std/integer_sequence.hpp>
 #include <boost/math/tools/condition_numbers.hpp>
+#include <boost/math/differentiation/finite_difference.hpp>
 #include <boost/math/special_functions/daubechies_scaling.hpp>
 #include <boost/math/filters/daubechies.hpp>
 #include <boost/math/special_functions/detail/daubechies_scaling_integer_grid.hpp>
+#include <boost/math/constants/constants.hpp>
 #include <boost/math/quadrature/trapezoidal.hpp>
 #include <boost/math/special_functions/next.hpp>
 
@@ -27,7 +28,10 @@
 using boost::multiprecision::float128;
 #endif
 
-using std::sqrt;
+
+using boost::math::constants::pi;
+using boost::math::constants::root_two;
+
 // Mallat, Theorem 7.4, characterization number 3:
 // A conjugate mirror filter has p vanishing moments iff h^{(n)}(pi) = 0 for 0 <= n < p.
 template<class Real, unsigned p>
@@ -51,7 +55,7 @@ void test_daubechies_filters()
     {
         H0 += h[j];
     }
-    CHECK_MOLLIFIED_CLOSE(sqrt(static_cast<Real>(2)), H0, tol);
+    CHECK_MOLLIFIED_CLOSE(root_two<Real>(), H0, tol);
 
     // This is implied if we choose the scaling function to be an orthonormal basis of V0.
     Real scaling = 0;
@@ -245,7 +249,7 @@ void test_dyadic_grid()
     {
         auto phijk = boost::math::daubechies_scaling_dyadic_grid<Real, i+2, 0>(0);
         auto phik = boost::math::detail::daubechies_scaling_integer_grid<Real, i+2, 0>();
-        BOOST_ASSERT(phik.size() == phijk.size());
+        assert(phik.size() == phijk.size());
 
         for (size_t k = 0; k < phik.size(); ++k)
         {
@@ -354,15 +358,15 @@ void test_quadratures()
             CHECK_ULP_CLOSE(Real(0), phi(xlo), 0);
             CHECK_ULP_CLOSE(Real(0), phi(xhi), 0);
             xlo = std::nextafter(xlo, std::numeric_limits<Real>::lowest());
-            xhi = std::nextafter(xhi, (std::numeric_limits<Real>::max)());
+            xhi = std::nextafter(xhi, std::numeric_limits<Real>::max());
         }
 
         xlo = a;
         xhi = b;
         for (int i = 0; i < samples; ++i) {
-            BOOST_ASSERT(abs(phi(xlo)) <= 5);
-            BOOST_ASSERT(abs(phi(xhi)) <= 5);
-            xlo = std::nextafter(xlo, (std::numeric_limits<Real>::max)());
+            assert(abs(phi(xlo)) <= 5);
+            assert(abs(phi(xhi)) <= 5);
+            xlo = std::nextafter(xlo, std::numeric_limits<Real>::max());
             xhi = std::nextafter(xhi, std::numeric_limits<Real>::lowest());
         }
 
@@ -393,7 +397,7 @@ void test_quadratures()
         }
 
         std::random_device rd;
-        Real t = static_cast<Real>(rd())/static_cast<Real>((rd.max)());
+        Real t = static_cast<Real>(rd())/static_cast<Real>(rd.max());
         Real S = phi(t);
         Real dS = phi.prime(t);
         while (t < b)
@@ -426,23 +430,23 @@ void test_quadratures()
             CHECK_ULP_CLOSE(Real(0), phi(xlo), 0);
             CHECK_ULP_CLOSE(Real(0), phi(xhi), 0);
             if constexpr (p > 2) {
-                BOOST_ASSERT(abs(phi.prime(xlo)) <= 5);
-                BOOST_ASSERT(abs(phi.prime(xhi)) <= 5);
+                assert(abs(phi.prime(xlo)) <= 5);
+                assert(abs(phi.prime(xhi)) <= 5);
                 if constexpr (p > 5) {
-                     BOOST_ASSERT(abs(phi.double_prime(xlo)) <= 5);
-                     BOOST_ASSERT(abs(phi.double_prime(xhi)) <= 5);
+                    assert(abs(phi.double_prime(xlo)) <= 5);
+                    assert(abs(phi.double_prime(xhi)) <= 5);
                 }
             }
             xlo = std::nextafter(xlo, std::numeric_limits<Real>::lowest());
-            xhi = std::nextafter(xhi, (std::numeric_limits<Real>::max)());
+            xhi = std::nextafter(xhi, std::numeric_limits<Real>::max());
         }
 
         xlo = a;
         xhi = b;
         for (int i = 0; i < samples; ++i) {
-            BOOST_ASSERT(abs(phi(xlo)) <= 5);
-            BOOST_ASSERT(abs(phi(xhi)) <= 5);
-            xlo = std::nextafter(xlo, (std::numeric_limits<Real>::max)());
+            assert(abs(phi(xlo)) <= 5);
+            assert(abs(phi(xhi)) <= 5);
+            xlo = std::nextafter(xlo, std::numeric_limits<Real>::max());
             xhi = std::nextafter(xhi, std::numeric_limits<Real>::lowest());
         }
     }
@@ -450,7 +454,6 @@ void test_quadratures()
 
 int main()
 {
-    #ifndef __MINGW32__
     boost::hana::for_each(std::make_index_sequence<18>(), [&](auto i){
       test_quadratures<float, i+2>();
       test_quadratures<double, i+2>();
@@ -530,6 +533,6 @@ int main()
         test_daubechies_filters<float128, i+1>();
     });
     #endif
-    #endif // compiler guard for CI
+
     return boost::math::test::report_errors();
 }

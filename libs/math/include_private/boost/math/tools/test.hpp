@@ -38,7 +38,7 @@ public:
    T max BOOST_PREVENT_MACRO_SUBSTITUTION()const{ return (stat.max)(); }
    T total()const{ return stat.total(); }
    T mean()const{ return stat.mean(); }
-   std::uintmax_t count()const{ return stat.count(); }
+   boost::uintmax_t count()const{ return stat.count(); }
    T variance()const{ return stat.variance(); }
    T variance1()const{ return stat.variance1(); }
    T rms()const{ return stat.rms(); }
@@ -69,7 +69,7 @@ T relative_error(T a, T b)
 template <class T>
 void set_output_precision(T, std::ostream& os)
 {
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4127)
 #endif
@@ -77,10 +77,7 @@ void set_output_precision(T, std::ostream& os)
    {
       os << std::setprecision(std::numeric_limits<T>::digits10 + 2);
    }
-   else
-      os << std::setprecision(22); // and hope for the best!
-
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
 }

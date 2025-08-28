@@ -269,8 +269,6 @@ class transfer_op
                 std::move(*this));
     }
 
-    static bool never_pending_;
-
 public:
     template<class Handler_>
     transfer_op(
@@ -280,25 +278,10 @@ public:
         : async_base<Handler, Executor>(
             std::forward<Handler_>(h), s.get_executor())
         , impl_(s.impl_)
-        , pg_()
+        , pg_(state().pending)
         , b_(b)
     {
-        if (buffer_bytes(b_) == 0 && state().pending)
-        {
-            // Workaround:
-            // Corner case discovered in https://github.com/boostorg/beast/issues/2065
-            // Enclosing SSL stream wishes to complete a 0-length write early by
-            // executing a 0-length read against the underlying stream.
-            // This can occur even if an existing async_read is in progress.
-            // In this specific case, we will complete the async op with no error
-            // in order to prevent assertions and/or internal corruption of the basic_stream
-            this->complete(false, error_code(), 0);
-        }
-        else
-        {
-            pg_.assign(state().pending);
-            (*this)({});
-        }
+        (*this)({});
     }
 
     void
@@ -313,14 +296,7 @@ public:
             {
                 // make sure we perform the no-op
                 BOOST_ASIO_CORO_YIELD
-                {
-                    BOOST_ASIO_HANDLER_LOCATION((
-                        __FILE__, __LINE__,
-                        (isRead ? "basic_stream::async_read_some"
-                            : "basic_stream::async_write_some")));
-
-                    async_perform(0, is_read{});
-                }
+                async_perform(0, is_read{});
                 // apply the timeout manually, otherwise
                 // behavior varies across platforms.
                 if(state().timer.expiry() <= clock_type::now())
@@ -333,19 +309,12 @@ public:
 
             // if a timeout is active, wait on the timer
             if(state().timer.expiry() != never())
-            {
-                BOOST_ASIO_HANDLER_LOCATION((
-                    __FILE__, __LINE__,
-                    (isRead ? "basic_stream::async_read_some"
-                        : "basic_stream::async_write_some")));
-
                 state().timer.async_wait(
                     timeout_handler<decltype(this->get_executor())>{
                         state(),
                         impl_,
                         state().tick,
                         this->get_executor()});
-            }
 
             // check rate limit, maybe wait
             std::size_t amount;
@@ -354,14 +323,7 @@ public:
             {
                 ++impl_->waiting;
                 BOOST_ASIO_CORO_YIELD
-                {
-                    BOOST_ASIO_HANDLER_LOCATION((
-                        __FILE__, __LINE__,
-                        (isRead ? "basic_stream::async_read_some"
-                            : "basic_stream::async_write_some")));
-
-                    impl_->timer.async_wait(std::move(*this));
-                }
+                impl_->timer.async_wait(std::move(*this));
                 if(ec)
                 {
                     // socket was closed, or a timeout
@@ -385,14 +347,7 @@ public:
             }
 
             BOOST_ASIO_CORO_YIELD
-            {
-                BOOST_ASIO_HANDLER_LOCATION((
-                    __FILE__, __LINE__,
-                    (isRead ? "basic_stream::async_read_some"
-                        : "basic_stream::async_write_some")));
-
-                async_perform(amount, is_read{});
-            }
+            async_perform(amount, is_read{});
 
             if(state().timer.expiry() != never())
             {
@@ -453,22 +408,12 @@ public:
         , pg1_(impl_->write.pending)
     {
         if(state().timer.expiry() != stream_base::never())
-        {
-            BOOST_ASIO_HANDLER_LOCATION((
-                __FILE__, __LINE__,
-                "basic_stream::async_connect"));
-
             impl_->write.timer.async_wait(
                 timeout_handler<decltype(this->get_executor())>{
                     state(),
                     impl_,
                     state().tick,
                     this->get_executor()});
-        }
-
-        BOOST_ASIO_HANDLER_LOCATION((
-            __FILE__, __LINE__,
-            "basic_stream::async_connect"));
 
         impl_->socket.async_connect(
             ep, std::move(*this));
@@ -490,22 +435,12 @@ public:
         , pg1_(impl_->write.pending)
     {
         if(state().timer.expiry() != stream_base::never())
-        {
-            BOOST_ASIO_HANDLER_LOCATION((
-                __FILE__, __LINE__,
-                "basic_stream::async_connect"));
-
             impl_->write.timer.async_wait(
                 timeout_handler<decltype(this->get_executor())>{
                     state(),
                     impl_,
                     state().tick,
                     this->get_executor()});
-        }
-
-        BOOST_ASIO_HANDLER_LOCATION((
-            __FILE__, __LINE__,
-            "basic_stream::async_connect"));
 
         net::async_connect(impl_->socket,
             eps, cond, std::move(*this));
@@ -527,22 +462,12 @@ public:
         , pg1_(impl_->write.pending)
     {
         if(state().timer.expiry() != stream_base::never())
-        {
-            BOOST_ASIO_HANDLER_LOCATION((
-                __FILE__, __LINE__,
-                "basic_stream::async_connect"));
-
             impl_->write.timer.async_wait(
                 timeout_handler<decltype(this->get_executor())>{
                     state(),
                     impl_,
                     state().tick,
                     this->get_executor()});
-        }
-
-        BOOST_ASIO_HANDLER_LOCATION((
-            __FILE__, __LINE__,
-            "basic_stream::async_connect"));
 
         net::async_connect(impl_->socket,
             begin, end, cond, std::move(*this));

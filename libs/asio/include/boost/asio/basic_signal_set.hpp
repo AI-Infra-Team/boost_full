@@ -2,7 +2,7 @@
 // basic_signal_set.hpp
 // ~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -27,8 +27,6 @@
 #include <boost/asio/detail/type_traits.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/execution_context.hpp>
-
-#include <boost/asio/detail/push_options.hpp>
 
 namespace boost {
 namespace asio {
@@ -117,7 +115,7 @@ public:
    * signal set.
    */
   explicit basic_signal_set(const executor_type& ex)
-    : impl_(0, ex)
+    : impl_(ex)
   {
   }
 
@@ -131,11 +129,10 @@ public:
    */
   template <typename ExecutionContext>
   explicit basic_signal_set(ExecutionContext& context,
-      typename constraint<
-        is_convertible<ExecutionContext&, execution_context&>::value,
-        defaulted_constraint
-      >::type = defaulted_constraint())
-    : impl_(0, 0, context)
+      typename enable_if<
+        is_convertible<ExecutionContext&, execution_context&>::value
+      >::type* = 0)
+    : impl_(context)
   {
   }
 
@@ -154,7 +151,7 @@ public:
    * signals.add(signal_number_1); @endcode
    */
   basic_signal_set(const executor_type& ex, int signal_number_1)
-    : impl_(0, ex)
+    : impl_(ex)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -177,11 +174,10 @@ public:
    */
   template <typename ExecutionContext>
   basic_signal_set(ExecutionContext& context, int signal_number_1,
-      typename constraint<
-        is_convertible<ExecutionContext&, execution_context&>::value,
-        defaulted_constraint
-      >::type = defaulted_constraint())
-    : impl_(0, 0, context)
+      typename enable_if<
+        is_convertible<ExecutionContext&, execution_context&>::value
+      >::type* = 0)
+    : impl_(context)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -207,7 +203,7 @@ public:
    */
   basic_signal_set(const executor_type& ex, int signal_number_1,
       int signal_number_2)
-    : impl_(0, ex)
+    : impl_(ex)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -236,11 +232,10 @@ public:
   template <typename ExecutionContext>
   basic_signal_set(ExecutionContext& context, int signal_number_1,
       int signal_number_2,
-      typename constraint<
-        is_convertible<ExecutionContext&, execution_context&>::value,
-        defaulted_constraint
-      >::type = defaulted_constraint())
-    : impl_(0, 0, context)
+      typename enable_if<
+        is_convertible<ExecutionContext&, execution_context&>::value
+      >::type* = 0)
+    : impl_(context)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -271,7 +266,7 @@ public:
    */
   basic_signal_set(const executor_type& ex, int signal_number_1,
       int signal_number_2, int signal_number_3)
-    : impl_(0, ex)
+    : impl_(ex)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -305,11 +300,10 @@ public:
   template <typename ExecutionContext>
   basic_signal_set(ExecutionContext& context, int signal_number_1,
       int signal_number_2, int signal_number_3,
-      typename constraint<
-        is_convertible<ExecutionContext&, execution_context&>::value,
-        defaulted_constraint
-      >::type = defaulted_constraint())
-    : impl_(0, 0, context)
+      typename enable_if<
+        is_convertible<ExecutionContext&, execution_context&>::value
+      >::type* = 0)
+    : impl_(context)
   {
     boost::system::error_code ec;
     impl_.get_service().add(impl_.get_implementation(), signal_number_1, ec);
@@ -572,7 +566,5 @@ private:
 
 } // namespace asio
 } // namespace boost
-
-#include <boost/asio/detail/pop_options.hpp>
 
 #endif // BOOST_ASIO_BASIC_SIGNAL_SET_HPP

@@ -21,7 +21,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
-#include "timer.hpp"
+#include <boost/timer.hpp>
 #include "test.hpp"
 
 #ifdef _MSC_VER
@@ -68,20 +68,20 @@ T generate_random(unsigned bits_wanted)
 }
 
 template <class T>
-struct is_checked_cpp_int : public std::integral_constant<bool, false>
+struct is_checked_cpp_int : public boost::mpl::false_
 {};
 template <unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, class Allocator, boost::multiprecision::expression_template_option ET>
-struct is_checked_cpp_int<boost::multiprecision::number<boost::multiprecision::cpp_int_backend<MinBits, MaxBits, SignType, boost::multiprecision::checked, Allocator>, ET> > : public std::integral_constant<bool, true>
+struct is_checked_cpp_int<boost::multiprecision::number<boost::multiprecision::cpp_int_backend<MinBits, MaxBits, SignType, boost::multiprecision::checked, Allocator>, ET> > : public boost::mpl::true_
 {};
 
 template <class N>
-typename std::enable_if<boost::multiprecision::backends::is_fixed_precision<typename N::backend_type>::value && !is_checked_cpp_int<N>::value>::type test(const N&)
+typename boost::enable_if_c<boost::multiprecision::backends::is_fixed_precision<typename N::backend_type>::value && !is_checked_cpp_int<N>::value>::type test(const N&)
 {
    using namespace boost::multiprecision;
 
    static unsigned last_error_count = 0;
 
-   timer tim;
+   boost::timer tim;
 
    do
    {
@@ -184,13 +184,13 @@ typename std::enable_if<boost::multiprecision::backends::is_fixed_precision<type
    }
 }
 template <class N>
-typename std::enable_if<!(boost::multiprecision::backends::is_fixed_precision<typename N::backend_type>::value && !is_checked_cpp_int<N>::value)>::type test(const N&)
+typename boost::disable_if_c<boost::multiprecision::backends::is_fixed_precision<typename N::backend_type>::value && !is_checked_cpp_int<N>::value>::type test(const N&)
 {
    using namespace boost::multiprecision;
 
    static unsigned last_error_count = 0;
 
-   timer tim;
+   boost::timer tim;
 
    mpz_int mask;
    if (std::numeric_limits<N>::is_bounded)

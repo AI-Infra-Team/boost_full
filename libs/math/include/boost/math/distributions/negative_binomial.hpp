@@ -52,6 +52,11 @@
 #include <boost/math/tools/roots.hpp> // for root finding.
 #include <boost/math/distributions/detail/inv_discrete_quantile.hpp>
 
+#include <boost/type_traits/is_floating_point.hpp>
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/mpl/if.hpp>
+
 #include <limits> // using std::numeric_limits;
 #include <utility>
 
@@ -487,7 +492,7 @@ namespace boost
       //
       // Max iterations permitted:
       //
-      std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
+      boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
       typedef typename Policy::discrete_quantile_type discrete_type;
       return detail::inverse_discrete_quantile(
          dist,
@@ -574,7 +579,7 @@ namespace boost
        //
        // Max iterations permitted:
        //
-       std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
+       boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
        typedef typename Policy::discrete_quantile_type discrete_type;
        return detail::inverse_discrete_quantile(
           dist,

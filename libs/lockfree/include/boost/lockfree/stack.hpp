@@ -237,8 +237,9 @@ public:
      * */
     ~stack(void)
     {
-        detail::consume_noop consume_functor;
-        (void)consume_all(consume_functor);
+        T dummy;
+        while(unsynchronized_pop(dummy))
+        {}
     }
 
 private:

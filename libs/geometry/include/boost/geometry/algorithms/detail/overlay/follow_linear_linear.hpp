@@ -18,10 +18,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include <boost/range/begin.hpp>
-#include <boost/range/end.hpp>
-#include <boost/range/size.hpp>
-#include <boost/range/value_type.hpp>
+#include <boost/range.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <boost/geometry/core/assert.hpp>
@@ -334,10 +331,14 @@ public:
                                strategy);
         }
 
+#if ! defined(BOOST_GEOMETRY_OVERLAY_NO_THROW)
         if (enter_count != 0)
         {
-           return oit;
+            BOOST_THROW_EXCEPTION(inconsistent_turns_exception());
         }
+#else
+        BOOST_GEOMETRY_ASSERT(enter_count == 0);
+#endif
 
         return process_end(entered, linestring,
                            current_segment_id, current_piece,

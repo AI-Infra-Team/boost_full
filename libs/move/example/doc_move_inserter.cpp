@@ -9,6 +9,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <boost/move/detail/config_begin.hpp>
+
 //[move_inserter_example
 #include <boost/container/list.hpp>
 #include "movable.hpp"
@@ -46,3 +48,5 @@ int main()
    return 0;
 }
 //]
+
+#include <boost/move/detail/config_end.hpp>

@@ -7,12 +7,10 @@
     ],
     "maintainers": [
         "Emil Dotchevski <emil -at- revergestudios.com>",
-        "Peter Dimov <pdimov -at- gmail.com>"
+        "Peter Dimov <pdimov -at- pdimov.com>"
     ],
     "description": "A common infrastructure for throwing exceptions from Boost libraries.",
     "category": [
-        "Emulation",
-        "Error-handling"
-    ],
-    "cxxstd": "03"
+        "Miscellaneous"
+    ]
 }

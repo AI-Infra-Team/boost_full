@@ -11,6 +11,5 @@
     ],
     "maintainers": [
         "Vinnie Falco <vinnie.falco@gmail.com>"
-    ],
-    "cxxstd": "11"
+    ]
 }

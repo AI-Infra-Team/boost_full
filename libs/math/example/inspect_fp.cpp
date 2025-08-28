@@ -13,12 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-
-#ifndef BOOST_MATH_STANDALONE
-#include <boost/endian.hpp>
-#else
-#include <boost/math/tools/config.hpp>
-#endif
+#include <boost/detail/endian.hpp>
 
 //------------------------------------------------------------------------------
 

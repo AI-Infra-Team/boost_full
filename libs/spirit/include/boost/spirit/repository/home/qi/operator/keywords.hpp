@@ -24,6 +24,7 @@
 #include <boost/fusion/include/value_at.hpp>
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/optional.hpp>
+#include <boost/foreach.hpp>
 #include <boost/array.hpp>
 #include <boost/spirit/home/qi/string/symbols.hpp>
 #include <boost/spirit/home/qi/string/lit.hpp>
@@ -280,9 +281,9 @@ namespace boost { namespace spirit { namespace repository { namespace qi
                   {
                     first = save;
                     // Check that we are leaving the keywords parser in a successful state
-                    for(typename flags_type::size_type i = 0, size = flags.size(); i < size; ++i)
+                    BOOST_FOREACH(bool &valid,flags)
                     {
-                      if(!flags[i])
+                      if(!valid)
                       {
                         return false;
                       }
@@ -293,7 +294,7 @@ namespace boost { namespace spirit { namespace repository { namespace qi
                     save = first;
                 }
             }
-            BOOST_UNREACHABLE_RETURN(false)
+            return false;
           }
 
         // Handle the mixed kwd and ikwd case
@@ -361,9 +362,9 @@ namespace boost { namespace spirit { namespace repository { namespace qi
                   {
                     first = save;
                     // Check that we are leaving the keywords parser in a successful state
-                    for(typename flags_type::size_type i = 0, size = flags.size(); i < size; ++i)
+                    BOOST_FOREACH(bool &valid,flags)
                     {
-                      if(!flags[i])
+                      if(!valid)
                       {
                         return false;
                       }
@@ -376,7 +377,7 @@ namespace boost { namespace spirit { namespace repository { namespace qi
                   }
                 }
             }
-            BOOST_UNREACHABLE_RETURN(false)
+            return false;
           }
 
         template <typename Context>

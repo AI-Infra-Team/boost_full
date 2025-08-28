@@ -2,7 +2,7 @@
 // execution/schedule.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -69,7 +69,7 @@ struct can_schedule :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
-namespace boost_asio_execution_schedule_fn {
+namespace asio_execution_schedule_fn {
 
 using boost::asio::decay;
 using boost::asio::declval;
@@ -88,7 +88,7 @@ enum overload_type
   ill_formed
 };
 
-template <typename S, typename = void, typename = void, typename = void>
+template <typename S, typename = void>
 struct call_traits
 {
   BOOST_ASIO_STATIC_CONSTEXPR(overload_type, overload = ill_formed);
@@ -99,7 +99,9 @@ struct call_traits
 template <typename S>
 struct call_traits<S,
   typename enable_if<
-    schedule_member<S>::is_valid
+    (
+      schedule_member<S>::is_valid
+    )
   >::type> :
   schedule_member<S>
 {
@@ -109,10 +111,11 @@ struct call_traits<S,
 template <typename S>
 struct call_traits<S,
   typename enable_if<
-    !schedule_member<S>::is_valid
-  >::type,
-  typename enable_if<
-    schedule_free<S>::is_valid
+    (
+      !schedule_member<S>::is_valid
+      &&
+      schedule_free<S>::is_valid
+    )
   >::type> :
   schedule_free<S>
 {
@@ -122,13 +125,13 @@ struct call_traits<S,
 template <typename S>
 struct call_traits<S,
   typename enable_if<
-    !schedule_member<S>::is_valid
-  >::type,
-  typename enable_if<
-    !schedule_free<S>::is_valid
-  >::type,
-  typename enable_if<
-    is_executor<typename decay<S>::type>::value
+    (
+      !schedule_member<S>::is_valid
+      &&
+      !schedule_free<S>::is_valid
+      &&
+      is_executor<typename decay<S>::type>::value
+    )
   >::type>
 {
   BOOST_ASIO_STATIC_CONSTEXPR(overload_type, overload = identity);
@@ -239,22 +242,22 @@ struct static_instance
 template <typename T>
 const T static_instance<T>::instance = {};
 
-} // namespace boost_asio_execution_schedule_fn
+} // namespace asio_execution_schedule_fn
 namespace boost {
 namespace asio {
 namespace execution {
 namespace {
 
-static BOOST_ASIO_CONSTEXPR const boost_asio_execution_schedule_fn::impl&
-  schedule = boost_asio_execution_schedule_fn::static_instance<>::instance;
+static BOOST_ASIO_CONSTEXPR const asio_execution_schedule_fn::impl&
+  schedule = asio_execution_schedule_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename S>
 struct can_schedule :
   integral_constant<bool,
-    boost_asio_execution_schedule_fn::call_traits<S>::overload !=
-      boost_asio_execution_schedule_fn::ill_formed>
+    asio_execution_schedule_fn::call_traits<S>::overload !=
+      asio_execution_schedule_fn::ill_formed>
 {
 };
 
@@ -268,7 +271,7 @@ constexpr bool can_schedule_v = can_schedule<S>::value;
 template <typename S>
 struct is_nothrow_schedule :
   integral_constant<bool,
-    boost_asio_execution_schedule_fn::call_traits<S>::is_noexcept>
+    asio_execution_schedule_fn::call_traits<S>::is_noexcept>
 {
 };
 

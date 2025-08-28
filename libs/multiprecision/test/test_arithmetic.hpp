@@ -14,10 +14,10 @@
 #include "test.hpp"
 
 template <class T>
-struct is_boost_rational : public std::integral_constant<bool, false>
+struct is_boost_rational : public boost::mpl::false_
 {};
 template <class T>
-struct is_checked_cpp_int : public std::integral_constant<bool, false>
+struct is_checked_cpp_int : public boost::mpl::false_
 {};
 
 #ifdef BOOST_MSVC
@@ -63,7 +63,7 @@ abs(boost::multiprecision::detail::expression<tag, Arg1, Arg2, Arg3, Arg4> const
 } // namespace detail
 
 template <class T>
-struct is_twos_complement_integer : public std::integral_constant<bool, true>
+struct is_twos_complement_integer : public boost::mpl::true_
 {};
 
 template <class T>
@@ -73,7 +73,7 @@ struct related_type
 };
 
 template <class Real, class Val>
-void test_comparisons(Val, Val, const std::integral_constant<bool, false>&)
+void test_comparisons(Val, Val, const boost::mpl::false_)
 {}
 
 int normalize_compare_result(int r)
@@ -81,45 +81,9 @@ int normalize_compare_result(int r)
    return r > 0 ? 1 : r < 0 ? -1 : 0;
 }
 
-enum unscoped_enum
-{
-   one = 1,
-   two = 2,
-   three = 3,
-};
-
-enum struct scoped_enum
-{
-   four = 4,
-   five = 5,
-   six = 6,
-};
-
-template <class Real>
-typename std::enable_if<boost::multiprecision::is_number<Real>::value>::type test_enum_conversions()
-{
-   Real r1(one);
-   BOOST_CHECK_EQUAL(r1, 1);
-   Real r2(scoped_enum::four);
-   BOOST_CHECK_EQUAL(r2, 4);
-   r1 = two;
-   BOOST_CHECK_EQUAL(r1, 2);
-   r1.assign(scoped_enum::five);
-   BOOST_CHECK_EQUAL(r1, 5);
-
-   r1.assign(two);
-
-   BOOST_CHECK_EQUAL(static_cast<unscoped_enum>(r1), two);
-   BOOST_CHECK(static_cast<scoped_enum>(r2) == scoped_enum::four);
-}
-
-template <class Real>
-typename std::enable_if<!boost::multiprecision::is_number<Real>::value>::type test_enum_conversions() 
-{}
-
 template <class Real, class Val>
-typename std::enable_if<boost::multiprecision::number_category<Real>::value != boost::multiprecision::number_kind_complex>::type
-test_comparisons(Val a, Val b, const std::integral_constant<bool, true>&)
+typename boost::disable_if_c<boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex>::type
+test_comparisons(Val a, Val b, const boost::mpl::true_)
 {
    Real r1(a);
    Real r2(b);
@@ -190,8 +154,8 @@ test_comparisons(Val a, Val b, const std::integral_constant<bool, true>&)
 }
 
 template <class Real, class Val>
-typename std::enable_if<boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex>::type
-test_comparisons(Val a, Val b, const std::integral_constant<bool, true>&)
+typename boost::enable_if_c<boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex>::type
+test_comparisons(Val a, Val b, const boost::mpl::true_)
 {
    Real r1(a);
    Real r2(b);
@@ -265,7 +229,7 @@ void test_conditional(Real v, Exp e)
 }
 
 template <class Real>
-void test_complement(Real a, Real b, Real c, const std::integral_constant<bool, true>&)
+void test_complement(Real a, Real b, Real c, const boost::mpl::true_&)
 {
    int i         = 1020304;
    int j         = 56789123;
@@ -285,7 +249,7 @@ void test_complement(Real a, Real b, Real c, const std::integral_constant<bool, 
 }
 
 template <class Real>
-void test_complement(Real, Real, Real, const std::integral_constant<bool, false>&)
+void test_complement(Real, Real, Real, const boost::mpl::false_&)
 {
 }
 
@@ -293,7 +257,7 @@ template <class Real, class T>
 void test_integer_ops(const T&) {}
 
 template <class Real>
-void test_rational(const std::integral_constant<bool, true>&)
+void test_rational(const boost::mpl::true_&)
 {
    Real a(2);
    a /= 3;
@@ -311,21 +275,9 @@ void test_rational(const std::integral_constant<bool, true>&)
    ss >> b;
    BOOST_CHECK_EQUAL(a, b);
 }
-template <class Real>
-void test_rational_signed(const std::integral_constant<bool, true>&)
-{
-   Real three = -3;
-   BOOST_CHECK_EQUAL(static_cast<std::int16_t>(three), -3);
-   BOOST_CHECK_EQUAL(static_cast<std::int32_t>(three), -3);
-   BOOST_CHECK_EQUAL(static_cast<std::int64_t>(three), -3);
-}
-template <class Real>
-void test_rational_signed(const std::integral_constant<bool, false>&)
-{
-}
 
 template <class Real>
-void test_rational(const std::integral_constant<bool, false>&)
+void test_rational(const boost::mpl::false_&)
 {
    Real a(2);
    a /= 3;
@@ -348,24 +300,16 @@ void test_rational(const std::integral_constant<bool, false>&)
    ss << a;
    ss >> b;
    BOOST_CHECK_EQUAL(a, b);
-   //
-   // Conversion to integer, see https://github.com/boostorg/multiprecision/issues/342.
-   //
-   Real three(10, 3);
-   BOOST_CHECK_EQUAL(static_cast<std::uint16_t>(three), 3);
-   BOOST_CHECK_EQUAL(static_cast<std::uint32_t>(three), 3);
-   BOOST_CHECK_EQUAL(static_cast<std::uint64_t>(three), 3);
-   test_rational_signed<Real>(std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
 }
 
 template <class Real>
-void test_integer_ops(const std::integral_constant<int, boost::multiprecision::number_kind_rational>&)
+void test_integer_ops(const boost::mpl::int_<boost::multiprecision::number_kind_rational>&)
 {
    test_rational<Real>(is_boost_rational<Real>());
 }
 
 template <class Real>
-void test_signed_integer_ops(const std::integral_constant<bool, true>&)
+void test_signed_integer_ops(const boost::mpl::true_&)
 {
    Real a(20);
    Real b(7);
@@ -490,17 +434,17 @@ void test_signed_integer_ops(const std::integral_constant<bool, true>&)
 #endif
 }
 template <class Real>
-void test_signed_integer_ops(const std::integral_constant<bool, false>&)
+void test_signed_integer_ops(const boost::mpl::false_&)
 {
 }
 
 template <class Real>
-inline Real negate_if_signed(Real r, const std::integral_constant<bool, true>&)
+inline Real negate_if_signed(Real r, const boost::mpl::bool_<true>&)
 {
    return -r;
 }
 template <class Real>
-inline Real negate_if_signed(Real r, const std::integral_constant<bool, false>&)
+inline Real negate_if_signed(Real r, const boost::mpl::bool_<false>&)
 {
    return r;
 }
@@ -517,7 +461,7 @@ void test_integer_overflow()
       {
          BOOST_CHECK_THROW(m.template convert_to<Int>(), std::overflow_error);
       }
-      else if (boost::multiprecision::detail::is_signed<Int>::value)
+      else if (boost::is_signed<Int>::value)
       {
          r = m.template convert_to<Int>();
          BOOST_CHECK_EQUAL(r, (std::numeric_limits<Int>::max)());
@@ -534,7 +478,7 @@ void test_integer_overflow()
       {
          BOOST_CHECK_THROW(m.template convert_to<Int>(), std::overflow_error);
       }
-      else if (boost::multiprecision::detail::is_signed<Int>::value && boost::multiprecision::detail::is_integral<Int>::value)
+      else if (boost::is_signed<Int>::value)
       {
          r = m.template convert_to<Int>();
          BOOST_CHECK_EQUAL(r, (std::numeric_limits<Int>::max)());
@@ -545,7 +489,7 @@ void test_integer_overflow()
          BOOST_CHECK_EQUAL(r, 0);
       }
 
-      if (std::numeric_limits<Real>::is_signed && (boost::multiprecision::detail::is_signed<Int>::value))
+      if (std::numeric_limits<Real>::is_signed && (boost::is_signed<Int>::value))
       {
          m = (std::numeric_limits<Int>::min)();
          --m;
@@ -562,7 +506,7 @@ void test_integer_overflow()
          m = 2u;
          m = pow(m, (std::min)(std::numeric_limits<Real>::digits - 1, 1000));
          ++m;
-         m = negate_if_signed(m, std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
+         m = negate_if_signed(m, boost::mpl::bool_<std::numeric_limits<Real>::is_signed>());
          if (is_checked_cpp_int<Real>::value)
          {
             BOOST_CHECK_THROW(m.template convert_to<Int>(), std::overflow_error);
@@ -573,17 +517,17 @@ void test_integer_overflow()
             BOOST_CHECK_EQUAL(r, (std::numeric_limits<Int>::min)());
          }
       }
-      else if (std::numeric_limits<Real>::is_signed && !boost::multiprecision::detail::is_signed<Int>::value)
+      else if (std::numeric_limits<Real>::is_signed && !boost::is_signed<Int>::value)
       {
          // signed to unsigned converison with overflow, it's really not clear what should happen here!
          m = (std::numeric_limits<Int>::max)();
          ++m;
-         m = negate_if_signed(m, std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
+         m = negate_if_signed(m, boost::mpl::bool_<std::numeric_limits<Real>::is_signed>());
          BOOST_CHECK_THROW(m.template convert_to<Int>(), std::range_error);
          // Again with much larger value:
          m = 2u;
          m = pow(m, (std::min)(std::numeric_limits<Real>::digits - 1, 1000));
-         m = negate_if_signed(m, std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
+         m = negate_if_signed(m, boost::mpl::bool_<std::numeric_limits<Real>::is_signed>());
          BOOST_CHECK_THROW(m.template convert_to<Int>(), std::range_error);
       }
    }
@@ -608,9 +552,9 @@ void test_integer_round_trip()
 }
 
 template <class Real>
-void test_integer_ops(const std::integral_constant<int, boost::multiprecision::number_kind_integer>&)
+void test_integer_ops(const boost::mpl::int_<boost::multiprecision::number_kind_integer>&)
 {
-   test_signed_integer_ops<Real>(std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
+   test_signed_integer_ops<Real>(boost::mpl::bool_<std::numeric_limits<Real>::is_signed>());
 
    Real a(20);
    Real b(7);
@@ -815,16 +759,6 @@ void test_integer_ops(const std::integral_constant<int, boost::multiprecision::n
    BOOST_CHECK_EQUAL(gcd(400u, b), boost::integer::gcd(400, 45));
    BOOST_CHECK_EQUAL(lcm(400u, b), boost::integer::lcm(400, 45));
 
-   if (std::numeric_limits<Real>::is_bounded)
-   {
-      // Fixed precision integer:
-      a = (std::numeric_limits<Real>::max)() - 1;
-      b = (std::numeric_limits<Real>::max)() / 35;
-      Real div = gcd(a, b);
-      BOOST_CHECK_EQUAL(a % div, 0);
-      BOOST_CHECK_EQUAL(b % div, 0);
-   }
-
    //
    // Conditionals involving 2 arg functions:
    //
@@ -1004,7 +938,7 @@ void test_integer_ops(const std::integral_constant<int, boost::multiprecision::n
    test_integer_round_trip<Real, unsigned int>();
    test_integer_round_trip<Real, long>();
    test_integer_round_trip<Real, unsigned long>();
-#ifndef BOOST_NO_LONG_LONG
+#ifndef BOOST_NO_CXX11_LONG_LONG
    test_integer_round_trip<Real, long long>();
    test_integer_round_trip<Real, unsigned long long>();
 #endif
@@ -1014,7 +948,7 @@ template <class Real, class T>
 void test_float_funcs(const T&) {}
 
 template <class Real>
-void test_float_funcs(const std::integral_constant<bool, true>&)
+void test_float_funcs(const boost::mpl::true_&)
 {
    if (boost::multiprecision::is_interval_number<Real>::value)
       return;
@@ -1254,7 +1188,7 @@ template <class Real, class T>
 void test_float_ops(const T&) {}
 
 template <class Real>
-void test_float_ops(const std::integral_constant<int, boost::multiprecision::number_kind_floating_point>&)
+void test_float_ops(const boost::mpl::int_<boost::multiprecision::number_kind_floating_point>&)
 {
    BOOST_CHECK_EQUAL(abs(Real(2)), 2);
    BOOST_CHECK_EQUAL(abs(Real(-2)), 2);
@@ -1479,23 +1413,23 @@ void test_float_ops(const std::integral_constant<int, boost::multiprecision::num
       }
    }
 
-   test_float_funcs<Real>(std::integral_constant<bool, std::numeric_limits<Real>::is_specialized>());
+   test_float_funcs<Real>(boost::mpl::bool_<std::numeric_limits<Real>::is_specialized>());
 }
 
 template <class T>
 struct lexical_cast_target_type
 {
-   typedef typename std::conditional<
-       boost::multiprecision::detail::is_signed<T>::value && boost::multiprecision::detail::is_integral<T>::value,
-       std::intmax_t,
-       typename std::conditional<
-           boost::multiprecision::detail::is_unsigned<T>::value,
-           std::uintmax_t,
+   typedef typename boost::mpl::if_<
+       boost::is_signed<T>,
+       boost::intmax_t,
+       typename boost::mpl::if_<
+           boost::is_unsigned<T>,
+           boost::uintmax_t,
            T>::type>::type type;
 };
 
 template <class Real, class Num>
-void test_negative_mixed_minmax(std::integral_constant<bool, true> const&)
+void test_negative_mixed_minmax(boost::mpl::true_ const&)
 {
    if (!std::numeric_limits<Real>::is_bounded || (std::numeric_limits<Real>::digits >= std::numeric_limits<Num>::digits))
    {
@@ -1522,12 +1456,12 @@ void test_negative_mixed_minmax(std::integral_constant<bool, true> const&)
    }
 }
 template <class Real, class Num>
-void test_negative_mixed_minmax(std::integral_constant<bool, false> const&)
+void test_negative_mixed_minmax(boost::mpl::false_ const&)
 {
 }
 
 template <class Real, class Num>
-void test_negative_mixed_numeric_limits(std::integral_constant<bool, true> const&)
+void test_negative_mixed_numeric_limits(boost::mpl::true_ const&)
 {
    typedef typename lexical_cast_target_type<Num>::type target_type;
 #if defined(TEST_MPFR)
@@ -1540,8 +1474,8 @@ void test_negative_mixed_numeric_limits(std::integral_constant<bool, true> const
    Num                     n2              = -1;
    Num                     n3              = 0;
    Num                     n4              = -20;
-   std::ios_base::fmtflags f               = std::is_floating_point<Num>::value ? std::ios_base::scientific : std::ios_base::fmtflags(0);
-   int                     digits_to_print = std::is_floating_point<Num>::value && std::numeric_limits<Num>::is_specialized
+   std::ios_base::fmtflags f               = boost::is_floating_point<Num>::value ? std::ios_base::scientific : std::ios_base::fmtflags(0);
+   int                     digits_to_print = boost::is_floating_point<Num>::value && std::numeric_limits<Num>::is_specialized
                              ? std::numeric_limits<Num>::digits10 + 5
                              : 0;
    if (std::numeric_limits<target_type>::digits <= std::numeric_limits<Real>::digits)
@@ -1554,17 +1488,17 @@ void test_negative_mixed_numeric_limits(std::integral_constant<bool, true> const
 }
 
 template <class Real, class Num>
-void test_negative_mixed_numeric_limits(std::integral_constant<bool, false> const&) {}
+void test_negative_mixed_numeric_limits(boost::mpl::false_ const&) {}
 
 template <class Real, class Num>
-void test_negative_mixed(std::integral_constant<bool, true> const&)
+void test_negative_mixed(boost::mpl::true_ const&)
 {
-   typedef typename std::conditional<
-       std::is_convertible<Num, Real>::value,
-       typename std::conditional<boost::multiprecision::detail::is_integral<Num>::value && (sizeof(Num) < sizeof(int)), int, Num>::type,
+   typedef typename boost::mpl::if_<
+       boost::is_convertible<Num, Real>,
+       typename boost::mpl::if_c<boost::is_integral<Num>::value && (sizeof(Num) < sizeof(int)), int, Num>::type,
        Real>::type cast_type;
-   typedef typename std::conditional<
-       std::is_convertible<Num, Real>::value,
+   typedef typename boost::mpl::if_<
+       boost::is_convertible<Num, Real>,
        Num,
        Real>::type simple_cast_type;
    std::cout << "Testing mixed arithmetic with type: " << typeid(Real).name() << " and " << typeid(Num).name() << std::endl;
@@ -1575,12 +1509,12 @@ void test_negative_mixed(std::integral_constant<bool, true> const&)
    Num              n4         = -20;
    Num              n5         = -8;
 
-   test_comparisons<Real>(n1, n2, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n1, n3, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n3, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n2, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n1, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n3, n3, std::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n2, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n3, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n3, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n2, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n3, n3, boost::is_convertible<Num, Real>());
 
    // Default construct:
    BOOST_CHECK_EQUAL(Real(n1), static_cast<cast_type>(n1));
@@ -1595,20 +1529,24 @@ void test_negative_mixed(std::integral_constant<bool, true> const&)
    BOOST_CHECK_EQUAL(Real(n2).template convert_to<Num>(), n2);
    BOOST_CHECK_EQUAL(Real(n3).template convert_to<Num>(), n3);
    BOOST_CHECK_EQUAL(Real(n4).template convert_to<Num>(), n4);
+#ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n1)), n1);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n2)), n2);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n3)), n3);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n4)), n4);
+#endif
    // Conversions when source is an expression template:
    BOOST_CHECK_EQUAL((Real(n1) + 0).template convert_to<Num>(), n1);
    BOOST_CHECK_EQUAL((Real(n2) + 0).template convert_to<Num>(), n2);
    BOOST_CHECK_EQUAL((Real(n3) + 0).template convert_to<Num>(), n3);
    BOOST_CHECK_EQUAL((Real(n4) + 0).template convert_to<Num>(), n4);
+#ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
    BOOST_CHECK_EQUAL(static_cast<Num>((Real(n1) + 0)), n1);
    BOOST_CHECK_EQUAL(static_cast<Num>((Real(n2) + 0)), n2);
    BOOST_CHECK_EQUAL(static_cast<Num>((Real(n3) + 0)), n3);
    BOOST_CHECK_EQUAL(static_cast<Num>((Real(n4) + 0)), n4);
-   test_negative_mixed_numeric_limits<Real, Num>(std::integral_constant<bool, std::numeric_limits<Real>::is_specialized>());
+#endif
+   test_negative_mixed_numeric_limits<Real, Num>(boost::mpl::bool_<std::numeric_limits<Real>::is_specialized>());
    // Assignment:
    Real r(0);
    BOOST_CHECK(r != static_cast<cast_type>(n1));
@@ -1824,7 +1762,7 @@ void test_negative_mixed(std::integral_constant<bool, true> const&)
    //
    // Conversion from min and max values:
    //
-   test_negative_mixed_minmax<Real, Num>(std::integral_constant<bool, std::numeric_limits<Real>::is_integer && std::numeric_limits<Num>::is_integer > ());
+   test_negative_mixed_minmax<Real, Num>(boost::mpl::bool_ < std::numeric_limits<Real>::is_integer && std::numeric_limits<Num>::is_integer > ());
    //
    // RValue ref overloads:
    //
@@ -1850,38 +1788,38 @@ void test_negative_mixed(std::integral_constant<bool, true> const&)
 }
 
 template <class Real, class Num>
-void test_negative_mixed(std::integral_constant<bool, false> const&)
+void test_negative_mixed(boost::mpl::false_ const&)
 {
 }
 
 template <class Real, class Num>
-void test_mixed(const std::integral_constant<bool, false>&)
+void test_mixed(const boost::mpl::false_&)
 {
 }
 
 template <class Real>
-inline bool check_is_nan(const Real& val, const std::integral_constant<bool, true>&)
+inline bool check_is_nan(const Real& val, const boost::mpl::true_&)
 {
    return (boost::math::isnan)(val);
 }
 template <class Real>
-inline bool check_is_nan(const Real&, const std::integral_constant<bool, false>&)
+inline bool check_is_nan(const Real&, const boost::mpl::false_&)
 {
    return false;
 }
 template <class Real>
-inline Real negate_value(const Real& val, const std::integral_constant<bool, true>&)
+inline Real negate_value(const Real& val, const boost::mpl::true_&)
 {
    return -val;
 }
 template <class Real>
-inline Real negate_value(const Real& val, const std::integral_constant<bool, false>&)
+inline Real negate_value(const Real& val, const boost::mpl::false_&)
 {
    return val;
 }
 
 template <class Real, class Num>
-void test_mixed_numeric_limits(const std::integral_constant<bool, true>&)
+void test_mixed_numeric_limits(const boost::mpl::true_&)
 {
    typedef typename lexical_cast_target_type<Num>::type target_type;
 #if defined(TEST_MPFR)
@@ -1895,15 +1833,15 @@ void test_mixed_numeric_limits(const std::integral_constant<bool, true>&)
    {
       d = static_cast<Real>(std::numeric_limits<Num>::infinity());
       BOOST_CHECK_GT(d, (std::numeric_limits<Real>::max)());
-      d = static_cast<Real>(negate_value(std::numeric_limits<Num>::infinity(), std::integral_constant<bool, std::numeric_limits<Num>::is_signed>()));
-      BOOST_CHECK_LT(d, negate_value((std::numeric_limits<Real>::max)(), std::integral_constant<bool, std::numeric_limits<Real>::is_signed>()));
+      d = static_cast<Real>(negate_value(std::numeric_limits<Num>::infinity(), boost::mpl::bool_<std::numeric_limits<Num>::is_signed>()));
+      BOOST_CHECK_LT(d, negate_value((std::numeric_limits<Real>::max)(), boost::mpl::bool_<std::numeric_limits<Real>::is_signed>()));
    }
    if (std::numeric_limits<Real>::has_quiet_NaN && std::numeric_limits<Num>::has_quiet_NaN)
    {
       d = static_cast<Real>(std::numeric_limits<Num>::quiet_NaN());
-      BOOST_CHECK(check_is_nan(d, std::integral_constant<bool, std::numeric_limits<Real>::has_quiet_NaN>()));
-      d = static_cast<Real>(negate_value(std::numeric_limits<Num>::quiet_NaN(), std::integral_constant<bool, std::numeric_limits<Num>::is_signed>()));
-      BOOST_CHECK(check_is_nan(d, std::integral_constant<bool, std::numeric_limits<Real>::has_quiet_NaN>()));
+      BOOST_CHECK(check_is_nan(d, boost::mpl::bool_<std::numeric_limits<Real>::has_quiet_NaN>()));
+      d = static_cast<Real>(negate_value(std::numeric_limits<Num>::quiet_NaN(), boost::mpl::bool_<std::numeric_limits<Num>::is_signed>()));
+      BOOST_CHECK(check_is_nan(d, boost::mpl::bool_<std::numeric_limits<Real>::has_quiet_NaN>()));
    }
 
    static const int left_shift = std::numeric_limits<Num>::digits - 1;
@@ -1912,8 +1850,8 @@ void test_mixed_numeric_limits(const std::integral_constant<bool, true>&)
    Num              n3         = 0;
    Num              n4         = 20;
 
-   std::ios_base::fmtflags f               = std::is_floating_point<Num>::value ? std::ios_base::scientific : std::ios_base::fmtflags(0);
-   int                     digits_to_print = std::is_floating_point<Num>::value && std::numeric_limits<Num>::is_specialized
+   std::ios_base::fmtflags f               = boost::is_floating_point<Num>::value ? std::ios_base::scientific : std::ios_base::fmtflags(0);
+   int                     digits_to_print = boost::is_floating_point<Num>::value && std::numeric_limits<Num>::is_specialized
                              ? std::numeric_limits<Num>::digits10 + 5
                              : 0;
    if (std::numeric_limits<target_type>::digits <= std::numeric_limits<Real>::digits)
@@ -1925,19 +1863,19 @@ void test_mixed_numeric_limits(const std::integral_constant<bool, true>&)
    BOOST_CHECK_CLOSE(n4, checked_lexical_cast<target_type>(Real(n4).str(digits_to_print, f)), 0);
 }
 template <class Real, class Num>
-void test_mixed_numeric_limits(const std::integral_constant<bool, false>&)
+void test_mixed_numeric_limits(const boost::mpl::false_&)
 {
 }
 
 template <class Real, class Num>
-void test_mixed(const std::integral_constant<bool, true>&)
+void test_mixed(const boost::mpl::true_&)
 {
-   typedef typename std::conditional<
-       std::is_convertible<Num, Real>::value,
-       typename std::conditional<boost::multiprecision::detail::is_integral<Num>::value && (sizeof(Num) < sizeof(int)), int, Num>::type,
+   typedef typename boost::mpl::if_<
+       boost::is_convertible<Num, Real>,
+       typename boost::mpl::if_c<boost::is_integral<Num>::value && (sizeof(Num) < sizeof(int)), int, Num>::type,
        Real>::type cast_type;
-   typedef typename std::conditional<
-       std::is_convertible<Num, Real>::value,
+   typedef typename boost::mpl::if_<
+       boost::is_convertible<Num, Real>,
        Num,
        Real>::type simple_cast_type;
 
@@ -1952,12 +1890,12 @@ void test_mixed(const std::integral_constant<bool, true>&)
    Num              n4         = 20;
    Num              n5         = 8;
 
-   test_comparisons<Real>(n1, n2, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n1, n3, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n1, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n3, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n2, n1, std::is_convertible<Num, Real>());
-   test_comparisons<Real>(n3, n3, std::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n2, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n3, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n1, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n3, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n2, n1, boost::is_convertible<Num, Real>());
+   test_comparisons<Real>(n3, n3, boost::is_convertible<Num, Real>());
 
    // Default construct:
    BOOST_CHECK_EQUAL(Real(n1), static_cast<cast_type>(n1));
@@ -1968,19 +1906,23 @@ void test_mixed(const std::integral_constant<bool, true>&)
    BOOST_CHECK_EQUAL(Real(n2).template convert_to<Num>(), n2);
    BOOST_CHECK_EQUAL(Real(n3).template convert_to<Num>(), n3);
    BOOST_CHECK_EQUAL(Real(n4).template convert_to<Num>(), n4);
+#ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n1)), n1);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n2)), n2);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n3)), n3);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n4)), n4);
+#endif
    // Again with expression templates:
    BOOST_CHECK_EQUAL((Real(n1) + 0).template convert_to<Num>(), n1);
    BOOST_CHECK_EQUAL((Real(n2) + 0).template convert_to<Num>(), n2);
    BOOST_CHECK_EQUAL((Real(n3) + 0).template convert_to<Num>(), n3);
    BOOST_CHECK_EQUAL((Real(n4) + 0).template convert_to<Num>(), n4);
+#ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n1) + 0), n1);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n2) + 0), n2);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n3) + 0), n3);
    BOOST_CHECK_EQUAL(static_cast<Num>(Real(n4) + 0), n4);
+#endif
    BOOST_CHECK_EQUAL(static_cast<cast_type>(n1), Real(n1));
    BOOST_CHECK_EQUAL(static_cast<cast_type>(n2), Real(n2));
    BOOST_CHECK_EQUAL(static_cast<cast_type>(n3), Real(n3));
@@ -2032,7 +1974,7 @@ void test_mixed(const std::integral_constant<bool, true>&)
    r = static_cast<cast_type>(Num(4) * n4) / Real(4);
    BOOST_CHECK_EQUAL(r, static_cast<cast_type>(n4));
 
-   typedef std::integral_constant<bool, 
+   typedef boost::mpl::bool_<
        (!std::numeric_limits<Num>::is_specialized || std::numeric_limits<Num>::is_signed) && (!std::numeric_limits<Real>::is_specialized || std::numeric_limits<Real>::is_signed)>
        signed_tag;
 
@@ -2109,11 +2051,11 @@ void test_mixed(const std::integral_constant<bool, true>&)
    d = b * static_cast<cast_type>(n3) - static_cast<cast_type>(n1);
    BOOST_CHECK_EQUAL(d, 3 * 4 - 2);
 
-   test_mixed_numeric_limits<Real, Num>(std::integral_constant<bool, std::numeric_limits<Real>::is_specialized>());
+   test_mixed_numeric_limits<Real, Num>(boost::mpl::bool_<std::numeric_limits<Real>::is_specialized>());
 }
 
 template <class Real>
-typename std::enable_if<boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex>::type test_members(Real)
+typename boost::enable_if_c<boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex>::type test_members(Real)
 {
    //
    // Test sign and zero functions:
@@ -2434,115 +2376,89 @@ typename std::enable_if<boost::multiprecision::number_category<Real>::value == b
    BOOST_CHECK_CLOSE_FRACTION(real_type("-8.8931513442797186948734782808862447235385767991868219480917324534839621090167050538805196124711247247992169338"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-1.3826999557878897572499699021550296885662132089951379549068064961882821777067532977546360861176011175070188118"), imag(a), tol * 3);
 
-   a = c;
-   a = sqrt(a);
+   a = sqrt(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.674149228035540040448039300849051821674708677883920366727287836003399240343274891876712629708287692163156802065"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.8959774761298381247157337552900434410433241995549314932449006989874470582160955817053273057885402621549320588976"), imag(a), tol);
-   a = c;
-   a = sin(a);
+   a = sin(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("9.154499146911429573467299544609832559158860568765182977899828142590020335321896403936690014669532606510294425039"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-4.168906959966564350754813058853754843573565604758055889965478710592666260138453299795649308385497563475115931624"), imag(a), tol);
-   a = c;
-   a = cos(a);
+   a = cos(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-4.1896256909688072301325550196159737286219454041279210357407905058369727912162626993926269783331491034500484583"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-9.1092278937553365979791972627788621213326202389201695649104967309554222940748568716960841549279996556547993373"), imag(a), tol);
-   a = c;
-   a = tan(a);
+   a = tan(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-0.0037640256415042482927512211303226908396306202016580864328644932511249097100916559688254811519914564480500042311"), real(a), tol * 5);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.0032386273536098014463585978219272598077897241071003399272426939850671219193120708438426543945017427085738411"), imag(a), tol);
-   a = c;
-   a = asin(a);
+   a = asin(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.5706527843210994007102838796856696501828032450960401365302732598209740064262509342420347149436326252483895113827"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), imag(a), tol);
-   a = c;
-   a = acos(a);
+   a = acos(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.000143542473797218521037811954081791915781454591512773957199036332934196716853565071982697727425908742684531873"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), imag(a), tol);
-   a = c;
-   a = atan(a);
+   a = atan(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.409921049596575522530619384460420782588207051908724814771070766475530084440199227135813201495737846771570458568"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.2290726829685387662958818029420027678625253049770656169479919704951963414344907622560676377741902308144912055002"), imag(a), tol);
-   a = c;
-   a = sqrt(a + 0);
+   a = sqrt(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.674149228035540040448039300849051821674708677883920366727287836003399240343274891876712629708287692163156802065"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.8959774761298381247157337552900434410433241995549314932449006989874470582160955817053273057885402621549320588976"), imag(a), tol);
-   a = c;
-   a = sin(a + 0);
+   a = sin(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("9.154499146911429573467299544609832559158860568765182977899828142590020335321896403936690014669532606510294425039"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-4.168906959966564350754813058853754843573565604758055889965478710592666260138453299795649308385497563475115931624"), imag(a), tol);
-   a = c;
-   a = cos(a + 0);
+   a = cos(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-4.1896256909688072301325550196159737286219454041279210357407905058369727912162626993926269783331491034500484583"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-9.1092278937553365979791972627788621213326202389201695649104967309554222940748568716960841549279996556547993373"), imag(a), tol);
-   a = c;
-   a = tan(a + 0);
+   a = tan(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-0.0037640256415042482927512211303226908396306202016580864328644932511249097100916559688254811519914564480500042311"), real(a), tol * 5);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.0032386273536098014463585978219272598077897241071003399272426939850671219193120708438426543945017427085738411"), imag(a), tol);
-   a = c;
-   a = asin(a + 0);
+   a = asin(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.5706527843210994007102838796856696501828032450960401365302732598209740064262509342420347149436326252483895113827"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), imag(a), tol);
-   a = c;
-   a = acos(a + 0);
+   a = acos(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.000143542473797218521037811954081791915781454591512773957199036332934196716853565071982697727425908742684531873"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), imag(a), tol);
-   a = c;
-   a = atan(a + 0);
+   a = atan(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.409921049596575522530619384460420782588207051908724814771070766475530084440199227135813201495737846771570458568"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.2290726829685387662958818029420027678625253049770656169479919704951963414344907622560676377741902308144912055002"), imag(a), tol);
 
-   a = c;
-   a = sinh(a);
+   a = sinh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-3.5905645899857799520125654477948167931949136757293015099986213974178826801534614215227593814301490087307920223"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.53092108624851980526704009066067655967277345095149103008706855371803528753067068552935673000832252607835087747"), imag(a), tol);
-   a = c;
-   a = cosh(a);
+   a = cosh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-3.7245455049153225654739707032559725286749657732153307267858945686649501059065292889110148294141744084833329553"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.51182256998738460883446384980187563424555660949074386745538379123585339045741119409984041226187262097496424111"), imag(a), tol);
-   a = c;
-   a = tanh(a);
+   a = tanh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.965385879022133124278480269394560685879729650005757773636908240066639772853967550095754361348005358178253777920"), real(a), tol * 5);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-0.00988437503832249372031403430350121097961813353467039031861010606115560355679254344335582852193041894874685555114"), imag(a), tol);
-   a = c;
-   a = asinh(a);
+   a = asinh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.968637925793096291788665095245498189520731012682010573842811017352748255492485345887875752070076230641308014923"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.9646585044076027920454110594995323555197773725073316527132580297155508786089335572049608301897631767195194427315"), imag(a), tol);
-   a = c;
-   a = acosh(a);
+   a = acosh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.000143542473797218521037811954081791915781454591512773957199036332934196716853565071982697727425908742684531873"), imag(a), tol);
-   a = c;
-   a = atanh(a);
+   a = atanh(c);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.1469466662255297520474327851547159424423449403442452953891851939502023996823900422792744078835711416939934387775"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.338972522294493561124193575909144241084316172544492778582005751793809271060233646663717270678614587712809117131"), imag(a), tol);
-   a = c;
-   a = sinh(a + 0);
+   a = sinh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-3.5905645899857799520125654477948167931949136757293015099986213974178826801534614215227593814301490087307920223"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.53092108624851980526704009066067655967277345095149103008706855371803528753067068552935673000832252607835087747"), imag(a), tol);
-   a = c;
-   a = cosh(a + 0);
+   a = cosh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-3.7245455049153225654739707032559725286749657732153307267858945686649501059065292889110148294141744084833329553"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.51182256998738460883446384980187563424555660949074386745538379123585339045741119409984041226187262097496424111"), imag(a), tol);
-   a = c;
-   a = tanh(a + 0);
+   a = tanh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.965385879022133124278480269394560685879729650005757773636908240066639772853967550095754361348005358178253777920"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("-0.00988437503832249372031403430350121097961813353467039031861010606115560355679254344335582852193041894874685555114"), imag(a), tol);
-   a = c;
-   a = asinh(a + 0);
+   a = asinh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.968637925793096291788665095245498189520731012682010573842811017352748255492485345887875752070076230641308014923"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.9646585044076027920454110594995323555197773725073316527132580297155508786089335572049608301897631767195194427315"), imag(a), tol);
-   a = c;
-   a = acosh(a + 0);
+   a = acosh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.983387029916535432347076902894039565014248302909345356125267430944752731616095111727103650117987412058949254132"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.000143542473797218521037811954081791915781454591512773957199036332934196716853565071982697727425908742684531873"), imag(a), tol);
-   a = c;
-   a = atanh(a + 0);
+   a = atanh(c + 0);
    BOOST_CHECK_CLOSE_FRACTION(real_type("0.1469466662255297520474327851547159424423449403442452953891851939502023996823900422792744078835711416939934387775"), real(a), tol);
    BOOST_CHECK_CLOSE_FRACTION(real_type("1.338972522294493561124193575909144241084316172544492778582005751793809271060233646663717270678614587712809117131"), imag(a), tol);
 }
 
 template <class Real>
-typename std::enable_if<boost::multiprecision::number_category<Real>::value != boost::multiprecision::number_kind_complex>::type test_members(Real)
+typename boost::enable_if_c<boost::multiprecision::number_category<Real>::value != boost::multiprecision::number_kind_complex>::type test_members(Real)
 {
    //
    // Test sign and zero functions:
@@ -2591,7 +2507,7 @@ void test_members(boost::rational<Real>)
 }
 
 template <class Real>
-void test_signed_ops(const std::integral_constant<bool, true>&)
+void test_signed_ops(const boost::mpl::true_&)
 {
    Real a(8);
    Real b(64);
@@ -2695,7 +2611,7 @@ void test_signed_ops(const std::integral_constant<bool, true>&)
    BOOST_CHECK_EQUAL(c, -2);
 }
 template <class Real>
-void test_signed_ops(const std::integral_constant<bool, false>&)
+void test_signed_ops(const boost::mpl::false_&)
 {
 }
 
@@ -2747,7 +2663,7 @@ void test_basic_conditionals(Real a, Real b)
 }
 
 template <class T>
-typename std::enable_if<boost::multiprecision::number_category<T>::value == boost::multiprecision::number_kind_complex>::type
+typename boost::enable_if_c<boost::multiprecision::number_category<T>::value == boost::multiprecision::number_kind_complex>::type
 test_relationals(T a, T b)
 {
    BOOST_CHECK_EQUAL((a == b), false);
@@ -2778,7 +2694,7 @@ test_relationals(T a, T b)
 }
 
 template <class T>
-typename std::enable_if<boost::multiprecision::number_category<T>::value != boost::multiprecision::number_kind_complex>::type
+typename boost::disable_if_c<boost::multiprecision::number_category<T>::value == boost::multiprecision::number_kind_complex>::type
 test_relationals(T a, T b)
 {
    BOOST_CHECK_EQUAL((a == b), false);
@@ -2913,16 +2829,14 @@ void test()
    test_mixed<Real, long double>(tag);
 
    typedef typename related_type<Real>::type                                                                      related_type;
-   std::integral_constant<bool, boost::multiprecision::is_number<Real>::value && !std::is_same<related_type, Real>::value> tag2;
+   boost::mpl::bool_<boost::multiprecision::is_number<Real>::value && !boost::is_same<related_type, Real>::value> tag2;
 
    test_mixed<Real, related_type>(tag2);
 
-   std::integral_constant<bool, boost::multiprecision::is_number<Real>::value && (boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex)> complex_tag;
+   boost::mpl::bool_<boost::multiprecision::is_number<Real>::value && (boost::multiprecision::number_category<Real>::value == boost::multiprecision::number_kind_complex)> complex_tag;
    test_mixed<Real, std::complex<float> >(complex_tag);
    test_mixed<Real, std::complex<double> >(complex_tag);
    test_mixed<Real, std::complex<long double> >(complex_tag);
-
-   test_enum_conversions<Real>();
 
 #endif
 #ifndef MIXED_OPS_ONLY
@@ -3194,20 +3108,23 @@ void test()
    test_conditional(a, +a);
    test_conditional(a, (a + 0));
 
-   test_signed_ops<Real>(std::integral_constant<bool, std::numeric_limits<Real>::is_signed>());
+   test_signed_ops<Real>(boost::mpl::bool_<std::numeric_limits<Real>::is_signed>());
    //
    // Test hashing:
    //
    boost::hash<Real> hasher;
    std::size_t       s = hasher(a);
    BOOST_CHECK_NE(s, 0);
+#ifndef BOOST_NO_CXX11_HDR_FUNCTIONAL
    std::hash<Real> hasher2;
    s = hasher2(a);
    BOOST_CHECK_NE(s, 0);
+#endif
 
    //
    // Test move:
    //
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
    Real m(static_cast<Real&&>(a));
    BOOST_CHECK_EQUAL(m, 20);
    // Move from already moved from object:
@@ -3222,6 +3139,7 @@ void test()
    BOOST_CHECK_EQUAL(c, 20);
    // Destructor of "a" checks destruction of moved-from-object...
    Real m3(static_cast<Real&&>(a));
+#endif
 #ifndef BOOST_MP_NOT_TESTING_NUMBER
    //
    // string and string_view:

@@ -71,7 +71,7 @@ private:
 
 typedef normal_distribution<double> normal;
 
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4127)
 #endif
@@ -104,7 +104,7 @@ inline const std::pair<RealType, RealType> support(const normal_distribution<Rea
   }
 }
 
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
 

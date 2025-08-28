@@ -13,6 +13,5 @@
     ],
     "maintainers": [
         "Steven Watanabe <watanabesj -at- gmail.com>"
-    ],
-    "cxxstd": "03"
+    ]
 }

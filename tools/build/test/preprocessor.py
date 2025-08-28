@@ -3,7 +3,7 @@
 # Copyright 2003 Vladimir Prus
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Test the C/C++ preprocessor.
 
@@ -15,7 +15,7 @@ t.write("jamroot.jam", """
 project ;
 preprocessed hello : hello.cpp ;
 preprocessed a : a.c ;
-exe test : hello a : <define>FAIL ;
+exe hello.exe : hello a : <define>FAIL ;
 """)
 
 t.write("hello.cpp", """
@@ -37,7 +37,7 @@ t.write("a.c", """
 #ifdef FAIL
 #error "Not preprocessed?"
 #endif
-int foo(void)
+int foo()
 {
     int new = 0;
     new = (new+1)*7;
@@ -48,6 +48,6 @@ int foo(void)
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug*/hello.ii")
 t.expect_addition("bin/$toolset/debug*/a.i")
-t.expect_addition("bin/$toolset/debug*/test.exe")
+t.expect_addition("bin/$toolset/debug*/hello.exe")
 
 t.cleanup()

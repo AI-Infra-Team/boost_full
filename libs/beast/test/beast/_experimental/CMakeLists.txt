@@ -13,7 +13,6 @@ GroupSources (test/beast/_experimental "/")
 add_executable (tests-beast-_experimental
     ${BOOST_BEAST_FILES}
     Jamfile
-    _test_detail_stream_state.cpp
     error.cpp
     icy_stream.cpp
     stream.cpp

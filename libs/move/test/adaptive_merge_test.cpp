@@ -22,7 +22,6 @@
 
 #include <boost/move/algo/adaptive_merge.hpp>
 #include <boost/move/core.hpp>
-#include <cstdlib>
 
 
 template<class T>
@@ -61,7 +60,7 @@ bool test_random_shuffled(std::size_t const element_count, std::size_t const num
       if (!is_order_type_ordered(elements.get(), element_count))
       {
          std::cout <<  "\n ERROR\n";
-         std::abort();
+         throw int(0);
       }
    }
    return true;

@@ -16,7 +16,6 @@
 
 #include "movable_int.hpp"
 #include "dummy_test_allocator.hpp"
-#include <functional> //std::less
 
 using namespace boost::container;
 

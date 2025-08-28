@@ -9,13 +9,9 @@
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
-#include <limits>
 #include <cmath>
 
-namespace boost {
-namespace math {
-namespace interpolators {
-namespace detail {
+namespace boost::math::interpolators::detail {
 
 template<class RandomAccessContainer>
 class quintic_hermite_detail {
@@ -578,8 +574,5 @@ private:
     Real inv_dx_;
 };
 
-}
-}
-}
 }
 #endif

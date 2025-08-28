@@ -11,7 +11,6 @@
         "Data"
     ],
     "maintainers": [
-        "Richard Hodges <hodges.r@gmail.com>"
-    ],
-    "cxxstd": "03"
+        "Sebastian Redl <sebastian.redl -at- getdesigned.at>"
+    ]
 }

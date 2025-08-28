@@ -4,6 +4,8 @@
 
 language: cpp
 
+sudo: false
+
 dist: xenial
 
 branches:
@@ -123,17 +125,6 @@ matrix:
         apt:
           packages:
             - g++-9
-          sources:
-            - ubuntu-toolchain-r-test
-
-    - os: linux
-      dist: bionic
-      compiler: g++-10
-      env: TOOLSET=gcc COMPILER=g++-10 CXXSTD=03,11,14,17,2a
-      addons:
-        apt:
-          packages:
-            - g++-10
           sources:
             - ubuntu-toolchain-r-test
 
@@ -274,30 +265,9 @@ matrix:
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
 
     - os: linux
-      compiler: clang++-10
-      env: TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,2a
-      addons:
-        apt:
-          packages:
-            - clang-10
-          sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main'
-              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-
-    - os: linux
       dist: trusty
       compiler: clang++-libc++
       env: TOOLSET=clang COMPILER=clang++-libc++ CXXSTD=03,11,14,1z
-      addons:
-        apt:
-          packages:
-            - libc++-dev
-
-    - os: linux
-      dist: bionic
-      compiler: clang++-libc++
-      env: TOOLSET=clang COMPILER=clang++-libc++ CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
@@ -311,7 +281,7 @@ matrix:
       env: CMAKE_TEST=1
       script:
         - mkdir __build__ && cd __build__
-        - cmake -DBOOST_ENABLE_CMAKE=1 -DBUILD_TESTING=ON -DBoost_VERBOSE=1 -DBOOST_INCLUDE_LIBRARIES=bind ..
+        - cmake -DBOOST_ENABLE_CMAKE=1 -DBoost_VERBOSE=1 -DBOOST_INCLUDE_LIBRARIES=bind ..
         - ctest --output-on-failure -R boost_bind
 
     - os: linux

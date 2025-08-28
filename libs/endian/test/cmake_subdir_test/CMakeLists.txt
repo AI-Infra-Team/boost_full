@@ -26,7 +26,6 @@ boost_add_subdir(type_traits)
 # secondary dependencies
 
 boost_add_subdir(assert)
-boost_add_subdir(throw_exception)
 
 # --target check
 

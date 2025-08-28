@@ -95,16 +95,10 @@ public:
                 {
                     // Try to read the first three characters
                     BOOST_ASIO_CORO_YIELD
-                    {
-                        BOOST_ASIO_HANDLER_LOCATION((
-                            __FILE__, __LINE__,
-                            "http::icy_stream::async_read_some"));
-
-                        s_.next_layer().async_read_some(
-                            net::mutable_buffer(
-                                s_.buf_ + s_.n_, 3 - s_.n_),
-                            std::move(*this));
-                    }
+                    s_.next_layer().async_read_some(
+                        net::mutable_buffer(
+                            s_.buf_ + s_.n_, 3 - s_.n_),
+                        std::move(*this));
                     s_.n_ += static_cast<char>(bytes_transferred);
                     if(ec)
                         goto upcall;
@@ -133,14 +127,8 @@ public:
             else
             {
                 BOOST_ASIO_CORO_YIELD
-                {
-                    BOOST_ASIO_HANDLER_LOCATION((
-                        __FILE__, __LINE__,
-                        "http::icy_stream::async_read_some"));
-
-                    s_.next_layer().async_read_some(
-                        b_, std::move(*this));
-                }
+                s_.next_layer().async_read_some(
+                    b_, std::move(*this));
             }
         upcall:
             if(! cont)
@@ -148,15 +136,9 @@ public:
                 ec_ = ec;
                 n_ = bytes_transferred;
                 BOOST_ASIO_CORO_YIELD
-                {
-                    BOOST_ASIO_HANDLER_LOCATION((
-                        __FILE__, __LINE__,
-                        "http::icy_stream::async_read_some"));
-
-                    s_.next_layer().async_read_some(
-                        net::mutable_buffer{},
-                        std::move(*this));
-                }
+                s_.next_layer().async_read_some(
+                    net::mutable_buffer{},
+                    std::move(*this));
                 ec = ec_;
                 bytes_transferred = n_;
             }

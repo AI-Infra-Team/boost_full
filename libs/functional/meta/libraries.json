@@ -9,8 +9,7 @@
         "description": "The Boost.Function library contains a family of class templates that are function object wrappers.",
         "category": [
             "Function-objects"
-        ],
-        "cxxstd": "03"
+        ]
     },
     {
         "key": "functional/factory",
@@ -28,8 +27,7 @@
         "documentation": "factory/",
         "category": [
             "Function-objects"
-        ],
-        "cxxstd": "03"
+        ]
     },
     {
         "key": "functional/forward",
@@ -45,8 +43,7 @@
         "documentation": "forward/",
         "category": [
             "Function-objects"
-        ],
-        "cxxstd": "03"
+        ]
     },
     {
         "key": "functional/overloaded_function",
@@ -62,7 +59,6 @@
         "documentation": "overloaded_function/",
         "category": [
             "Function-objects"
-        ],
-        "cxxstd": "03"
+        ]
     }
 ]

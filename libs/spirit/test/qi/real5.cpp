@@ -76,7 +76,6 @@ main()
     ///////////////////////////////////////////////////////////////////////////
     //  parameterized custom data type
     ///////////////////////////////////////////////////////////////////////////
-#ifndef BOOST_SPIRIT_NO_MATH_REAL_CONCEPT
     {
         using boost::math::concepts::real_concept;
         using boost::spirit::qi::real_parser;
@@ -97,7 +96,6 @@ main()
         BOOST_TEST(compare(d, 1.2e3));
         BOOST_TEST(!test_attr("1.2e3", custom_real(-3.2e1), d));
     }
-#endif
     
     ///////////////////////////////////////////////////////////////////////////
     //  parameterized lazy tests

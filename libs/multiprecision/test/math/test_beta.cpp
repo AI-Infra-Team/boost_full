@@ -47,7 +47,7 @@ void expected_results()
        ".*",                     // platform
        ".*",                     // test type(s)
        "Beta Function: Small.*", // test data group
-       "beta", 12, 8);            // test function
+       "beta", 8, 5);            // test function
    add_expected_result(
        ".*",                      // compiler
        ".*",                      // stdlib

@@ -34,18 +34,12 @@ namespace beast {
 namespace {
 
 #if defined(BOOST_ASIO_NO_TS_EXECUTORS)
-
-static struct ex1_context : net::execution_context
-{
-
-} ex1ctx;
-
 struct ex1_type
 {
 
     net::execution_context &
     query(net::execution::context_t c) const noexcept
-    { return *reinterpret_cast<net::execution_context *>(&ex1ctx); }
+    { return *reinterpret_cast<net::execution_context *>(0); }
 
     net::execution::blocking_t
     query(net::execution::blocking_t) const noexcept
@@ -722,9 +716,9 @@ public:
 
                 net::steady_timer timer;
 
-                temporary_data(std::string message_, net::any_io_executor ex)
+                temporary_data(std::string message_, net::io_context& ctx)
                     : message(std::move(message_))
-                    , timer(std::move(ex))
+                    , timer(ctx)
                 {
                 }
             };
@@ -739,7 +733,7 @@ public:
                 , repeats_(repeats)
                 , data_(allocate_stable<temporary_data>(*this,
                     std::move(message),
-                    stream.get_executor()))
+                    net::query(stream.get_executor(), net::execution::context)))
             {
                 (*this)(); // start the operation
             }

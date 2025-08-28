@@ -1,4 +1,7 @@
-#include <boost/core/lightweight_test.hpp>
+#define BOOST_TEST_MODULE \
+    find_flow_cost_bundled_properties_and_named_params_test
+
+#include <boost/test/unit_test.hpp>
 #include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
 #include <boost/graph/find_flow_cost.hpp>
 #include "min_cost_max_flow_utils.hpp"
@@ -26,7 +29,7 @@ typedef boost::adjacency_list< boost::listS, boost::vecS, boost::directedS,
 
 // Unit test written in order to fails (at compile time) if the find_flow_cost()
 // is not properly handling bundled properties
-void using_bundled_properties_with_find_max_flow_test()
+BOOST_AUTO_TEST_CASE(using_bundled_properties_with_find_max_flow_test)
 {
     Graph g;
     traits::vertex_descriptor s, t;
@@ -56,12 +59,13 @@ void using_bundled_properties_with_find_max_flow_test()
 
     // The "bundled properties" version (producing errors)
     int flow_cost = boost::find_flow_cost(g, capacity, residual_capacity, cost);
-    BOOST_TEST_EQ(flow_cost, 29);
+    BOOST_CHECK_EQUAL(flow_cost, 29);
 }
 
 // Unit test written in order to fails (at compile time) if the find_flow_cost()
 // is not properly handling bundled properties
-void using_named_params_and_bundled_properties_with_find_max_flow_test()
+BOOST_AUTO_TEST_CASE(
+    using_named_params_and_bundled_properties_with_find_max_flow_test)
 {
     Graph g;
     traits::vertex_descriptor s, t;
@@ -95,12 +99,5 @@ void using_named_params_and_bundled_properties_with_find_max_flow_test()
         boost::capacity_map(capacity)
             .residual_capacity_map(residual_capacity)
             .weight_map(cost));
-    BOOST_TEST_EQ(flow_cost, 29);
-}
-
-int main()
-{
-    using_bundled_properties_with_find_max_flow_test();
-    using_named_params_and_bundled_properties_with_find_max_flow_test();
-    return boost::report_errors();
+    BOOST_CHECK_EQUAL(flow_cost, 29);
 }

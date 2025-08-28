@@ -21,7 +21,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/tracking.hpp>
 
-#include <sstream>
+#include <fstream>
 
 using namespace std;
 using namespace boost::msm::front::euml;
@@ -134,7 +134,7 @@ namespace
                             "Open entry not called correctly");
 
         // test the serialization
-        std::ostringstream ofs;
+        std::ofstream ofs("fsm.txt");
         // save fsm to archive (current state is Open)
         {
             boost::archive::text_oarchive oa(ofs);
@@ -145,7 +145,7 @@ namespace
         player p;
         {
             // create and open an archive for input
-            std::istringstream ifs(ofs.str());
+            std::ifstream ifs("fsm.txt");
             boost::archive::text_iarchive ia(ifs);
             // read class state from archive
             ia >> p;

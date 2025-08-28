@@ -19,7 +19,6 @@
 #include <boost/spirit/home/support/has_semantic_action.hpp>
 #include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/spirit/home/karma/detail/attributes.hpp>
-#include <boost/spirit/home/karma/detail/output_iterator.hpp>
 
 namespace boost { namespace spirit
 {

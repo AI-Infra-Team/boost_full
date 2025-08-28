@@ -3,8 +3,8 @@
 # Copyright 2002-2005 Dave Abrahams.
 # Copyright 2002-2006 Vladimir Prus.
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE.txt or copy at
-#         https://www.bfgroup.xyz/b2/LICENSE.txt)
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
 
 from __future__ import print_function
 
@@ -64,11 +64,9 @@ def run_tests(critical_tests, other_tests):
         except KeyboardInterrupt:
             """This allows us to abort the testing manually using Ctrl-C."""
             raise
-        except SystemExit as e:
+        except SystemExit:
             """This is the regular way our test scripts are supposed to report
             test failures."""
-            if e.code is None or e.code == 0:
-                passed = 1
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
             try:
@@ -166,8 +164,7 @@ critical_tests = ["unit_tests", "module_actions", "startup_v2", "core_d12",
 if xml:
     critical_tests.insert(0, "collect_debug_info")
 
-tests = ["abs_workdir",
-         "absolute_sources",
+tests = ["absolute_sources",
          "alias",
          "alternatives",
          "always",
@@ -179,19 +176,16 @@ tests = ["abs_workdir",
          "builtin_echo",
          "builtin_exit",
          "builtin_glob",
-         "builtin_readlink",
          "builtin_split_by_characters",
          "bzip2",
          "c_file",
          "chain",
          "clean",
-         "cli_property_expansion",
          "command_line_properties",
          "composite",
          "conditionals",
          "conditionals2",
          "conditionals3",
-         "conditionals4",
          "conditionals_multiple",
          "configuration",
          "configure",
@@ -201,11 +195,9 @@ tests = ["abs_workdir",
          "core_actions_quietly",
          "core_at_file",
          "core_bindrule",
-         "core_dependencies",
          "core_syntax_error_exit_status",
          "core_fail_expected",
          "core_jamshell",
-         "core_modifiers",
          "core_multifile_actions",
          "core_nt_cmd_line",
          "core_option_d2",
@@ -220,8 +212,7 @@ tests = ["abs_workdir",
          "core_variables_in_actions",
          "custom_generator",
          "debugger",
-# Newly broken?
-#         "debugger-mi",
+         "debugger-mi",
          "default_build",
          "default_features",
 # This test is known to be broken itself.
@@ -252,8 +243,6 @@ tests = ["abs_workdir",
          "inline",
          "libjpeg",
          "liblzma",
-         "libpng",
-         "libtiff",
          "libzstd",
          "lib_source_property",
          "lib_zlib",
@@ -268,14 +257,11 @@ tests = ["abs_workdir",
          "no_type",
          "notfile",
          "ordered_include",
-# FIXME: Disabled due to bug in B2
-#         "ordered_properties",
          "out_of_tree",
          "package",
          "param",
          "path_features",
          "prebuilt",
-         "preprocessor",
          "print",
          "project_dependencies",
          "project_glob",
@@ -285,8 +271,6 @@ tests = ["abs_workdir",
          "project_test3",
          "project_test4",
          "property_expansion",
-# FIXME: Disabled due lack of qt5 detection
-#         "qt5",
          "rebuilds",
          "relative_sources",
          "remove_requirement",
@@ -306,8 +290,6 @@ tests = ["abs_workdir",
          "suffix",
          "tag",
          "test_rc",
-         "test1",
-         "test2",
          "testing",
          "timedata",
          "toolset_clang_darwin",
@@ -318,7 +300,6 @@ tests = ["abs_workdir",
          "toolset_gcc",
          "toolset_intel_darwin",
          "toolset_requirements",
-         "transitive_skip",
          "unit_test",
          "unused",
          "use_requirements",
@@ -343,14 +324,9 @@ if toolset.startswith("gcc") and os.name != "nt":
     # assumes otherwise. Hence enable it only when not on Windows.
     tests.append("gcc_runtime")
 
-if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
-    tests.append("pch")
-    if sys.platform != "darwin": # clang-darwin does not yet support
-        tests.append("feature_force_include")
-
-# Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package
-if toolset.startswith("clang") or "darwin" in toolset:
-    tests.append("lang_objc")
+# PCH test seems broken in strange ways. Disable it.
+# if toolset.startswith("gcc") or toolset.startswith("msvc"):
+#     tests.append("pch")
 
 # Disable on OSX as it doesn't seem to work for unknown reasons.
 if sys.platform != 'darwin':

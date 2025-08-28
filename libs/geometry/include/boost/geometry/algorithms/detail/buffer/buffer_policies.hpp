@@ -2,8 +2,8 @@
 
 // Copyright (c) 2012-2014 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2017-2020.
-// Modifications copyright (c) 2017-2020, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2017, 2018.
+// Modifications copyright (c) 2017-2018, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -15,7 +15,7 @@
 
 #include <cstddef>
 
-#include <boost/range/value_type.hpp>
+#include <boost/range.hpp>
 
 #include <boost/geometry/core/coordinate_type.hpp>
 #include <boost/geometry/core/point_type.hpp>
@@ -193,40 +193,30 @@ struct buffer_less
     }
 };
 
-template <typename Strategy>
 struct piece_get_box
 {
-    explicit piece_get_box(Strategy const& strategy)
-        : m_strategy(strategy)
-    {}
-
     template <typename Box, typename Piece>
-    inline void apply(Box& total, Piece const& piece) const
+    static inline void apply(Box& total, Piece const& piece)
     {
-        assert_coordinate_type_equal(total, piece.m_piece_border.m_envelope);
+        typedef typename strategy::expand::services::default_strategy
+            <
+                box_tag, typename cs_tag<Box>::type
+            >::type expand_strategy_type;
 
         if (piece.m_piece_border.m_has_envelope)
         {
             geometry::expand(total, piece.m_piece_border.m_envelope,
-                             m_strategy);
+                             expand_strategy_type());
         }
     }
-
-    Strategy const& m_strategy;
 };
 
-template <typename Strategy>
-struct piece_overlaps_box
+template <typename DisjointBoxBoxStrategy>
+struct piece_ovelaps_box
 {
-    explicit piece_overlaps_box(Strategy const& strategy)
-        : m_strategy(strategy)
-    {}
-
     template <typename Box, typename Piece>
-    inline bool apply(Box const& box, Piece const& piece) const
+    static inline bool apply(Box const& box, Piece const& piece)
     {
-        assert_coordinate_type_equal(box, piece.m_piece_border.m_envelope);
-
         if (piece.type == strategy::buffer::buffered_flat_end
             || piece.type == strategy::buffer::buffered_concave)
         {
@@ -242,45 +232,32 @@ struct piece_overlaps_box
         }
 
         return ! geometry::detail::disjoint::disjoint_box_box(box, piece.m_piece_border.m_envelope,
-                                                              m_strategy);
+                                                              DisjointBoxBoxStrategy());
     }
-
-    Strategy const& m_strategy;
 };
 
-template <typename Strategy>
 struct turn_get_box
 {
-    explicit turn_get_box(Strategy const& strategy)
-        : m_strategy(strategy)
-    {}
-
     template <typename Box, typename Turn>
-    inline void apply(Box& total, Turn const& turn) const
+    static inline void apply(Box& total, Turn const& turn)
     {
-        assert_coordinate_type_equal(total, turn.point);
-        geometry::expand(total, turn.point, m_strategy);
+        typedef typename strategy::expand::services::default_strategy
+            <
+                point_tag, typename cs_tag<Box>::type
+            >::type expand_strategy_type;
+        geometry::expand(total, turn.point, expand_strategy_type());
     }
-
-    Strategy const& m_strategy;
 };
 
-template <typename Strategy>
-struct turn_overlaps_box
+template <typename DisjointPointBoxStrategy>
+struct turn_ovelaps_box
 {
-    explicit turn_overlaps_box(Strategy const& strategy)
-        : m_strategy(strategy)
-    {}
-
     template <typename Box, typename Turn>
-    inline bool apply(Box const& box, Turn const& turn) const
+    static inline bool apply(Box const& box, Turn const& turn)
     {
-        assert_coordinate_type_equal(turn.point, box);
         return ! geometry::detail::disjoint::disjoint_point_box(turn.point, box,
-                                                                m_strategy);
+                                                                DisjointPointBoxStrategy());
     }
-
-    Strategy const& m_strategy;
 };
 
 struct enriched_map_buffer_include_policy

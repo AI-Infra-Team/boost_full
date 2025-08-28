@@ -18,7 +18,7 @@ endif()
 
 set(BOOST_TEST_LINK_LIBRARIES Boost::histogram)
 
-# keep in sync with Jamfile, this should be automated...
+# keep in sync with Jamfile, this should be automatized...
 boost_test(TYPE compile-fail SOURCES axis_category_fail0.cpp)
 boost_test(TYPE compile-fail SOURCES axis_category_fail1.cpp)
 boost_test(TYPE compile-fail SOURCES axis_category_fail2.cpp)
@@ -44,6 +44,7 @@ set(BOOST_TEST_LINK_LIBRARIES Boost::histogram Boost::core)
 boost_test(TYPE run SOURCES accumulators_count_test.cpp)
 boost_test(TYPE run SOURCES accumulators_mean_test.cpp)
 boost_test(TYPE run SOURCES accumulators_sum_test.cpp)
+boost_test(TYPE run SOURCES accumulators_thread_safe_test.cpp)
 boost_test(TYPE run SOURCES accumulators_weighted_mean_test.cpp)
 boost_test(TYPE run SOURCES accumulators_weighted_sum_test.cpp)
 boost_test(TYPE run SOURCES algorithm_project_test.cpp)
@@ -89,7 +90,6 @@ boost_test(TYPE run SOURCES indexed_test.cpp)
 boost_test(TYPE run SOURCES storage_adaptor_test.cpp)
 boost_test(TYPE run SOURCES unlimited_storage_test.cpp)
 boost_test(TYPE run SOURCES utility_test.cpp)
-boost_test(TYPE run SOURCES issue_327_test.cpp)
 
 find_package(Threads)
 if (Threads_FOUND)
@@ -97,10 +97,6 @@ if (Threads_FOUND)
   boost_test(TYPE run SOURCES histogram_threaded_test.cpp
     LINK_LIBRARIES Threads::Threads)
   boost_test(TYPE run SOURCES storage_adaptor_threaded_test.cpp
-    LINK_LIBRARIES Threads::Threads)
-  boost_test(TYPE run SOURCES accumulators_count_thread_safe_test.cpp
-    LINK_LIBRARIES Threads::Threads)
-  boost_test(TYPE run SOURCES accumulators_thread_safe_test.cpp
     LINK_LIBRARIES Threads::Threads)
 
 endif()
@@ -122,16 +118,5 @@ endif()
 #     LINK_LIBRARIES Boost::serialization)
 # boost_test(TYPE run SOURCES accumulators_serialization_test.cpp
 #     LINK_LIBRARIES Boost::serialization)
-# boost_test(TYPE run SOURCES histogram_ostream_ascii_test.cpp)
 
-# Workaround for gcc-5
-if (NOT(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6))
-
-  boost_test(TYPE run SOURCES deduction_guides_test.cpp
-    COMPILE_FEATURES cxx_std_17
-  )
-  boost_test(TYPE run SOURCES issue_290_test.cpp
-    COMPILE_FEATURES cxx_std_17
-  )
-
-endif()
+boost_test(TYPE run SOURCES deduction_guides_test.cpp COMPILE_FEATURES cxx_std_17)

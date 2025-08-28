@@ -6,9 +6,6 @@
  */
 
 #include "jam.h"
-
-#ifdef USE_EXECUNIX
-
 #include "execcmd.h"
 
 #include "lists.h"
@@ -28,6 +25,8 @@
 #if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
+
+#ifdef USE_EXECUNIX
 
 #include <sys/times.h>
 
@@ -141,8 +140,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    int32_t * error_length,
-    int32_t * error_max_length
+    int * error_length,
+    int * error_max_length
 )
 {
     int const is_raw_cmd = is_raw_command_request( *pShell );
@@ -155,7 +154,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
+        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
             error_max_length );
 }
 
@@ -215,7 +214,7 @@ void exec_cmd
     /* Create pipes for collecting child output. */
     if ( pipe( out ) < 0 || ( globs.pipe_action && pipe( err ) < 0 ) )
     {
-        errno_puts( "pipe" );
+        perror( "pipe" );
         exit( EXITBAD );
     }
 
@@ -257,7 +256,7 @@ void exec_cmd
 
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
-        errno_puts( "vfork" );
+        perror( "vfork" );
         exit( EXITBAD );
     }
 
@@ -294,11 +293,11 @@ void exec_cmd
             setrlimit( RLIMIT_CPU, &r_limit );
         }
         if (0 != setpgid( pid, pid )) {
-            errno_puts("setpgid(child)");
+            perror("setpgid(child)");
             /* exit( EXITBAD ); */
         }
         execvp( argv[ 0 ], (char * *)argv );
-        errno_puts( "execvp" );
+        perror( "execvp" );
         _exit( 127 );
     }
 
@@ -324,7 +323,7 @@ void exec_cmd
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
     if ( !cmdtab[ slot ].stream[ OUT ] )
     {
-        errno_puts( "fdopen" );
+        perror( "fdopen" );
         exit( EXITBAD );
     }
 
@@ -335,7 +334,7 @@ void exec_cmd
         cmdtab[ slot ].stream[ ERR ] = fdopen( cmdtab[ slot ].fd[ ERR ], "rb" );
         if ( !cmdtab[ slot ].stream[ ERR ] )
         {
-            errno_puts( "fdopen" );
+            perror( "fdopen" );
             exit( EXITBAD );
         }
     }
@@ -602,11 +601,6 @@ static int get_free_cmdtab_slot()
             return slot;
     err_printf( "no slots for child!\n" );
     exit( EXITBAD );
-}
-
-int32_t shell_maxline()
-{
-    return MAXLINE;
 }
 
 # endif /* USE_EXECUNIX */

@@ -26,14 +26,14 @@ using namespace boost::interprocess;
 
 void remove_shared_memory(const xsi_key &key)
 {
-   BOOST_TRY{
+   try{
       xsi_shared_memory xsi(open_only, key);
       xsi_shared_memory::remove(xsi.get_shmid());
    }
-   BOOST_CATCH(interprocess_exception &e){
+   catch(interprocess_exception &e){
       if(e.get_error_code() != not_found_error)
-         BOOST_RETHROW
-   } BOOST_CATCH_END
+         throw;
+   }
 }
 
 class xsi_shared_memory_remover
@@ -49,6 +49,14 @@ class xsi_shared_memory_remover
    xsi_shared_memory & xsi_shm_;
 };
 
+inline std::string get_filename()
+{
+   std::string ret (ipcdetail::get_temporary_path());
+   ret += "/";
+   ret += test::get_process_id_name();
+   return ret;
+}
+
 int main ()
 {
    std::string filename(get_filename());
@@ -61,23 +69,23 @@ int main ()
    remove_shared_memory(key);
 
    unsigned int i;
-   BOOST_TRY{
+   try{
       for(i = 0; i < sizeof(names)/sizeof(names[0]); ++i)
       {
          const std::size_t FileSize = 99999*2;
          //Create a file mapping
          xsi_shared_memory mapping (create_only, names[i] ? key : xsi_key(), FileSize);
          xsi_shared_memory_remover rem(mapping);
-         BOOST_TRY{
+         try{
             {
                //Partial mapping should fail fox XSI shared memory
                bool thrown = false;
-               BOOST_TRY{
+               try{
                   mapped_region region2(mapping, read_write, FileSize/2, FileSize - FileSize/2, 0);
                }
-               BOOST_CATCH(...){
+               catch(...){
                   thrown = true;
-               } BOOST_CATCH_END
+               }
                if(thrown == false){
                   return 1;
                }
@@ -105,16 +113,16 @@ int main ()
                }
             }
          }
-         BOOST_CATCH(std::exception &exc){
+         catch(std::exception &exc){
             std::cout << "Unhandled exception: " << exc.what() << std::endl;
             return 1;
-         } BOOST_CATCH_END
+         }
       }
    }
-   BOOST_CATCH(std::exception &exc){
+   catch(std::exception &exc){
       std::cout << "Unhandled exception: " << exc.what() << std::endl;
       return 1;
-   } BOOST_CATCH_END
+   }
    return 0;
 }
 

@@ -31,13 +31,13 @@
 
     namespace airy_zero
     {
-      template<class T, class Policy>
-      T equation_as_10_4_105(const T& z, const Policy& pol)
+      template<class T>
+      T equation_as_10_4_105(const T& z)
       {
         const T one_over_z        (T(1) / z);
         const T one_over_z_squared(one_over_z * one_over_z);
 
-        const T z_pow_third     (boost::math::cbrt(z, pol));
+        const T z_pow_third     (boost::math::cbrt(z));
         const T z_pow_two_thirds(z_pow_third * z_pow_third);
 
         // Implement the top line of Eq. 10.4.105.
@@ -53,8 +53,8 @@
 
       namespace airy_ai_zero_detail
       {
-        template<class T, class Policy>
-        T initial_guess(const int m, const Policy& pol)
+        template<class T>
+        T initial_guess(const int m)
         {
           T guess;
 
@@ -74,7 +74,7 @@
             default:
             {
               const T t(((boost::math::constants::pi<T>() * 3) * ((T(m) * 4) - 1)) / 8);
-              guess = -boost::math::detail::airy_zero::equation_as_10_4_105(t, pol);
+              guess = -boost::math::detail::airy_zero::equation_as_10_4_105(t);
               break;
             }
           }
@@ -98,14 +98,14 @@
 
         private:
           const Policy& my_pol;
-          const function_object_ai_and_ai_prime& operator=(const function_object_ai_and_ai_prime&) = delete;
+          const function_object_ai_and_ai_prime& operator=(const function_object_ai_and_ai_prime&);
         };
       } // namespace airy_ai_zero_detail
 
       namespace airy_bi_zero_detail
       {
-        template<class T, class Policy>
-        T initial_guess(const int m, const Policy& pol)
+        template<class T>
+        T initial_guess(const int m)
         {
           T guess;
 
@@ -125,7 +125,7 @@
             default:
             {
               const T t(((boost::math::constants::pi<T>() * 3) * ((T(m) * 4) - 3)) / 8);
-              guess = -boost::math::detail::airy_zero::equation_as_10_4_105(t, pol);
+              guess = -boost::math::detail::airy_zero::equation_as_10_4_105(t);
               break;
             }
           }
@@ -149,7 +149,7 @@
 
         private:
           const Policy& my_pol;
-          const function_object_bi_and_bi_prime& operator=(const function_object_bi_and_bi_prime&) = delete;
+          const function_object_bi_and_bi_prime& operator=(const function_object_bi_and_bi_prime&);
         };
       } // namespace airy_bi_zero_detail
     } // namespace airy_zero

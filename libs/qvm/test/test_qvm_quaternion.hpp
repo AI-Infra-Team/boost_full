@@ -37,8 +37,12 @@ test_qvm
         }
     }
 
-namespace boost { namespace qvm {
-
+namespace
+boost
+    {
+    namespace
+    qvm
+        {
         template <class Tag,class T>
         struct
         quat_traits< test_qvm::quaternion<Tag,T> >:

@@ -13,16 +13,12 @@
 #include <sstream>
 #include <limits>
 
-namespace boost {
-namespace math {
-namespace interpolators {
-namespace detail {
+namespace boost::math::interpolators::detail {
 
 template<class RandomAccessContainer>
 class cubic_hermite_detail {
 public:
     using Real = typename RandomAccessContainer::value_type;
-    using Size = typename RandomAccessContainer::size_type;
 
     cubic_hermite_detail(RandomAccessContainer && x, RandomAccessContainer && y, RandomAccessContainer dydx)
      : x_{std::move(x)}, y_{std::move(y)}, dydx_{std::move(dydx)}
@@ -149,7 +145,7 @@ public:
         return os;
     }
 
-    Size size() const
+    auto size() const
     {
         return x_.size();
     }
@@ -173,7 +169,6 @@ template<class RandomAccessContainer>
 class cardinal_cubic_hermite_detail {
 public:
     using Real = typename RandomAccessContainer::value_type;
-    using Size = typename RandomAccessContainer::size_type;
 
     cardinal_cubic_hermite_detail(RandomAccessContainer && y, RandomAccessContainer dydx, Real x0, Real dx)
     : y_{std::move(y)}, dy_{std::move(dydx)}, x0_{x0}, inv_dx_{1/dx}
@@ -273,7 +268,7 @@ public:
     }
 
 
-    Size size() const
+    auto size() const
     {
         return y_.size();
     }
@@ -303,7 +298,6 @@ class cardinal_cubic_hermite_detail_aos {
 public:
     using Point = typename RandomAccessContainer::value_type;
     using Real = typename Point::value_type;
-    using Size = typename RandomAccessContainer::size_type;
 
     cardinal_cubic_hermite_detail_aos(RandomAccessContainer && dat, Real x0, Real dx)
     : dat_{std::move(dat)}, x0_{x0}, inv_dx_{1/dx}
@@ -408,7 +402,7 @@ public:
     }
 
 
-    Size size() const
+    auto size() const
     {
         return dat_.size();
     }
@@ -431,8 +425,6 @@ private:
     Real inv_dx_;
 };
 
-}
-}
-}
+
 }
 #endif

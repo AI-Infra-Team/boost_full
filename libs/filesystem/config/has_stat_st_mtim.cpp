@@ -5,8 +5,6 @@
 
 //  See library home page at http://www.boost.org/libs/filesystem
 
-#include "platform_config.hpp"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

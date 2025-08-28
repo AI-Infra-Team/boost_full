@@ -21,9 +21,6 @@ using namespace boost::interprocess;
 
 static const std::size_t ShmSize = 1000;
 static const char *      ShmName = test::get_process_id_name();
-#ifdef BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES
-static const wchar_t *   ShmNameW = test::get_process_id_wname();
-#endif
 
 struct eraser
 {
@@ -56,37 +53,12 @@ class shared_memory_creation_test_wrapper
    {}
 };
 
-#ifdef BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES
-
-class shared_memory_creation_test_wrapper_w
-   : public eraser
-   , public shared_memory
-{
-
-   public:
-   shared_memory_creation_test_wrapper_w(create_only_t)
-      :  shared_memory(create_only, ShmNameW, ShmSize, read_write, 0, permissions())
-   {}
-
-   shared_memory_creation_test_wrapper_w(open_only_t)
-      :  shared_memory(open_only, ShmNameW, read_write, 0)
-   {}
-
-   shared_memory_creation_test_wrapper_w(open_or_create_t)
-      :  shared_memory(open_or_create, ShmNameW, ShmSize, read_write, 0, permissions())
-   {}
-};
-
-#endif
 
 int main ()
 {
-   BOOST_TRY{
+   try{
       shared_memory_object::remove(ShmName);
       test::test_named_creation<shared_memory_creation_test_wrapper>();
-      #ifdef BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES
-      test::test_named_creation<shared_memory_creation_test_wrapper_w>();
-      #endif
 
       //Create and get name, size and address
       {
@@ -102,11 +74,11 @@ int main ()
          move_assign = boost::move(move_ctor);
       }
    }
-   BOOST_CATCH(std::exception &ex){
+   catch(std::exception &ex){
       shared_memory_object::remove(ShmName);
       std::cout << ex.what() << std::endl;
       return 1;
-   } BOOST_CATCH_END
+   }
    shared_memory_object::remove(ShmName);
    return 0;
 }

@@ -26,7 +26,6 @@
 //!   - boost::container::static_vector
 //!   - boost::container::small_vector_base
 //!   - boost::container::small_vector
-//!   - boost::container::devector
 //!   - boost::container::slist
 //!   - boost::container::list
 //!   - boost::container::set
@@ -122,11 +121,6 @@ template < class T
          , class Allocator = void
          , class Options   = void  >
 class small_vector;
-
-template <class T
-         ,class Allocator = void
-         ,class Options   = void>
-class devector;
 
 template <class T
          ,class Allocator = void

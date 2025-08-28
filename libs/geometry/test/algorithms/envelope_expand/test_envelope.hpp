@@ -2,11 +2,6 @@
 // Unit Test
 
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
-
-// This file was modified by Oracle on 2021.
-// Modifications copyright (c) 2021, Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +16,6 @@
 
 #include <boost/geometry/algorithms/envelope.hpp>
 #include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/geometry_collection.hpp>
 #include <boost/geometry/strategies/strategies.hpp>
 
 #include <boost/geometry/io/wkt/read.hpp>
@@ -34,13 +28,13 @@ struct check_result
 template <typename Box>
 struct check_result<Box, 2>
 {
-    using ctype = typename bg::coordinate_type<Box>::type;
-    using type = std::conditional_t
-        <
-            (std::is_integral<ctype>::value || std::is_floating_point<ctype>::value),
-            double,
-            ctype
-        >;
+    typedef typename bg::coordinate_type<Box>::type ctype;
+    typedef typename boost::mpl::if_
+            <
+                boost::is_arithmetic<ctype>,
+                double,
+                ctype
+            >::type type;
 
     static void apply(Box const& b, const type& x1, const type& y1, const type& /*z1*/,
                 const type& x2, const type& y2, const type& /*z2*/)
@@ -56,13 +50,13 @@ struct check_result<Box, 2>
 template <typename Box>
 struct check_result<Box, 3>
 {
-    using ctype = typename bg::coordinate_type<Box>::type;
-    using type = std::conditional_t
-        <
-            (std::is_integral<ctype>::value || std::is_floating_point<ctype>::value),
-            double,
-            ctype
-        >;
+    typedef typename bg::coordinate_type<Box>::type ctype;
+    typedef typename boost::mpl::if_
+            <
+                boost::is_arithmetic<ctype>,
+                double,
+                ctype
+            >::type type;
 
     static void apply(Box const& b, const type& x1, const type& y1, const type& z1,
                 const type& x2, const type& y2, const type& z2)
@@ -98,10 +92,6 @@ void test_envelope(std::string const& wkt,
     check_result<box_type, bg::dimension<Geometry>::type::value>
             ::apply(b, x1, y1, z1, x2, y2, z2);
 
-    bg::model::geometry_collection<boost::variant<Geometry>> gc{v};
-    bg::envelope(gc, b);
-    check_result<box_type, bg::dimension<Geometry>::type::value>
-            ::apply(b, x1, y1, z1, x2, y2, z2);
 }
 
 

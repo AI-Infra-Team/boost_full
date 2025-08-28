@@ -2,7 +2,7 @@
 // execution/set_done.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -68,7 +68,7 @@ struct can_set_done :
 
 #else // defined(GENERATING_DOCUMENTATION)
 
-namespace boost_asio_execution_set_done_fn {
+namespace asio_execution_set_done_fn {
 
 using boost::asio::decay;
 using boost::asio::declval;
@@ -85,7 +85,7 @@ enum overload_type
   ill_formed
 };
 
-template <typename R, typename = void, typename = void>
+template <typename R, typename = void>
 struct call_traits
 {
   BOOST_ASIO_STATIC_CONSTEXPR(overload_type, overload = ill_formed);
@@ -96,7 +96,9 @@ struct call_traits
 template <typename R>
 struct call_traits<R,
   typename enable_if<
-    set_done_member<R>::is_valid
+    (
+      set_done_member<R>::is_valid
+    )
   >::type> :
   set_done_member<R>
 {
@@ -106,10 +108,11 @@ struct call_traits<R,
 template <typename R>
 struct call_traits<R,
   typename enable_if<
-    !set_done_member<R>::is_valid
-  >::type,
-  typename enable_if<
-    set_done_free<R>::is_valid
+    (
+      !set_done_member<R>::is_valid
+      &&
+      set_done_free<R>::is_valid
+    )
   >::type> :
   set_done_free<R>
 {
@@ -202,22 +205,22 @@ struct static_instance
 template <typename T>
 const T static_instance<T>::instance = {};
 
-} // namespace boost_asio_execution_set_done_fn
+} // namespace asio_execution_set_done_fn
 namespace boost {
 namespace asio {
 namespace execution {
 namespace {
 
-static BOOST_ASIO_CONSTEXPR const boost_asio_execution_set_done_fn::impl&
-  set_done = boost_asio_execution_set_done_fn::static_instance<>::instance;
+static BOOST_ASIO_CONSTEXPR const asio_execution_set_done_fn::impl&
+  set_done = asio_execution_set_done_fn::static_instance<>::instance;
 
 } // namespace
 
 template <typename R>
 struct can_set_done :
   integral_constant<bool,
-    boost_asio_execution_set_done_fn::call_traits<R>::overload !=
-      boost_asio_execution_set_done_fn::ill_formed>
+    asio_execution_set_done_fn::call_traits<R>::overload !=
+      asio_execution_set_done_fn::ill_formed>
 {
 };
 
@@ -231,7 +234,7 @@ constexpr bool can_set_done_v = can_set_done<R>::value;
 template <typename R>
 struct is_nothrow_set_done :
   integral_constant<bool,
-    boost_asio_execution_set_done_fn::call_traits<R>::is_noexcept>
+    asio_execution_set_done_fn::call_traits<R>::is_noexcept>
 {
 };
 

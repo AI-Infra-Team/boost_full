@@ -8,8 +8,8 @@
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2005 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE.txt or copy at
- * https://www.bfgroup.xyz/b2/LICENSE.txt)
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 /*
@@ -17,8 +17,6 @@
  */
 
 #include "jam.h"
-#ifdef USE_PATHNT
-
 #include "pathsys.h"
 #include "hash.h"
 
@@ -96,11 +94,11 @@ void path_get_temp_path_( string * buffer )
  *  - path_key_cache path/key mapping cache object already initialized
  */
 
-static int canonicWindowsPath( char const * const path, int32_t path_length,
+static int canonicWindowsPath( char const * const path, int const path_length,
     string * const out )
 {
     char const * last_element;
-    int32_t saved_size;
+    unsigned long saved_size;
     char const * p;
     int missing_parent;
 
@@ -140,7 +138,7 @@ static int canonicWindowsPath( char const * const path, int32_t path_length,
     if ( p >= path )
     {
         char const * const dir = path;
-        const int32_t dir_length = int32_t(p - path);
+        int const dir_length = p - path;
         OBJECT * const dir_obj = object_new_range( dir, dir_length );
         int found;
         path_key_entry * const result = (path_key_entry *)hash_insert(
@@ -172,7 +170,7 @@ static int canonicWindowsPath( char const * const path, int32_t path_length,
     if ( !missing_parent )
     {
         char const * const n = last_element;
-        int32_t n_length = int32_t(path + path_length - n);
+        int const n_length = path + path_length - n;
         if ( !( n_length == 1 && n[ 0 ] == '.' )
             && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
@@ -241,7 +239,7 @@ static path_key_entry * path_key( OBJECT * const path,
     if ( !found )
     {
         OBJECT * normalized;
-        int32_t normalized_size;
+        int normalized_size;
         path_key_entry * nresult;
         result->path = path;
         {
@@ -396,8 +394,8 @@ OBJECT * path_as_key( OBJECT * path )
 static void free_path_key_entry( void * xentry, void * const data )
 {
     path_key_entry * const entry = (path_key_entry *)xentry;
-    if (entry->path) object_free( entry->path );
-    if (entry->key) object_free( entry->key );
+    object_free( entry->path );
+    object_free( entry->key );
 }
 
 
@@ -409,5 +407,3 @@ void path_done( void )
         hashdone( path_key_cache );
     }
 }
-
-#endif // USE_PATHNT

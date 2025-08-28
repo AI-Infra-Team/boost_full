@@ -18,6 +18,7 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/graph/dll_import_export.hpp>
 #include <boost/graph/graphviz.hpp> // for exceptions
+#include <typeinfo>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/find.hpp>
@@ -26,7 +27,6 @@
 #include <boost/throw_exception.hpp>
 #include <exception>
 #include <sstream>
-#include <typeinfo>
 
 namespace boost
 {
@@ -41,8 +41,8 @@ struct BOOST_SYMBOL_VISIBLE parse_error : public graph_exception
         error = err;
         statement = "parse error: " + error;
     }
-    ~parse_error() throw() BOOST_OVERRIDE {}
-    const char* what() const throw() BOOST_OVERRIDE { return statement.c_str(); }
+    virtual ~parse_error() throw() {}
+    virtual const char* what() const throw() { return statement.c_str(); }
     std::string statement;
     std::string error;
 };
@@ -84,16 +84,16 @@ public:
     {
     }
 
-    bool is_directed() const BOOST_OVERRIDE
+    bool is_directed() const
     {
         return is_convertible<
             typename graph_traits< MutableGraph >::directed_category,
             directed_tag >::value;
     }
 
-    any do_add_vertex() BOOST_OVERRIDE { return any(add_vertex(m_g)); }
+    virtual any do_add_vertex() { return any(add_vertex(m_g)); }
 
-    std::pair< any, bool > do_add_edge(any source, any target) BOOST_OVERRIDE
+    virtual std::pair< any, bool > do_add_edge(any source, any target)
     {
         std::pair< edge_descriptor, bool > retval
             = add_edge(any_cast< vertex_descriptor >(source),
@@ -101,8 +101,8 @@ public:
         return std::make_pair(any(retval.first), retval.second);
     }
 
-    void set_graph_property(const std::string& name,
-        const std::string& value, const std::string& value_type) BOOST_OVERRIDE
+    virtual void set_graph_property(const std::string& name,
+        const std::string& value, const std::string& value_type)
     {
         bool type_found = false;
         try
@@ -123,8 +123,8 @@ public:
         }
     }
 
-    void set_vertex_property(const std::string& name, any vertex,
-        const std::string& value, const std::string& value_type) BOOST_OVERRIDE
+    virtual void set_vertex_property(const std::string& name, any vertex,
+        const std::string& value, const std::string& value_type)
     {
         bool type_found = false;
         try
@@ -146,8 +146,8 @@ public:
         }
     }
 
-    void set_edge_property(const std::string& name, any edge,
-        const std::string& value, const std::string& value_type) BOOST_OVERRIDE
+    virtual void set_edge_property(const std::string& name, any edge,
+        const std::string& value, const std::string& value_type)
     {
         bool type_found = false;
         try

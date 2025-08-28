@@ -8,6 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <boost/container/detail/config_begin.hpp>
+
 #include <iostream>
 #include <set>
 #include <utility>
@@ -862,55 +864,70 @@ int main()
       {
          typedef boost::container::flat_set<int> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, void> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_set, default) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_set, default) test failed" << std::endl;
+            return 1;
+         }
       }
       // flat_set, vector
       {
          typedef boost::container::vector<int> alloc_or_cont_t;
          typedef boost::container::flat_set<int, std::less<int>, alloc_or_cont_t> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_set, vector) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_set, vector) test failed" << std::endl;
+            return 1;
+         }
       }
       // flat_set, std::vector
       {
          typedef std::vector<int> alloc_or_cont_t;
          typedef boost::container::flat_set<int, std::less<int>, alloc_or_cont_t> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_set, std::vector) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_set, std::vector) test failed" << std::endl;
+            return 1;
+         }
       }
       // flat_multiset, default
       {
          typedef boost::container::flat_multiset<int> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, void> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_multiset, default) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multiset, default) test failed" << std::endl;
+            return 1;
+         }
       }
       // flat_multiset, vector
       {
          typedef boost::container::vector<int> alloc_or_cont_t;
          typedef boost::container::flat_multiset<int, std::less<int>, alloc_or_cont_t> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_multiset, vector) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multiset, vector) test failed" << std::endl;
+            return 1;
+         }
       }
       // flat_multiset, std::vector
       {
          typedef std::vector<int> alloc_or_cont_t;
          typedef boost::container::flat_multiset<int, std::less<int>, alloc_or_cont_t> cont;
          typedef boost::container::dtl::flat_tree<int, key_of_value_t, std::less<int>, alloc_or_cont_t> tree;
-         BOOST_STATIC_ASSERT_MSG ( boost::has_trivial_destructor_after_move<cont>::value ==
-                                   boost::has_trivial_destructor_after_move<tree>::value
-                                 , "has_trivial_destructor_after_move(flat_multiset, std::vector) test failed");
+         if (boost::has_trivial_destructor_after_move<cont>::value !=
+             boost::has_trivial_destructor_after_move<tree>::value) {
+            std::cerr << "has_trivial_destructor_after_move(flat_multiset, std::vector) test failed" << std::endl;
+            return 1;
+         }
       }
    }
 
    return 0;
 }
+
+#include <boost/container/detail/config_end.hpp>
+

@@ -14,8 +14,6 @@ Greg Colvin, Beman Dawes, Peter Dimov, Glen Fernandes
 :idprefix:
 :listing-caption: Code Example
 :docinfo: private-footer
-:source-highlighter: rouge
-:source-language: c++
 
 :leveloffset: +1
 

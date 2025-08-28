@@ -12,7 +12,6 @@
 #include <boost/geometry/core/access.hpp>
 #include <boost/geometry/core/config.hpp>
 #include <boost/geometry/algorithms/detail/make/make.hpp>
-#include <boost/geometry/util/math.hpp>
 
 namespace boost { namespace geometry
 {
@@ -130,7 +129,7 @@ public:
             // If it is to the utmost point s1 or s2, it is "outside"
             the_state.m_count = perp.is_zero() ? 0 : 1;
             the_state.m_close_to_offset = true;
-            the_state.m_min_distance = geometry::math::abs(perp.measure);
+            the_state.m_min_distance = std::fabs(perp.measure);
         }
         else
         {

@@ -263,8 +263,6 @@ int main()
       small_int_backend     nc(si1);
       nc = sqrt(nc);
       BOOST_CHECK_EQUAL(nc, r);
-      constexpr int_backend r2 = sqrt(si1 * 1);
-      BOOST_CHECK_EQUAL(nc, r);
 
       constexpr int jj = boost::multiprecision::sqrt(i);
       int           k  = i;

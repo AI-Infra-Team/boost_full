@@ -3,13 +3,12 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/detail/lightweight_test.hpp>
+#include <boost/spirit/include/phoenix_object.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/phoenix_container.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
-
-#include <boost/phoenix/object.hpp>
-#include <boost/phoenix/operator.hpp>
-#include <boost/phoenix/stl/container.hpp>
-
-#include <boost/core/lightweight_test.hpp>
+#include <boost/foreach.hpp>
 
 using namespace boost::spirit;
 
@@ -116,13 +115,13 @@ template <typename Token>
 inline 
 bool test_tokens(token_data const* d, std::vector<Token> const& tokens)
 {
-    for (std::size_t i = 0, len = tokens.size(); i < len; ++i)
+    BOOST_FOREACH(Token const& t, tokens)
     {
         if (d->id == -1)
             return false;           // reached end of expected data
 
-        typename Token::token_value_type const& value (tokens[i].value());
-        if (tokens[i].id() != static_cast<std::size_t>(d->id))        // token id must match
+        typename Token::token_value_type const& value (t.value());
+        if (t.id() != static_cast<std::size_t>(d->id))        // token id must match
             return false;
         if (value.which() != 1)     // must have an integer value 
             return false;

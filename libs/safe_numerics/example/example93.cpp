@@ -131,7 +131,6 @@ using phase_ix_t = boost::safe_numerics::safe_signed_range<
 >;
 
 // settings for control value output
-
 using phase_t = boost::safe_numerics::safe<
     uint16_t,
     pic16_promotion,
@@ -194,7 +193,7 @@ using safe_bit_t = boost::safe_numerics::safe_unsigned_range<
 // correct bit in PIC register
 template<typename T, std::int8_t N>
 struct bit {
-    T m_word;
+    T & m_word;
     constexpr explicit bit(T & rhs) :
         m_word(rhs)
     {}

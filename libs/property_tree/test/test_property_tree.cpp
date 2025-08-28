@@ -12,6 +12,7 @@
 #include <boost/range.hpp>
 #include <list>
 #include <cmath>
+#include <iostream>
 
 // If using VC, disable some warnings that trip in boost::serialization bowels
 #ifdef BOOST_MSVC
@@ -165,7 +166,7 @@ void run_tests(Ptree* pt)
     test_leaks(pt);                  // must be a final test
 }
 
-int main(int, char *[])
+int test_main(int, char *[])
 {
     
     using namespace boost::property_tree;
@@ -198,5 +199,5 @@ int main(int, char *[])
     }
 #endif
 
-    return boost::report_errors();
+    return 0;
 }

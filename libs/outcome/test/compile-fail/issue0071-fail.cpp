@@ -33,6 +33,5 @@ int main()
   };
   // Must not be possible to implicitly initialise a result<udt>
   result<udt> m(5);
-  (void) m;
   return 0;
 }

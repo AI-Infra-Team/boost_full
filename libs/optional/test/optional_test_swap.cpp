@@ -17,7 +17,7 @@
 #include "boost/optional/optional.hpp"
 #include "boost/utility/in_place_factory.hpp"
 
-#ifdef BOOST_BORLANDC
+#ifdef __BORLANDC__
 #pragma hdrstop
 #endif
 

@@ -3,10 +3,6 @@
 
 // Copyright (c) 2012-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2021.
-// Modifications copyright (c) 2021, Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -19,6 +15,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -26,21 +23,15 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/timer.hpp>
 
-#include <boost/geometry/algorithms/append.hpp>
-#include <boost/geometry/algorithms/buffer.hpp>
-#include <boost/geometry/algorithms/covered_by.hpp>
-#include <boost/geometry/algorithms/envelope.hpp>
-#include <boost/geometry/algorithms/within.hpp>
-
-#include <boost/geometry/extensions/algorithms/midpoints.hpp>
-
+#include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 
 #include <boost/geometry/io/svg/svg_mapper.hpp>
+#include <boost/geometry/extensions/algorithms/midpoints.hpp>
 
-#include <robustness/common/common_settings.hpp>
-#include <robustness/common/make_square_polygon.hpp>
+#include <common/common_settings.hpp>
+#include <common/make_square_polygon.hpp>
 
 
 namespace bg = boost::geometry;
@@ -206,18 +197,20 @@ public :
         typedef typename bg::point_type<Segment2>::type pt;
         typedef bg::model::segment<pt> segment_type;
 
-        bg::strategy::intersection::cartesian_segments<> strategy;
-        bg::policies::relate::segments_intersection_points
-            <
-                bg::segment_intersection_points<pt>
-            > policy;
+        typedef bg::strategy::intersection::relate_cartesian_segments
+                    <
+                        bg::policies::relate::segments_intersection_points
+                            <
+                                segment_type,
+                                segment_type,
+                                bg::segment_intersection_points<pt>
+                            >
+                    > policy;
 
         segment_type seg1, seg2;
         bg::convert(m_segment, seg1);
         bg::convert(segment, seg2);
-
-        // TODO: this function requires unique subranges now
-        bg::segment_intersection_points<pt> is = strategy.apply(seg1, seg2);
+        bg::segment_intersection_points<pt> is = policy::apply(seg1, seg2);
 
         if (is.count == 2)
         {
@@ -304,7 +297,7 @@ bool verify(std::string const& caseid, MultiPolygon const& mp, Linestring const&
     bg::for_each_segment(difference, bc);
 
     // 3) check also the mid-points from the difference to remove false positives
-    for (Linestring const& d : difference)
+    BOOST_FOREACH(Linestring const& d, difference)
     {
         Linestring difference_midpoints;
         bg::midpoints(d, false, std::back_inserter(difference_midpoints));
@@ -489,6 +482,10 @@ int main(int argc, char** argv)
         {
             test_all<double, true, true>(seed, count, level, settings);
         }
+
+#if defined(HAVE_TTMATH)
+        // test_all<ttmath_big, true, true>(seed, count, max, svg, level);
+#endif
     }
     catch(std::exception const& e)
     {

@@ -4,10 +4,6 @@
 // Copyright (c) 2008-2015 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2015 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2021.
-// Modifications copyright (c) 2021 Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -54,6 +50,7 @@
 #include <boost/config.hpp>
 #include <boost/concept_check.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/foreach.hpp>
 
 #include <string_from_type.hpp>
 
@@ -83,8 +80,22 @@
 
 #endif
 
-// For testing high precision numbers
-#include <boost/multiprecision/cpp_bin_float.hpp>
+
+#if defined(HAVE_TTMATH)
+#  include <boost/geometry/extensions/contrib/ttmath_stub.hpp>
+#endif
+
+#if defined(HAVE_CLN) || defined(HAVE_GMP)
+#  include <boost/numeric_adaptor/numeric_adaptor.hpp>
+#endif
+
+
+#if defined(HAVE_GMP)
+#  include <boost/numeric_adaptor/gmp_value_type.hpp>
+#endif
+#if defined(HAVE_CLN)
+#  include <boost/numeric_adaptor/cln_value_type.hpp>
+#endif
 
 // For all tests:
 // - do NOT use "using namespace boost::geometry" to make clear what is Boost.Geometry
@@ -96,6 +107,23 @@
 #include <boost/geometry/core/tag.hpp>
 namespace bg = boost::geometry;
 
+
+template <typename CoordinateType, typename T1, typename T2>
+inline T1 if_typed_tt(T1 value_tt, T2 value)
+{
+#if defined(HAVE_TTMATH)
+    return boost::is_same<CoordinateType, ttmath_big>::type::value ? value_tt : value;
+#else
+    boost::ignore_unused(value_tt);
+    return value;
+#endif
+}
+
+template <typename CoordinateType, typename Specified, typename T>
+inline T if_typed(T value_typed, T value)
+{
+    return boost::is_same<CoordinateType, Specified>::value ? value_typed : value;
+}
 
 template <typename Geometry1, typename Geometry2>
 inline std::string type_for_assert_message()
@@ -135,18 +163,18 @@ struct mathematical_policy
 
 struct ut_base_settings
 {
-    explicit ut_base_settings(bool validity = true)
+    explicit ut_base_settings(bool val = true)
         : m_test_validity(true)
     {
-        set_test_validity(validity);
+        set_test_validity(val);
     }
 
-    inline void set_test_validity(bool validity)
+    inline void set_test_validity(bool val)
     {
 #if defined(BOOST_GEOMETRY_TEST_FAILURES)
-        boost::ignore_unused(validity);
+        boost::ignore_unused(val);
 #else
-        m_test_validity = validity;
+        m_test_validity = val;
 #endif
     }
 
@@ -159,61 +187,31 @@ private :
     bool m_test_validity;
 };
 
-//! Type used for tests using high precision numbers
-using mp_test_type = boost::multiprecision::cpp_bin_float_100;
 
-//! Default type for tests, can optionally be specified on the command line
-//! e.g. float, "long double", mp_test_type
-#if defined(BOOST_GEOMETRY_DEFAULT_TEST_TYPE)
-using default_test_type = BOOST_GEOMETRY_DEFAULT_TEST_TYPE;
-#else
-using default_test_type = double;
-#endif
+typedef double default_test_type;
 
-//! Compile time function for expectations depending on type
-template <typename CoordinateType, typename Specified, typename T>
-inline T if_typed(T value_typed, T value)
-{
-    return std::is_same<CoordinateType, Specified>::value ? value_typed : value;
-}
-
-//! Compile time function for expectations depending on high precision
-template <typename CoordinateType, typename T1, typename T2>
-inline T1 const& bg_if_mp(T1 const& value_mp, T2 const& value)
-{
-    return std::is_same<CoordinateType, mp_test_type>::type::value ? value_mp : value;
-}
-
-//! Macro for expectations depending on rescaling
 #if defined(BOOST_GEOMETRY_USE_RESCALING)
 #define BG_IF_RESCALED(a, b) a
 #else
 #define BG_IF_RESCALED(a, b) b
 #endif
 
-//! Macro for turning of a test setting when testing without failures
-#if defined(BOOST_GEOMETRY_TEST_FAILURES)
-#define BG_IF_TEST_FAILURES true
+#if defined(BOOST_GEOMETRY_USE_KRAMER_RULE)
+#define BG_IF_KRAMER(a, b) a
 #else
-#define BG_IF_TEST_FAILURES false
+#define BG_IF_KRAMER(a, b) b
 #endif
 
 inline void BoostGeometryWriteTestConfiguration()
 {
     std::cout << std::endl << "Test configuration:" << std::endl;
-#if defined(BOOST_GEOMETRY_COMPILER_MODE_RELEASE)
-    std::cout << "  - Release mode" << std::endl;
-#endif
-#if defined(BOOST_GEOMETRY_COMPILER_MODE_DEBUG)
-    std::cout << "  - Debug mode" << std::endl;
-#endif
-#if defined(BOOST_GEOMETRY_ROBUSTNESS_ALTERNATIVE)
-    std::cout << "  - Flipping the robustness alternative" << std::endl;
-#endif
 #if defined(BOOST_GEOMETRY_USE_RESCALING)
     std::cout << "  - Using rescaling" << std::endl;
+#endif
+#if defined(BOOST_GEOMETRY_USE_KRAMER_RULE)
+    std::cout << "  - Using Kramer rule" << std::endl;
 #else
-    std::cout << "  - No rescaling" << std::endl;
+    std::cout << "  - Using general form" << std::endl;
 #endif
 #if defined(BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE)
     std::cout << "  - Testing only one type" << std::endl;
@@ -231,35 +229,19 @@ inline void BoostGeometryWriteTestConfiguration()
 #ifdef BOOST_GEOMETRY_TEST_FAILURES
 #define BG_NO_FAILURES 0
 inline void BoostGeometryWriteExpectedFailures(std::size_t for_rescaling,
-                                               std::size_t for_no_rescaling_double,
-                                               std::size_t for_no_rescaling_float,
-                                               std::size_t for_no_rescaling_extended)
+                std::size_t for_no_rescaling = BG_NO_FAILURES)
 {
-    std::size_t const for_no_rescaling
-        = if_typed<default_test_type, double>(for_no_rescaling_double,
-              if_typed<default_test_type, float>(for_no_rescaling_float,
-                  for_no_rescaling_extended));
+    boost::ignore_unused(for_rescaling, for_no_rescaling);
 
-    boost::ignore_unused(for_rescaling, for_no_rescaling, for_no_rescaling_double,
-                         for_no_rescaling_float, for_no_rescaling_extended);
-
-
+#if defined(BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE) && defined(BOOST_GEOMETRY_TEST_ONLY_ONE_ORDER)
+    std::cout << std::endl;
 #if defined(BOOST_GEOMETRY_USE_RESCALING)
     std::cout << "RESCALED - Expected: " << for_rescaling << " error(s)" << std::endl;
-#elif defined(BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE) && defined(BOOST_GEOMETRY_TEST_ONLY_ONE_ORDER)
-    std::cout << "NOT RESCALED - Expected: " << for_no_rescaling << " error(s)" << std::endl;
 #else
-    std::cout << std::endl;
+    std::cout << "NOT RESCALED - Expected: " << for_no_rescaling << " error(s)" << std::endl;
+#endif
 #endif
 }
-
-inline void BoostGeometryWriteExpectedFailures(std::size_t for_rescaling,
-                                               std::size_t for_no_rescaling_double = BG_NO_FAILURES)
-{
-    BoostGeometryWriteExpectedFailures(for_rescaling, for_no_rescaling_double,
-                                       for_no_rescaling_double, for_no_rescaling_double);
-}
-
 #endif
 
 #endif // GEOMETRY_TEST_GEOMETRY_TEST_COMMON_HPP

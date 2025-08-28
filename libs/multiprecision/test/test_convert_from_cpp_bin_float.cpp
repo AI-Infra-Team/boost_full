@@ -39,19 +39,6 @@ using namespace boost::multiprecision;
 template <class T>
 T generate_random()
 {
-   //
-   // Our aim is to fill up the mantissa of T with random bits,
-   // the main loop simply multiplies by the largest random value
-   // we produce and then adds the next random value.  It stops
-   // when the next random value is too small to change the result,
-   // and so "val" and "prev_val" end up with the same value.
-   //
-   // We start with an arbitrary value in "prev_val" - anything you
-   // like as long as it's a value that our generator can not produce.
-   //
-   // At the end we ditch the current exponent, and replace with our own
-   // randomly generated one.
-   //
    typedef int                   e_type;
    static boost::random::mt19937 gen;
    T                             val      = gen();
@@ -70,7 +57,7 @@ T generate_random()
 }
 
 template <class From, class To>
-void test_convert_neg_int(From from, const std::integral_constant<bool, true>&)
+void test_convert_neg_int(From from, const boost::mpl::true_&)
 {
    from = -from;
    To t3(from);
@@ -79,12 +66,12 @@ void test_convert_neg_int(From from, const std::integral_constant<bool, true>&)
    BOOST_CHECK_EQUAL(From(trunc(from)), From(t4));
 }
 template <class From, class To>
-void test_convert_neg_int(From const&, const std::integral_constant<bool, false>&)
+void test_convert_neg_int(From const&, const boost::mpl::false_&)
 {
 }
 
 template <class From, class To>
-void test_convert_imp(std::integral_constant<int, number_kind_floating_point> const&, std::integral_constant<int, number_kind_integer> const&)
+void test_convert_imp(boost::mpl::int_<number_kind_floating_point> const&, boost::mpl::int_<number_kind_integer> const&)
 {
    for (unsigned i = 0; i < 100; ++i)
    {
@@ -93,12 +80,12 @@ void test_convert_imp(std::integral_constant<int, number_kind_floating_point> co
       To   t2 = from.template convert_to<To>();
       BOOST_CHECK_EQUAL(From(trunc(from)), From(t1));
       BOOST_CHECK_EQUAL(From(trunc(from)), From(t2));
-      test_convert_neg_int<From, To>(from, std::integral_constant<bool, std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
+      test_convert_neg_int<From, To>(from, boost::mpl::bool_ < std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
    }
 }
 
 template <class From, class To>
-void test_convert_neg_rat(From from, const std::integral_constant<bool, true>&)
+void test_convert_neg_rat(From from, const boost::mpl::true_&)
 {
    from = -from;
    To t3(from);
@@ -107,12 +94,12 @@ void test_convert_neg_rat(From from, const std::integral_constant<bool, true>&)
    BOOST_CHECK_EQUAL(From(t4), from);
 }
 template <class From, class To>
-void test_convert_rat_int(From const&, const std::integral_constant<bool, false>&)
+void test_convert_rat_int(From const&, const boost::mpl::false_&)
 {
 }
 
 template <class From, class To>
-void test_convert_imp(std::integral_constant<int, number_kind_floating_point> const&, std::integral_constant<int, number_kind_rational> const&)
+void test_convert_imp(boost::mpl::int_<number_kind_floating_point> const&, boost::mpl::int_<number_kind_rational> const&)
 {
    for (unsigned i = 0; i < 100; ++i)
    {
@@ -121,12 +108,12 @@ void test_convert_imp(std::integral_constant<int, number_kind_floating_point> co
       To   t2 = from.template convert_to<To>();
       BOOST_CHECK_EQUAL(From(t1), from);
       BOOST_CHECK_EQUAL(From(t2), from);
-      test_convert_neg_rat<From, To>(from, std::integral_constant<bool, std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
+      test_convert_neg_rat<From, To>(from, boost::mpl::bool_ < std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
    }
 }
 
 template <class From, class To>
-void test_convert_neg_float(From from, const std::integral_constant<bool, true>&)
+void test_convert_neg_float(From from, const boost::mpl::true_&)
 {
    from = -from;
    To t3(from);
@@ -137,12 +124,12 @@ void test_convert_neg_float(From from, const std::integral_constant<bool, true>&
    BOOST_CHECK_CLOSE_FRACTION(t4, answer, tol);
 }
 template <class From, class To>
-void test_convert_neg_float(From const&, const std::integral_constant<bool, false>&)
+void test_convert_neg_float(From const&, const boost::mpl::false_&)
 {
 }
 
 template <class From, class To>
-void test_convert_imp(std::integral_constant<int, number_kind_floating_point> const&, std::integral_constant<int, number_kind_floating_point> const&)
+void test_convert_imp(boost::mpl::int_<number_kind_floating_point> const&, boost::mpl::int_<number_kind_floating_point> const&)
 {
    for (unsigned i = 0; i < 100; ++i)
    {
@@ -153,7 +140,7 @@ void test_convert_imp(std::integral_constant<int, number_kind_floating_point> co
       To   tol = (std::max)(std::numeric_limits<To>::epsilon(), To(std::numeric_limits<From>::epsilon())) * 2;
       BOOST_CHECK_CLOSE_FRACTION(t1, answer, tol);
       BOOST_CHECK_CLOSE_FRACTION(t2, answer, tol);
-      test_convert_neg_float<From, To>(from, std::integral_constant<bool, std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
+      test_convert_neg_float<From, To>(from, boost::mpl::bool_ < std::numeric_limits<From>::is_signed && std::numeric_limits<To>::is_signed > ());
    }
 }
 

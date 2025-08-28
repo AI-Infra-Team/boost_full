@@ -8,6 +8,7 @@
 
 #include "rule_separate_tu_grammar.hpp"
 
+#include <boost/core/lightweight_test.hpp>
 
 #include "test.hpp"
 

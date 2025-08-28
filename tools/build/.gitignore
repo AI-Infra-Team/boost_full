@@ -15,9 +15,3 @@
 /src/engine/b2.exe
 infer-out
 build.log
-/example/named-install-dirs/bar
-/example/named-install-dirs/foo
-/example/named-install-dirs/q
-/example/gettext/messages
-/example/**/bin
-/test/file.jam

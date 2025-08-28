@@ -32,7 +32,7 @@ int main()
 
     // if the invalidity is only due to lack of closing points and/or wrongly oriented rings, then bg::correct can fix it
     bool could_be_fixed = (failure == boost::geometry::failure_not_closed
-                           || failure == boost::geometry::failure_wrong_orientation);
+                           || boost::geometry::failure_wrong_orientation);
     std::cout << "is valid? " << (valid ? "yes" : "no") << std::endl;
     if (! valid)
     {

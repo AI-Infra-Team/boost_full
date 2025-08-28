@@ -13,10 +13,9 @@
 #include <iomanip>
 #include <typeinfo>
 
+#include <boost/foreach.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/spirit/include/karma_what.hpp>
-
-#include <boost/core/lightweight_test.hpp>
 
 namespace spirit_test
 {
@@ -56,8 +55,7 @@ namespace spirit_test
         else if (generated != expected)
         {
             std::cerr << "in " << func << ": generated \"";
-            for (std::size_t i = 0, len = generated.size(); i < len; ++i) {
-                typename boost::make_unsigned<Char>::type c(generated[i]);
+            BOOST_FOREACH(typename boost::make_unsigned<Char>::type c, generated) {
                 if (c >= 32 && c < 127)
                     std::cerr << static_cast<char>(static_cast<unsigned char>(c));
                 else
@@ -78,8 +76,8 @@ namespace spirit_test
                  std::memcmp(generated.c_str(), expected.c_str(), generated.size()))
         {
             std::cerr << "in " << func << ": generated \"";
-            for (std::size_t i = 0, len = generated.size(); i < len; ++i)
-                std::cerr << "\\x" << std::hex << std::setfill('0') << std::setw(2) << +generated[i];
+            BOOST_FOREACH(int c, generated)
+                std::cerr << "\\x" << std::hex << std::setfill('0') << std::setw(2) << c;
             std::cerr << "\"" << std::endl;
         }
     }

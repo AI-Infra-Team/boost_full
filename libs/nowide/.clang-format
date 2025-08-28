@@ -11,7 +11,7 @@ AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: Never
+AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: None
 AllowShortLambdasOnASingleLine: All
@@ -56,7 +56,6 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 2
 Cpp11BracedListStyle: true
-DeriveLineEnding: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
@@ -69,26 +68,16 @@ IncludeBlocks:   Preserve
 IncludeCategories:
   - Regex:           '<boost/(nowide/)?config.hpp>'
     Priority:        48
-    SortPriority:    0
   - Regex:           '<boost/nowide'
     Priority:        49
-    SortPriority:    0
-  - Regex:           '^"'
-    Priority:        50
-    SortPriority:    0
   - Regex:           '<boost/'
-    Priority:        75
-    SortPriority:    0
+    Priority:        50
   - Regex:           '^<'
     Priority:        100
-    SortPriority:    0
   - Regex:           '.*'
     Priority:        1
-    SortPriority:    0
 IncludeIsMainRegex: '(test)?$'
-IncludeIsMainSourceRegex: ''
 IndentCaseLabels: false
-IndentGotoLabels: true
 IndentPPDirectives: None
 IndentWidth:     4
 IndentWrappedFunctionNames: false
@@ -124,22 +113,15 @@ SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
 SpaceBeforeParens: Never
 SpaceBeforeRangeBasedForLoopColon: true
-SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
 SpacesInAngles:  false
-SpacesInConditionalStatement: false
 SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-SpaceBeforeSquareBrackets: false
-Standard:        c++11
-StatementMacros:
-  - Q_UNUSED
-  - QT_REQUIRE_VERSION
+Standard:        Cpp03
+StatementMacros: []
 TabWidth:        4
-UseCRLF:         false
 UseTab:          Never
 ...
-

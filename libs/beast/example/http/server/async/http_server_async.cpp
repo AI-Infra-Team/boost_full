@@ -434,7 +434,6 @@ private:
         if(ec)
         {
             fail(ec, "accept");
-            return; // To avoid infinite loop
         }
         else
         {

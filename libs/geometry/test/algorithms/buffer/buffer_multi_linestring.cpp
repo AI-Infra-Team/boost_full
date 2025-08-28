@@ -3,8 +3,8 @@
 
 // Copyright (c) 2012-2019 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2016-2021.
-// Modifications copyright (c) 2016-2021, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2016.
+// Modifications copyright (c) 2016, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -65,7 +65,6 @@ void test_all()
     typedef bg::model::linestring<P> linestring;
     typedef bg::model::multi_linestring<linestring> multi_linestring_type;
     typedef bg::model::polygon<P, Clockwise> polygon;
-    typedef typename bg::coordinate_type<P>::type coor_type;
 
     bg::strategy::buffer::join_miter join_miter;
     bg::strategy::buffer::join_round join_round(100);
@@ -141,7 +140,6 @@ void test_all()
         test_one<multi_linestring_type, polygon>("mikado4_small", mikado4, join_round32, end_flat, 1930.785, 10.0);
     }
 
-    if (! BOOST_GEOMETRY_CONDITION((std::is_same<coor_type, float>::value)))
     {
         // Coordinates in one linestring vary so much that
         // length = geometry::math::sqrt(dx * dx + dy * dy); returns a value of inf for length
@@ -199,9 +197,9 @@ void test_all()
     test_one<multi_linestring_type, polygon>("mysql_23023665_1_20",
             mysql_23023665_1, join_round32, end_flat, 1, 1, 350.1135, 2.0);
 
-#if defined(BOOST_GEOMETRY_TEST_FAILURES)
+#if ! defined(BOOST_GEOMETRY_USE_RESCALING) || defined(BOOST_GEOMETRY_TEST_FAILURES)
     {
-        // Cases (railway roads) still failing
+        // Cases failing with rescaling
         ut_settings settings(10.0, false);
         test_one<multi_linestring_type, polygon>("ticket_13444_1",
                 ticket_13444, join_round32, end_round32, 3, 0, 11801.7832, 1.0, settings);
@@ -212,19 +210,6 @@ void test_all()
     }
 #endif
 
-    {
-        // This issue was detected for CCW order and only CW is tested by default.
-        using polygon_ccw = bg::model::polygon<P, ! Clockwise>;
-        test_one
-            <
-                multi_linestring_type, polygon_ccw
-            >("mysql_33353637_macos11",
-              "MULTILINESTRING((0 10,10 0),(10 0,0 0),(0 0,10 10))",
-              bg::strategy::buffer::join_miter(10),
-              end_round32,
-              1, 0, 35307.0646,
-              100.0);
-    }
 }
 
 
@@ -239,7 +224,7 @@ int test_main(int, char* [])
 #endif
 
 #if defined(BOOST_GEOMETRY_TEST_FAILURES)
-    BoostGeometryWriteExpectedFailures(9, 6, 9, 3);
+    BoostGeometryWriteExpectedFailures(10, BG_NO_FAILURES);
 #endif
     return 0;
 }

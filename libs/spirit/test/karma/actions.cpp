@@ -5,10 +5,13 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#include <boost/spirit/include/karma_action.hpp>
+
+#include <boost/config/warning_disable.hpp>
+#include <boost/detail/lightweight_test.hpp>
 
 #include <boost/spirit/include/karma_char.hpp>
 #include <boost/spirit/include/karma_numeric.hpp>
+#include <boost/spirit/include/karma_action.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/spirit/include/karma_operator.hpp>
 #include <boost/bind/bind.hpp>
@@ -16,11 +19,6 @@
 
 #include <sstream>
 #include "test.hpp"
-
-#ifdef _MSC_VER
-// bogus https://developercommunity.visualstudio.com/t/buggy-warning-c4709/471956
-# pragma warning(disable: 4709) // comma operator within array index expression
-#endif
 
 using namespace spirit_test;
 using boost::spirit::unused_type;

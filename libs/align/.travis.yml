@@ -8,7 +8,7 @@ language: cpp
 
 sudo: false
 
-dist: xenial
+dist: trusty
 
 branches:
   only:
@@ -120,21 +120,10 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      compiler: g++-9
-      env: TOOLSET=gcc COMPILER=g++-9 STANDARD=03,11,14,17,2a
-      addons:
-        apt:
-          packages:
-            - g++-9
-          sources:
-            - ubuntu-toolchain-r-test
-
-    - os: linux
       compiler: clang++
       env: TOOLSET=clang COMPILER=clang++ STANDARD=03,11
 
     - os: linux
-      dist: trusty
       compiler: /usr/bin/clang++
       env: TOOLSET=clang COMPILER=/usr/bin/clang++ STANDARD=03,11
       addons:
@@ -143,7 +132,6 @@ matrix:
             - clang-3.3
 
     - os: linux
-      dist: trusty
       compiler: /usr/bin/clang++
       env: TOOLSET=clang COMPILER=/usr/bin/clang++ STANDARD=03,11
       addons:
@@ -152,7 +140,6 @@ matrix:
             - clang-3.4
 
     - os: linux
-      dist: trusty
       compiler: clang++-3.5
       env: TOOLSET=clang COMPILER=clang++-3.5 STANDARD=03,11,14,1z
       addons:
@@ -173,6 +160,7 @@ matrix:
             - clang-3.6
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
 
     - os: linux
       compiler: clang++-3.7
@@ -183,6 +171,7 @@ matrix:
             - clang-3.7
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
 
     - os: linux
       compiler: clang++-3.8
@@ -194,6 +183,7 @@ matrix:
             - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
 
     - os: linux
       compiler: clang++-3.9
@@ -205,6 +195,7 @@ matrix:
             - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
 
     - os: linux
       compiler: clang++-4.0
@@ -215,6 +206,7 @@ matrix:
             - clang-4.0
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
 
     - os: linux
       compiler: clang++-5.0
@@ -225,6 +217,7 @@ matrix:
             - clang-5.0
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
 
     - os: linux
       compiler: clang++-6.0
@@ -235,6 +228,7 @@ matrix:
             - clang-6.0
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
 
     - os: linux
       compiler: clang++-7
@@ -245,7 +239,7 @@ matrix:
             - clang-7
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-7
+            - llvm-toolchain-trusty-7
 
     - os: linux
       compiler: clang++-8
@@ -256,10 +250,9 @@ matrix:
             - clang-8
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-8
+            - llvm-toolchain-trusty-8
 
     - os: linux
-      dist: trusty
       compiler: clang++-libc++
       env: TOOLSET=clang COMPILER=clang++-libc++ STANDARD=03,11,14,1z
       addons:

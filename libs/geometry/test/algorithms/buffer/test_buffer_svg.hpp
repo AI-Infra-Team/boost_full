@@ -2,11 +2,6 @@
 // Unit Test Helper
 
 // Copyright (c) 2010-2015 Barend Gehrels, Amsterdam, the Netherlands.
-
-// This file was modified by Oracle on 2020-2021.
-// Modifications copyright (c) 2020-2021 Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -28,8 +23,8 @@
 #  endif
 #endif
 
+#include <boost/foreach.hpp>
 #include <boost/geometry/io/svg/svg_mapper.hpp>
-#include <boost/geometry/algorithms/buffer.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 
 
@@ -116,7 +111,8 @@ private :
 
         std::map<point_type, int, bg::less<point_type> > offsets;
 
-        for (auto it = boost::begin(turns); it != boost::end(turns); ++it)
+        for (typename boost::range_iterator<Turns const>::type it =
+            boost::begin(turns); it != boost::end(turns); ++it)
         {
             if (m_zoom && bg::disjoint(it->point, m_alternate_box))
             {
@@ -191,7 +187,9 @@ private :
         typedef typename boost::range_value<OffsettedRings const>::type ring_type;
         typedef typename bg::point_type<ring_type>::type point_type;
 
-        for (auto it = boost::begin(pieces); it != boost::end(pieces); ++it)
+        for(typename boost::range_iterator<Pieces const>::type it = boost::begin(pieces);
+            it != boost::end(pieces);
+            ++it)
         {
             const piece_type& piece = *it;
             bg::segment_identifier seg_id = piece.first_seg_id;
@@ -209,8 +207,7 @@ private :
             }
 #endif
 
-            // NOTE: ring is returned by copy here
-            auto const& corner = piece.m_piece_border.get_full_ring();
+            bg::model::ring<point_type> const& corner = piece.m_piece_border.get_full_ring();
 
             if (m_zoom && do_pieces)
             {
@@ -271,7 +268,8 @@ private :
     template <typename TraversedRings>
     inline void map_traversed_rings(TraversedRings const& traversed_rings)
     {
-        for (auto it = boost::begin(traversed_rings); it != boost::end(traversed_rings); ++it)
+        for(typename boost::range_iterator<TraversedRings const>::type it
+                = boost::begin(traversed_rings); it != boost::end(traversed_rings); ++it)
         {
             m_mapper.map(*it, "opacity:0.4;fill:none;stroke:rgb(0,255,0);stroke-width:2");
         }
@@ -280,7 +278,8 @@ private :
     template <typename OffsettedRings>
     inline void map_offsetted_rings(OffsettedRings const& offsetted_rings)
     {
-        for (auto it = boost::begin(offsetted_rings); it != boost::end(offsetted_rings); ++it)
+        for(typename boost::range_iterator<OffsettedRings const>::type it
+                = boost::begin(offsetted_rings); it != boost::end(offsetted_rings); ++it)
         {
             if (it->discarded())
             {
@@ -312,9 +311,8 @@ public :
         bg::assign_inverse(m_alternate_box);
     }
 
-    template <typename Mapper, typename Visitor, typename Envelope, typename DistanceType>
-    void prepare(Mapper& mapper, Visitor& visitor, Envelope const& envelope,
-                 const DistanceType& box_buffer_distance)
+    template <typename Mapper, typename Visitor, typename Envelope>
+    void prepare(Mapper& mapper, Visitor& visitor, Envelope const& envelope, double box_buffer_distance)
     {
 #ifdef BOOST_GEOMETRY_BUFFER_TEST_SVG_USE_ALTERNATE_BOX
         // Create a zoomed-in view
@@ -344,7 +342,14 @@ public :
     void map_input_output(Mapper& mapper, Geometry const& geometry,
             GeometryBuffer const& buffered, bool negative)
     {
-        bool const areal = bg::util::is_areal<Geometry>::value;
+        bool const areal = boost::is_same
+            <
+                typename bg::tag_cast
+                    <
+                        typename bg::tag<Geometry>::type,
+                        bg::areal_tag
+                    >::type, bg::areal_tag
+            >::type::value;
 
         if (m_zoom)
         {
@@ -373,7 +378,7 @@ public :
                 bg::detail::overlay::assign_null_policy
             >(geometry, strategy, rescale_policy, turns, policy);
 
-        for (turn_info const& turn : turns)
+        BOOST_FOREACH(turn_info const& turn, turns)
         {
             mapper.map(turn.point, "fill:rgb(255,128,0);stroke:rgb(0,0,100);stroke-width:1", 3);
         }

@@ -217,7 +217,7 @@ void test_spots(T, const char* name)
       BOOST_CHECK_CLOSE(::boost::math::tgamma(-4 - ldexp(static_cast<T>(1), -55)), static_cast<T>(-1.50119987579016527057843048200831672241827850458884790004313e15L), tolerance * extra_tol);
    }
 
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4127)
 #endif
@@ -226,7 +226,7 @@ void test_spots(T, const char* name)
    {
       BOOST_CHECK_CLOSE(::boost::math::tgamma(static_cast<T>(142.75)), static_cast<T>(7.8029496083318133344429227511387928576820621466e244L), tolerance * 4);
    }
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
    // An extra fudge factor for real_concept which has a less accurate tgamma:
@@ -332,18 +332,6 @@ void test_spots(T, const char* name)
       BOOST_CHECK_CLOSE(::boost::math::lgamma(ldexp(static_cast<T>(11103367432951928LL), 32)), static_cast<T>(2.7719825960021351251696385101478518546793793286704974382373670822285114741208958e27L), tolerance);
       BOOST_CHECK_CLOSE(::boost::math::lgamma(ldexp(static_cast<T>(11103367432951928LL), 62)), static_cast<T>(4.0411767712186990905102512019058204792570873633363159e36L), tolerance);
       BOOST_CHECK_CLOSE(::boost::math::lgamma(ldexp(static_cast<T>(11103367432951928LL), 326)), static_cast<T>(3.9754720509185529233002820161357111676582583112671658e116L), tolerance);
-   }
-   //
-   // Super small values may cause spurious overflow:
-   //
-   if (std::numeric_limits<T>::is_specialized && std::numeric_limits<T>::has_denorm)
-   {
-      T value = (std::numeric_limits<T>::min)();
-      while (value != 0)
-      {
-         BOOST_CHECK((boost::math::isfinite)(boost::math::lgamma(value)));
-         value /= 2;
-      }
    }
 }
 

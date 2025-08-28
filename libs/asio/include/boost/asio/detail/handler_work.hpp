@@ -2,7 +2,7 @@
 // detail/handler_work.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2021 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -35,12 +35,6 @@ namespace asio {
 class executor;
 class io_context;
 
-#if !defined(BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
-
-class any_io_executor;
-
-#endif // !defined(BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
-
 namespace execution {
 
 #if defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
@@ -63,14 +57,14 @@ template <typename Executor, typename CandidateExecutor = void,
 class handler_work_base
 {
 public:
-  explicit handler_work_base(int, int, const Executor& ex) BOOST_ASIO_NOEXCEPT
+  explicit handler_work_base(const Executor& ex) BOOST_ASIO_NOEXCEPT
     : executor_(boost::asio::prefer(ex, execution::outstanding_work.tracked))
   {
   }
 
   template <typename OtherExecutor>
-  handler_work_base(bool /*base1_owns_work*/, const Executor& ex,
-      const OtherExecutor& /*candidate*/) BOOST_ASIO_NOEXCEPT
+  handler_work_base(const Executor& ex,
+      const OtherExecutor&) BOOST_ASIO_NOEXCEPT
     : executor_(boost::asio::prefer(ex, execution::outstanding_work.tracked))
   {
   }
@@ -123,14 +117,14 @@ class handler_work_base<Executor, CandidateExecutor,
     >::type>
 {
 public:
-  explicit handler_work_base(int, int, const Executor& ex) BOOST_ASIO_NOEXCEPT
+  explicit handler_work_base(const Executor& ex) BOOST_ASIO_NOEXCEPT
     : executor_(ex),
       owns_work_(true)
   {
     executor_.on_work_started();
   }
 
-  handler_work_base(bool /*base1_owns_work*/, const Executor& ex,
+  handler_work_base(const Executor& ex,
       const Executor& candidate) BOOST_ASIO_NOEXCEPT
     : executor_(ex),
       owns_work_(ex != candidate)
@@ -140,8 +134,8 @@ public:
   }
 
   template <typename OtherExecutor>
-  handler_work_base(bool /*base1_owns_work*/, const Executor& ex,
-      const OtherExecutor& /*candidate*/) BOOST_ASIO_NOEXCEPT
+  handler_work_base(const Executor& ex,
+      const OtherExecutor&) BOOST_ASIO_NOEXCEPT
     : executor_(ex),
       owns_work_(true)
   {
@@ -198,7 +192,7 @@ class handler_work_base<Executor, void, IoContext, PolymorphicExecutor,
     >::type>
 {
 public:
-  explicit handler_work_base(int, int, const Executor&)
+  explicit handler_work_base(const Executor&)
   {
   }
 
@@ -221,7 +215,7 @@ template <typename Executor, typename IoContext>
 class handler_work_base<Executor, void, IoContext, Executor>
 {
 public:
-  explicit handler_work_base(int, int, const Executor& ex) BOOST_ASIO_NOEXCEPT
+  explicit handler_work_base(const Executor& ex) BOOST_ASIO_NOEXCEPT
 #if !defined(BOOST_ASIO_NO_TYPEID)
     : executor_(
         ex.target_type() == typeid(typename IoContext::executor_type)
@@ -234,7 +228,7 @@ public:
       executor_.on_work_started();
   }
 
-  handler_work_base(bool /*base1_owns_work*/, const Executor& ex,
+  handler_work_base(const Executor& ex,
       const Executor& candidate) BOOST_ASIO_NOEXCEPT
     : executor_(ex != candidate ? ex : Executor())
   {
@@ -293,15 +287,14 @@ template <
     typename T1, typename T2, typename T3, typename T4, typename T5,
     typename T6, typename T7, typename T8, typename T9,
 #endif // defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
-    typename CandidateExecutor, typename IoContext,
-    typename PolymorphicExecutor>
+    typename IoContext, typename PolymorphicExecutor>
 class handler_work_base<
 #if defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
     execution::any_executor<SupportableProperties...>,
 #else // defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
     execution::any_executor<T1, T2, T3, T4, T5, T6, T7, T8, T9>,
 #endif // defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
-    CandidateExecutor, IoContext, PolymorphicExecutor>
+    void, IoContext, PolymorphicExecutor>
 {
 public:
   typedef
@@ -312,8 +305,7 @@ public:
 #endif // defined(BOOST_ASIO_HAS_VARIADIC_TEMPLATES)
     executor_type;
 
-  explicit handler_work_base(int, int,
-      const executor_type& ex) BOOST_ASIO_NOEXCEPT
+  explicit handler_work_base(const executor_type& ex) BOOST_ASIO_NOEXCEPT
 #if !defined(BOOST_ASIO_NO_TYPEID)
     : executor_(
         ex.target_type() == typeid(typename IoContext::executor_type)
@@ -325,18 +317,15 @@ public:
   {
   }
 
-  handler_work_base(bool base1_owns_work, const executor_type& ex,
+  handler_work_base(const executor_type& ex,
       const executor_type& candidate) BOOST_ASIO_NOEXCEPT
-    : executor_(
-        !base1_owns_work && ex == candidate
-          ? executor_type()
-          : boost::asio::prefer(ex, execution::outstanding_work.tracked))
+    : executor_(ex != candidate ? ex : executor_type())
   {
   }
 
   template <typename OtherExecutor>
-  handler_work_base(bool /*base1_owns_work*/, const executor_type& ex,
-      const OtherExecutor& /*candidate*/) BOOST_ASIO_NOEXCEPT
+  handler_work_base(const executor_type& ex,
+      const OtherExecutor&) BOOST_ASIO_NOEXCEPT
     : executor_(boost::asio::prefer(ex, execution::outstanding_work.tracked))
   {
   }
@@ -359,93 +348,18 @@ public:
   }
 
   template <typename Function, typename Handler>
-  void dispatch(Function& function, Handler&)
+  void dispatch(Function& function, Handler& handler)
   {
     execution::execute(
-        boost::asio::prefer(executor_, execution::blocking.possibly),
+        boost::asio::prefer(executor_,
+          execution::blocking.possibly,
+          execution::allocator((get_associated_allocator)(handler))),
         BOOST_ASIO_MOVE_CAST(Function)(function));
   }
 
 private:
   executor_type executor_;
 };
-
-#if !defined(BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
-
-template <typename Executor, typename CandidateExecutor,
-    typename IoContext, typename PolymorphicExecutor>
-class handler_work_base<
-    Executor, CandidateExecutor,
-    IoContext, PolymorphicExecutor,
-    typename enable_if<
-      is_same<
-        Executor,
-        any_io_executor
-      >::value
-    >::type>
-{
-public:
-  typedef Executor executor_type;
-
-  explicit handler_work_base(int, int,
-      const executor_type& ex) BOOST_ASIO_NOEXCEPT
-#if !defined(BOOST_ASIO_NO_TYPEID)
-    : executor_(
-        ex.target_type() == typeid(typename IoContext::executor_type)
-          ? executor_type()
-          : boost::asio::prefer(ex, execution::outstanding_work.tracked))
-#else // !defined(BOOST_ASIO_NO_TYPEID)
-    : executor_(boost::asio::prefer(ex, execution::outstanding_work.tracked))
-#endif // !defined(BOOST_ASIO_NO_TYPEID)
-  {
-  }
-
-  handler_work_base(bool base1_owns_work, const executor_type& ex,
-      const executor_type& candidate) BOOST_ASIO_NOEXCEPT
-    : executor_(
-        !base1_owns_work && ex == candidate
-          ? executor_type()
-          : boost::asio::prefer(ex, execution::outstanding_work.tracked))
-  {
-  }
-
-  template <typename OtherExecutor>
-  handler_work_base(bool /*base1_owns_work*/, const executor_type& ex,
-      const OtherExecutor& /*candidate*/) BOOST_ASIO_NOEXCEPT
-    : executor_(boost::asio::prefer(ex, execution::outstanding_work.tracked))
-  {
-  }
-
-  handler_work_base(const handler_work_base& other) BOOST_ASIO_NOEXCEPT
-    : executor_(other.executor_)
-  {
-  }
-
-#if defined(BOOST_ASIO_HAS_MOVE)
-  handler_work_base(handler_work_base&& other) BOOST_ASIO_NOEXCEPT
-    : executor_(BOOST_ASIO_MOVE_CAST(executor_type)(other.executor_))
-  {
-  }
-#endif // defined(BOOST_ASIO_HAS_MOVE)
-
-  bool owns_work() const BOOST_ASIO_NOEXCEPT
-  {
-    return !!executor_;
-  }
-
-  template <typename Function, typename Handler>
-  void dispatch(Function& function, Handler&)
-  {
-    execution::execute(
-        boost::asio::prefer(executor_, execution::blocking.possibly),
-        BOOST_ASIO_MOVE_CAST(Function)(function));
-  }
-
-private:
-  executor_type executor_;
-};
-
-#endif // !defined(BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT)
 
 template <typename Handler, typename IoExecutor, typename = void>
 class handler_work :
@@ -459,9 +373,8 @@ public:
     Handler, IoExecutor>::type, IoExecutor> base2_type;
 
   handler_work(Handler& handler, const IoExecutor& io_ex) BOOST_ASIO_NOEXCEPT
-    : base1_type(0, 0, io_ex),
-      base2_type(base1_type::owns_work(),
-          boost::asio::get_associated_executor(handler, io_ex), io_ex)
+    : base1_type(io_ex),
+      base2_type(boost::asio::get_associated_executor(handler, io_ex), io_ex)
   {
   }
 
@@ -497,7 +410,7 @@ public:
   typedef handler_work_base<IoExecutor> base1_type;
 
   handler_work(Handler&, const IoExecutor& io_ex) BOOST_ASIO_NOEXCEPT
-    : base1_type(0, 0, io_ex)
+    : base1_type(io_ex)
   {
   }
 

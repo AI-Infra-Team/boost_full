@@ -1,11 +1,11 @@
 = Boost.Predef
-:author: René Ferdinand Rivera Morell
+:author: Rene Rivera
 :toc: left
 :toclevels: 3
 :sectanchors:
 :sectnums:
 :nofooter:
-:source-highlighter: rouge
+:source-highlighter: pygments
 :source-language: cpp
 :caution-caption: ⚑
 :important-caption: ‼
@@ -16,6 +16,14 @@
 :predef_symbol: Symbol
 :predef_version: Version
 :predef_detection: pass:q[*detection*]
+
+ifdef::backend-html5[]
+++++
+<style>
+include::predef.css[]
+</style>
+++++
+endif::[]
 
 == Introduction
 
@@ -556,8 +564,6 @@ include::../include/boost/predef/architecture/blackfin.h[tag=reference]
 
 include::../include/boost/predef/architecture/convex.h[tag=reference]
 
-include::../include/boost/predef/architecture/e2k.h[tag=reference]
-
 include::../include/boost/predef/architecture/ia64.h[tag=reference]
 
 include::../include/boost/predef/architecture/m68k.h[tag=reference]
@@ -822,8 +828,6 @@ include::../include/boost/predef/hardware/simd/x86_amd/versions.h[tag=reference]
 
 include::../include/boost/predef/other/endian.h[tag=reference]
 
-include::../include/boost/predef/other/wordsize.h[tag=reference]
-
 include::../include/boost/predef/other/workaround.h[tag=reference]
 
 :leveloffset: -3
@@ -1007,4 +1011,4 @@ Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 https://www.boost.org/LICENSE_1_0.txt)
 
-Copyright 2005-2021 René Ferdinand Rivera Morell; Copyright 2015 Charly Chevalier; Copyright 2015 Joel Falcou
+Copyright 2005-2020 Rene Rivera; Copyright 2015 Charly Chevalier; Copyright 2015 Joel Falcou

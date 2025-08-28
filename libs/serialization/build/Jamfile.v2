@@ -84,15 +84,12 @@ SOURCES =
     void_cast
     xml_grammar
     xml_iarchive
+    xml_oarchive
     xml_archive_exception
     codecvt_null
- ;
-
-SOURCES_HAS_STD_LOCALE = 
-    xml_oarchive
     utf8_codecvt_facet
-;
-
+ ;
+    
 WSOURCES = 
     basic_text_wiprimitive
     basic_text_woprimitive
@@ -107,49 +104,9 @@ WSOURCES =
     polymorphic_xml_woarchive
 ;
 
-rule has-config-flag ( flag : properties * )
-{
-    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
-    {
-        return 1 ;
-    }
-    else
-    {
-        return ;
-    }
-}
-
-rule select-define-specific-sources ( properties * )
-{
-    local result ;
-    if ! [ has-config-flag BOOST_NO_STD_LOCALE : $(properties) ]
-    {
-        result += <source>$(SOURCES_HAS_STD_LOCALE).cpp ;
-    }
-
-    #ECHO additional sources $(result) ;
-
-    return $(result) ;
-}
-
-rule should-build-wserialization ( properties * )
-{
-    local result ;
-    if [ has-config-flag BOOST_NO_STD_LOCALE : $(properties) ]
-    {
-        result += <build>no ;
-    }
-
-    #ECHO should build wserialization $(result) ;
-
-    return $(result) ;
-}
-
 lib boost_serialization 
-    : ## sources ##
-     $(SOURCES).cpp
-    : ## requirements ##
-    <conditional>@select-define-specific-sources
+    : $(SOURCES).cpp
+    : 
     <toolset>msvc:<cxxflags>/Gy
     <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
     <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
@@ -164,8 +121,7 @@ lib boost_serialization
 
 lib boost_wserialization 
     : $(WSOURCES).cpp boost_serialization 
-    : 
-    <conditional>@should-build-wserialization
+    :     
     <toolset>msvc:<cxxflags>/Gy 
     <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
     <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS

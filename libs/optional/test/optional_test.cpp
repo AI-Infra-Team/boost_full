@@ -24,7 +24,7 @@
 
 #include "boost/optional/optional.hpp"
 
-#ifdef BOOST_BORLANDC
+#ifdef __BORLANDC__
 #pragma hdrstop
 #endif
 

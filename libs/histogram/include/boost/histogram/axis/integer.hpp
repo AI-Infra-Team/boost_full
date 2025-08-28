@@ -153,14 +153,9 @@ public:
 
   /// Whether the axis is inclusive (see axis::traits::is_inclusive).
   static constexpr bool inclusive() noexcept {
-    // If axis has underflow and overflow, it is inclusive.
-    // If axis is growing or circular:
-    // - it is inclusive if value_type is int.
-    // - it is not inclusive if value_type is float, because of nan and inf.
-    constexpr bool full_flow =
-        options() & option::underflow && options() & option::overflow;
-    return full_flow || (std::is_integral<value_type>::value &&
-                         (options() & (option::growth | option::circular)));
+    return (options() & option::underflow || options() & option::overflow) ||
+           (std::is_integral<value_type>::value &&
+            (options() & (option::growth | option::circular)));
   }
 
   template <class V, class M, class O>
@@ -210,12 +205,12 @@ private:
 #if __cpp_deduction_guides >= 201606
 
 template <class T>
-integer(T, T) -> integer<detail::convert_integer<T, index_type>, null_type>;
+integer(T, T)->integer<detail::convert_integer<T, index_type>, null_type>;
 
 template <class T, class M>
 integer(T, T, M)
-    -> integer<detail::convert_integer<T, index_type>,
-               detail::replace_type<std::decay_t<M>, const char*, std::string>>;
+    ->integer<detail::convert_integer<T, index_type>,
+              detail::replace_type<std::decay_t<M>, const char*, std::string>>;
 
 #endif
 

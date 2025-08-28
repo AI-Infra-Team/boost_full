@@ -7,11 +7,12 @@ cmake_minimum_required(VERSION 3.5...3.16)
 project(cmake_install_test LANGUAGES CXX)
 
 find_package(boost_system REQUIRED)
+find_package(boost_core REQUIRED)
 
-add_executable(main main.cpp)
-target_link_libraries(main Boost::system)
+add_executable(quick ../quick.cpp)
+target_link_libraries(quick Boost::system Boost::core)
 
 enable_testing()
-add_test(main main)
+add_test(quick quick)
 
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>)

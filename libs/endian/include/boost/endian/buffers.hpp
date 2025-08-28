@@ -218,9 +218,7 @@ namespace endian
 template< BOOST_SCOPED_ENUM(order) Order, class T, std::size_t n_bits >
 class endian_buffer<Order, T, n_bits, align::no>
 {
-#ifdef BOOST_ENDIAN_NO_CTORS
-public:
-#endif
+private:
 
     BOOST_STATIC_ASSERT( (n_bits/8)*8 == n_bits );
 

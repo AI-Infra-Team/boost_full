@@ -76,7 +76,7 @@ namespace detail
   class laguerre_l_object BOOST_FINAL
   {
   public:
-    laguerre_l_object(const int n, const T a) noexcept
+    laguerre_l_object(const int n, const T a) BOOST_NOEXCEPT
       : order(n),
         alpha(a),
         p1   (0),
@@ -95,7 +95,7 @@ namespace detail
       return *this;
     }
 
-    T operator()(const T& x) const noexcept
+    T operator()(const T& x) const BOOST_NOEXCEPT
     {
       // Calculate (via forward recursion):
       // * the value of the Laguerre function L(n, alpha, x), called (p2),
@@ -138,10 +138,10 @@ namespace detail
       return p2;
     }
 
-    const T previous  () const noexcept { return p1; }
-    const T derivative() const noexcept { return d2; }
+    const T previous  () const BOOST_NOEXCEPT { return p1; }
+    const T derivative() const BOOST_NOEXCEPT { return d2; }
 
-    static bool root_tolerance(const T& a, const T& b) noexcept
+    static bool root_tolerance(const T& a, const T& b) BOOST_NOEXCEPT
     {
       using std::fabs;
 
@@ -177,8 +177,8 @@ namespace detail
       }
     }
 
-    const std::vector<T>& abscissa_n() const noexcept { return xi; }
-    const std::vector<T>& weight_n  () const noexcept { return wi; }
+    const std::vector<T>& abscissa_n() const BOOST_NOEXCEPT { return xi; }
+    const std::vector<T>& weight_n  () const BOOST_NOEXCEPT { return wi; }
 
   private:
     const int order;
@@ -219,7 +219,7 @@ namespace detail
 
         const bool this_laguerre_value_is_negative = (laguerre_root_object(T(0)) < 0);
 
-        constexpr int j_max = 10000;
+        BOOST_CONSTEXPR_OR_CONST int j_max = 10000;
 
         int j = 0;
 
@@ -309,7 +309,7 @@ namespace detail
 
           // Before storing the approximate root, perform a couple of
           // bisection steps in order to tighten up the root bracket.
-          std::uintmax_t a_couple_of_iterations = 4U;
+          boost::uintmax_t a_couple_of_iterations = 4U;
 
           const std::pair<T, T>
             root_estimate_bracket = boost::math::tools::bisect(laguerre_root_object,
@@ -389,12 +389,12 @@ namespace detail
         // The determination of the maximum allowed iterations is
         // based on the number of decimal digits in the numerical
         // type T.
-        constexpr int local_math_tools_digits10 =
+        BOOST_CONSTEXPR_OR_CONST int local_math_tools_digits10 =
           static_cast<int>(static_cast<boost::float_least32_t>(boost::math::tools::digits<T>()) * BOOST_FLOAT32_C(0.301));
 
-        const std::uintmax_t number_of_iterations_allowed = (std::max)(20, local_math_tools_digits10 / 2);
+        const boost::uintmax_t number_of_iterations_allowed = (std::max)(20, local_math_tools_digits10 / 2);
 
-        std::uintmax_t number_of_iterations_used = number_of_iterations_allowed;
+        boost::uintmax_t number_of_iterations_used = number_of_iterations_allowed;
 
         // Perform the root-finding using ACM TOMS 748 from Boost.Math.
         const std::pair<T, T>
@@ -467,14 +467,14 @@ namespace detail
 // A float_type is created to handle the desired number of decimal digits from `cpp_dec_float` without using __expression_templates.
 struct local
 {
-  static constexpr unsigned int my_digits10 = 101U;
+  BOOST_STATIC_CONSTEXPR unsigned int my_digits10 = 101U;
 
   typedef boost::multiprecision::number<boost::multiprecision::cpp_dec_float<my_digits10>,
                                         boost::multiprecision::et_off>
   float_type;
 };
 
-static_assert(local::my_digits10 > 20U,
+BOOST_STATIC_ASSERT_MSG(local::my_digits10 > 20U,
                         "Error: This example is intended to have more than 20 decimal digits");
 
 int main()
@@ -500,11 +500,11 @@ int main()
 
   // This Gauss-Laguerre quadrature is designed for airy_ai(x) with real-valued x >= 1.
 
-  constexpr boost::float_least32_t d = static_cast<boost::float_least32_t>(std::numeric_limits<local::float_type>::digits10);
+  BOOST_CONSTEXPR_OR_CONST boost::float_least32_t d = static_cast<boost::float_least32_t>(std::numeric_limits<local::float_type>::digits10);
 
-  constexpr boost::float_least32_t laguerre_order_factor = -1.28301F + ((0.235487F + (0.0000178915F * d)) * d);
+  BOOST_CONSTEXPR_OR_CONST boost::float_least32_t laguerre_order_factor = -1.28301F + ((0.235487F + (0.0000178915F * d)) * d);
 
-  constexpr int laguerre_order = static_cast<int>(laguerre_order_factor * d);
+  BOOST_CONSTEXPR_OR_CONST int laguerre_order = static_cast<int>(laguerre_order_factor * d);
 
   std::cout << "std::numeric_limits<local::float_type>::digits10: " << std::numeric_limits<local::float_type>::digits10 << std::endl;
   std::cout << "laguerre_order: " << laguerre_order << std::endl;

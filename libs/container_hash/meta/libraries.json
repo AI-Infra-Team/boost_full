@@ -1,6 +1,6 @@
 [
     {
-        "key": "container_hash",
+        "key": "functional/hash",
         "boost-version": "1.33.0",
         "name": "Container Hash",
         "authors": [
@@ -15,7 +15,6 @@
         ],
         "category": [
             "Function-objects"
-        ],
-        "cxxstd": "03"
+        ]
     }
 ]

@@ -3,12 +3,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifdef BOOST_QVM_TEST_SINGLE_HEADER
-#   include BOOST_QVM_TEST_SINGLE_HEADER
-#else
-#   include <boost/qvm/scalar_traits.hpp>
-#endif
-
+#include <boost/qvm/scalar_traits.hpp>
 #include <boost/qvm/vec.hpp>
 #include <boost/qvm/mat.hpp>
 #include <boost/qvm/quat.hpp>
@@ -38,9 +33,3 @@ tester<is_scalar<long double>::value> t13;
 tester<!is_scalar<vec<float,4> >::value> t14;
 tester<!is_scalar<mat<float,4,4> >::value> t15;
 tester<!is_scalar<quat<float> >::value> t16;
-
-int
-main()
-    {
-    return 0;
-    }

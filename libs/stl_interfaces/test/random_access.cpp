@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <array>
-#include <functional>
 #include <numeric>
 #include <tuple>
 #include <type_traits>
@@ -351,8 +350,6 @@ std::array<std::tuple<int_t, int>, 10> udt_tuples = {{
 ////////////////////
 #include "view_tests.hpp"
 
-#if !defined(__cpp_lib_concepts)
-
 template<typename T>
 using data_t = decltype(std::declval<T>().data());
 
@@ -362,7 +359,7 @@ static_assert(
         subrange<
             basic_random_access_iter,
             basic_random_access_iter,
-            boost::stl_interfaces::element_layout::discontiguous>>::value,
+            boost::stl_interfaces::v1::element_layout::discontiguous>>::value,
     "");
 static_assert(
     ill_formed<
@@ -370,7 +367,7 @@ static_assert(
         subrange<
             basic_random_access_iter,
             basic_random_access_iter,
-            boost::stl_interfaces::element_layout::discontiguous> const>::
+            boost::stl_interfaces::v1::element_layout::discontiguous> const>::
         value,
     "");
 
@@ -383,7 +380,7 @@ static_assert(
         subrange<
             int *,
             int const *,
-            boost::stl_interfaces::element_layout::discontiguous>>::value,
+            boost::stl_interfaces::v1::element_layout::discontiguous>>::value,
     "");
 static_assert(
     ill_formed<
@@ -391,11 +388,9 @@ static_assert(
         subrange<
             int *,
             int const *,
-            boost::stl_interfaces::element_layout::discontiguous> const>::
+            boost::stl_interfaces::v1::element_layout::discontiguous> const>::
         value,
     "");
-
-#endif
 
 
 int main()
@@ -883,9 +878,9 @@ int main()
     basic_random_access_iter first(ints.data());
     basic_random_access_iter last(ints.data() + ints.size());
 
-    auto r = range<boost::stl_interfaces::element_layout::contiguous>(
+    auto r = range<boost::stl_interfaces::v1::element_layout::contiguous>(
         first, last);
-    auto empty = range<boost::stl_interfaces::element_layout::contiguous>(
+    auto empty = range<boost::stl_interfaces::v1::element_layout::contiguous>(
         first, first);
 
     // range begin/end
@@ -914,10 +909,6 @@ int main()
         BOOST_TEST(!cempty);
     }
 
-    // TODO: Disabled for now, because std::to_address() appears to be broken
-    // in GCC10, which breaks the contiguous_iterator concept.
-    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96416
-#if !defined(__cpp_lib_concepts)
     // data
     {
         BOOST_TEST(r.data() != nullptr);
@@ -932,7 +923,6 @@ int main()
         auto const cempty = empty;
         BOOST_TEST(cempty.data() != nullptr);
     }
-#endif
 
     // size
     {
@@ -971,10 +961,10 @@ int main()
     zip_iter first(ints.data(), ones.data());
     zip_iter last(ints.data() + ints.size(), ones.data() + ones.size());
 
-    auto r = range<boost::stl_interfaces::element_layout::discontiguous>(
+    auto r = range<boost::stl_interfaces::v1::element_layout::discontiguous>(
         first, last);
     auto empty =
-        range<boost::stl_interfaces::element_layout::discontiguous>(
+        range<boost::stl_interfaces::v1::element_layout::discontiguous>(
             first, first);
 
     // range begin/end

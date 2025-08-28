@@ -17,11 +17,11 @@
 
 #include <boost/config.hpp>
 #include <boost/move/unique_ptr.hpp>
-#include <boost/move/detail/nsec_clock.hpp>
-#include <cstdlib>
+#include <boost/timer/timer.hpp>
 
-using boost::move_detail::cpu_timer;
-using boost::move_detail::nanosecond_type;
+using boost::timer::cpu_timer;
+using boost::timer::cpu_times;
+using boost::timer::nanosecond_type;
 
 #include "order_type.hpp"
 #include "random_shuffle.hpp"
@@ -30,9 +30,7 @@ using boost::move_detail::nanosecond_type;
 //#define BOOST_MOVE_ADAPTIVE_SORT_INVARIANTS
 void print_stats(const char *str, boost::ulong_long_type element_count)
 {
-   std::printf( "%sCmp:%7.03f Cpy:%8.03f\n", str
-              , double(order_perf_type::num_compare)/double(element_count)
-              , double(order_perf_type::num_copy)/double(element_count) );
+   std::printf("%sCmp:%7.03f Cpy:%8.03f\n", str, double(order_perf_type::num_compare)/element_count, double(order_perf_type::num_copy)/element_count );
 }
 
 
@@ -206,7 +204,7 @@ bool measure_algo(T *elements, std::size_t element_count, std::size_t alg, nanos
    nanosecond_type new_clock = timer.elapsed().wall;
 
    //std::cout << "Cmp:" << order_perf_type::num_compare << " Cpy:" << order_perf_type::num_copy;   //for old compilers without ll size argument
-   std::printf("Cmp:%7.03f Cpy:%8.03f", double(order_perf_type::num_compare)/double(element_count), double(order_perf_type::num_copy)/double(element_count) );
+   std::printf("Cmp:%7.03f Cpy:%8.03f", double(order_perf_type::num_compare)/element_count, double(order_perf_type::num_copy)/element_count );
 
    double time = double(new_clock);
 
@@ -306,9 +304,9 @@ bool measure_all(std::size_t L, std::size_t NK)
    //prev_clock = back_clock;
    //elements = original_elements;
    //res = res && measure_algo(elements.data(), L,SlowStableSort, prev_clock);
-
+   //
    if(!res)
-      std::abort();
+      throw int(0);
    return res;
 }
 

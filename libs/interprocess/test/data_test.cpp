@@ -26,7 +26,7 @@ int main ()
    test::get_process_id_name(process_name);
    const char *const shMemName = process_name.c_str();
 
-   BOOST_TRY{
+   try{
    shared_memory_object::remove(shMemName);
 
    //Create shared memory
@@ -47,15 +47,15 @@ int main ()
 
    //----   ALLOC, NAMED_ALLOC, NAMED_NEW TEST   ----//
    {
-      std::size_t i;
+      int i;
       //Let's allocate some memory
       for(i = 0; i < max; ++i){
-         array[std::ptrdiff_t(i)] = segment.allocate(i+1u);
+         array[i] = segment.allocate(i+1);
       }
 
       //Deallocate allocated memory
       for(i = 0; i < max; ++i){
-         segment.deallocate(array[std::ptrdiff_t(i)]);
+         segment.deallocate(array[i]);
       }
 
       bool res;
@@ -85,10 +85,10 @@ int main ()
          return 1;
    }
    }
-   BOOST_CATCH(...){
+   catch(...){
       shared_memory_object::remove(shMemName);
-      BOOST_RETHROW
-   } BOOST_CATCH_END
+      throw;
+   }
    shared_memory_object::remove(shMemName);
    return 0;
 }

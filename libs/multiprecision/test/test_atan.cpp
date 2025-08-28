@@ -74,12 +74,12 @@ T atan2_def(T y, T x)
 }
 
 template <class T>
-struct is_mpfr_type : public std::integral_constant<bool, false>
+struct is_mpfr_type : public boost::mpl::false_
 {};
 
 #ifdef TEST_MPFR_50
 template <unsigned Digits10>
-struct is_mpfr_type<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<Digits10> > > : public std::integral_constant<bool, true>
+struct is_mpfr_type<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<Digits10> > > : public boost::mpl::true_
 {};
 #endif
 

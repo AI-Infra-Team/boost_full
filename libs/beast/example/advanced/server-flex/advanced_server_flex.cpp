@@ -321,7 +321,7 @@ class websocket_session
             return;
 
         if(ec)
-            return fail(ec, "read");
+            fail(ec, "read");
 
         // Echo the message
         derived().ws().text(derived().ws().got_text());

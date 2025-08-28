@@ -3,15 +3,11 @@
 
 // Copyright (c) 2012-2014 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2021.
-// Modifications copyright (c) 2021, Oracle and/or its affiliates.
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
-
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test_buffer.hpp"
+#include <test_buffer.hpp>
 
 #include <boost/geometry/algorithms/buffer.hpp>
 
@@ -427,15 +423,6 @@ void test_aimes()
 
     typedef bg::model::linestring<P> linestring;
     typedef bg::model::polygon<P> polygon;
-    typedef typename bg::coordinate_type<P>::type coor_type;
-
-    if (BOOST_GEOMETRY_CONDITION((std::is_same<coor_type, float>::value)))
-    {
-      std::cout << "This unit test can't be tested with float,"
-                << " the coordinate values are too small." << std::endl;
-      return;
-    }
-
 
     int const n = sizeof(testcases) / sizeof(testcases[0]);
     int const ne = sizeof(expectations) / sizeof(expectations[0]);
@@ -456,13 +443,12 @@ void test_aimes()
     int expectation_index = 0;
     for (int width = 18; width <= 36; width += 18, expectation_index += 2)
     {
-        double const aimes_width = width / 1000000.0;
+        double aimes_width = static_cast<double>(width) / 1000000.0;
         for (int i = 0; i < n; i++)
         {
-#if defined(BOOST_GEOMETRY_USE_RESCALING) || defined(BOOST_GEOMETRY_TEST_FAILURES)
-            // There are 4 false positives
-            bool const possible_invalid = width == 18 && (i == 75 || i == 80 || i == 140);
-            settings.set_test_validity(! possible_invalid);
+#if ! defined(BOOST_GEOMETRY_USE_RESCALING)
+            // Without rescaling, several cases are still reported as invalid
+            settings.set_test_validity(i <= 10);
 #endif
             std::ostringstream name;
             try
@@ -497,9 +483,8 @@ int test_main(int, char* [])
     test_aimes<bg::model::point<default_test_type, 2, bg::cs::cartesian> >();
 
 #if defined(BOOST_GEOMETRY_TEST_FAILURES)
-    // Type float is not supported for these cases.
-    // Type double has (judging the svg) 4 false negatives for validity
-    BoostGeometryWriteExpectedFailures(0, 0, 0, 0);
+    // Non-rescaled reports failures, but in validity only
+    BoostGeometryWriteExpectedFailures(BG_NO_FAILURES, 4);
 #endif
 
     return 0;

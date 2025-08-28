@@ -35,9 +35,9 @@ namespace nowide {
         /// Size of the stack buffer
         static const size_t buffer_size = BufferSize;
         /// Type of the output character (converted to)
-        using output_char = CharOut;
+        typedef CharOut output_char;
         /// Type of the input character (converted from)
-        using input_char = CharIn;
+        typedef CharIn input_char;
 
         /// Creates a NULL stackstring
         basic_stackstring() : data_(NULL)
@@ -192,19 +192,19 @@ namespace nowide {
     ///
     /// Convenience typedef
     ///
-    using wstackstring = basic_stackstring<wchar_t, char, 256>;
+    typedef basic_stackstring<wchar_t, char, 256> wstackstring;
     ///
     /// Convenience typedef
     ///
-    using stackstring = basic_stackstring<char, wchar_t, 256>;
+    typedef basic_stackstring<char, wchar_t, 256> stackstring;
     ///
     /// Convenience typedef
     ///
-    using wshort_stackstring = basic_stackstring<wchar_t, char, 16>;
+    typedef basic_stackstring<wchar_t, char, 16> wshort_stackstring;
     ///
     /// Convenience typedef
     ///
-    using short_stackstring = basic_stackstring<char, wchar_t, 16>;
+    typedef basic_stackstring<char, wchar_t, 16> short_stackstring;
 
 } // namespace nowide
 } // namespace boost

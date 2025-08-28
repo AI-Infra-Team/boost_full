@@ -4,8 +4,8 @@
 //
 // Copyright (c) 2011-2015 Adam Wulkiewicz, Lodz, Poland.
 //
-// This file was modified by Oracle on 2019-2020.
-// Modifications copyright (c) 2019-2020 Oracle and/or its affiliates.
+// This file was modified by Oracle on 2019.
+// Modifications copyright (c) 2019 Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 //
 // Use, modification and distribution is subject to the Boost Software License,
@@ -15,12 +15,7 @@
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_RTREE_NODE_NODE_HPP
 #define BOOST_GEOMETRY_INDEX_DETAIL_RTREE_NODE_NODE_HPP
 
-#include <type_traits>
-
 #include <boost/container/vector.hpp>
-
-#include <boost/geometry/core/static_assert.hpp>
-
 #include <boost/geometry/index/detail/varray.hpp>
 
 #include <boost/geometry/index/detail/rtree/node/concept.hpp>
@@ -85,9 +80,9 @@ inline Box values_box(FwdIter first, FwdIter last, Translator const& tr,
                       Strategy const& strategy)
 {
     typedef typename std::iterator_traits<FwdIter>::value_type element_type;
-    BOOST_GEOMETRY_STATIC_ASSERT((is_leaf_element<element_type>::value),
-        "This function should be called only for elements of leaf nodes.",
-        element_type);
+    BOOST_MPL_ASSERT_MSG((is_leaf_element<element_type>::value),
+                         SHOULD_BE_CALLED_ONLY_FOR_LEAF_ELEMENTS,
+                         (element_type));
 
     Box result = elements_box<Box>(first, last, tr, strategy);
 
@@ -144,10 +139,11 @@ struct destroy_elements
     template <typename It>
     inline static void apply(It first, It last, allocators_type & allocators)
     {
-        typedef std::is_same
-            <
+        typedef boost::mpl::bool_<
+            boost::is_same<
                 value_type, typename std::iterator_traits<It>::value_type
-            > is_range_of_values;
+            >::value
+        > is_range_of_values;
 
         apply_dispatch(first, last, allocators, is_range_of_values());
     }
@@ -155,7 +151,7 @@ struct destroy_elements
 private:
     template <typename It>
     inline static void apply_dispatch(It first, It last, allocators_type & allocators,
-                                      std::false_type /*is_range_of_values*/)
+                                      boost::mpl::bool_<false> const& /*is_range_of_values*/)
     {
         for ( ; first != last ; ++first )
         {
@@ -167,7 +163,7 @@ private:
 
     template <typename It>
     inline static void apply_dispatch(It /*first*/, It /*last*/, allocators_type & /*allocators*/,
-                                      std::true_type /*is_range_of_values*/)
+                                      boost::mpl::bool_<true> const& /*is_range_of_values*/)
     {}
 };
 

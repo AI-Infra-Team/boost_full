@@ -31,17 +31,7 @@ inline void get_shared_dir(std::string &shared_dir)
    shared_dir += "/boostipctest_";
    shared_dir += boost::interprocess::test::get_process_id_name();
    if(!dir_created)
-      ipcdetail::open_or_create_shared_directory(shared_dir.c_str());
-   dir_created = true;
-}
-
-inline void get_shared_dir(std::wstring &shared_dir)
-{
-   shared_dir = boost::interprocess::ipcdetail::get_temporary_wpath();
-   shared_dir += L"/boostipctest_";
-   shared_dir += boost::interprocess::test::get_process_id_wname();
-   if(!dir_created)
-      ipcdetail::open_or_create_shared_directory(shared_dir.c_str());
+      ipcdetail::create_directory(shared_dir.c_str());
    dir_created = true;
 }
 

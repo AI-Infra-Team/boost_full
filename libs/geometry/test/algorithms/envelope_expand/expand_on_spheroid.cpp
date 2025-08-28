@@ -1,7 +1,8 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 // Unit Test
 
-// Copyright (c) 2015-2021, Oracle and/or its affiliates.
+// Copyright (c) 2015-2018, Oracle and/or its affiliates.
+
 // Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
@@ -16,17 +17,14 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <cstddef>
+
 #include <iostream>
 #include <string>
 
 #include <geometry_test_common.hpp>
 #include <from_wkt.hpp>
 
-#include <boost/geometry/algorithms/assign.hpp>
-#include <boost/geometry/algorithms/envelope.hpp>
-#include <boost/geometry/algorithms/expand.hpp>
-#include <boost/geometry/algorithms/make.hpp>
-#include <boost/geometry/algorithms/transform.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include <boost/geometry/core/coordinate_dimension.hpp>
 #include <boost/geometry/core/tag.hpp>
@@ -34,12 +32,18 @@
 
 #include <boost/geometry/geometries/geometries.hpp>
 
-#include <boost/geometry/io/dsv/write.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
+#include <boost/geometry/views/detail/indexed_point_view.hpp>
 
 #include <boost/geometry/util/condition.hpp>
 
-#include <boost/geometry/views/detail/indexed_point_view.hpp>
+#include <boost/geometry/io/dsv/write.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
+
+#include <boost/geometry/algorithms/assign.hpp>
+#include <boost/geometry/algorithms/envelope.hpp>
+#include <boost/geometry/algorithms/expand.hpp>
+#include <boost/geometry/algorithms/make.hpp>
+#include <boost/geometry/algorithms/transform.hpp>
 
 #include "test_envelope_expand_on_spheroid.hpp"
 
@@ -343,7 +347,7 @@ public:
 
         basic_tester
             <
-                std::is_same
+                boost::is_same
                     <
                         typename bg::tag<Geometry>::type,
                         bg::box_tag
@@ -1060,7 +1064,7 @@ void test_expand_make_inverse()
     typedef bg::model::segment<point_type> segment_type;
     typedef test_expand_on_spheroid tester;
 
-    box_type box = bg::make_inverse<box_type>();
+    box_type box = boost::geometry::make_inverse<box_type>();
 
     tester::apply("bi01",
                   box,

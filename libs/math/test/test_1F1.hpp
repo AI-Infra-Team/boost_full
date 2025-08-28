@@ -25,7 +25,7 @@
 #include <boost/math/special_functions/hypergeometric_1F1.hpp>
 #include <boost/math/quadrature/exp_sinh.hpp>
 
-#ifdef _MSC_VER
+#ifdef BOOST_MSVC
 #pragma warning(disable:4127)
 #endif
 

@@ -12,9 +12,7 @@
 #define BOOST_CONTAINER_TEST_DEFAULT_INIT_TEST_HEADER
 
 #include <boost/container/detail/config_begin.hpp>
-#include <boost/container/throw_exception.hpp>
 #include <cstddef>
-
 
 namespace boost{
 namespace container {
@@ -59,10 +57,6 @@ class default_init_allocator
 
    Integral* allocate(std::size_t n)
    {
-      const std::size_t max_count = std::size_t(-1)/(2*sizeof(Integral));
-      if(BOOST_UNLIKELY(n > max_count))
-         throw_bad_alloc();
-
       //Initialize memory to a pattern
       const std::size_t max = sizeof(Integral)*n;
       unsigned char *puc_raw = ::new unsigned char[max];

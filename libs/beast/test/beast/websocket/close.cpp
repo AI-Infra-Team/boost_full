@@ -645,7 +645,7 @@ public:
                         BOOST_THROW_EXCEPTION(
                             system_error{ec});
                     BEAST_EXPECT(n == s.size());
-                    ++count;
+                    BEAST_EXPECT(++count == 1);
                 });
             ws.async_ping({},
                 [&](error_code ec)

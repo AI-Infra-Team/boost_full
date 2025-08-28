@@ -1,5 +1,5 @@
 /* Unit testing for outcomes
-(C) 2013-2021 Niall Douglas <http://www.nedproductions.biz/> (1 commit)
+(C) 2013-2020 Niall Douglas <http://www.nedproductions.biz/> (1 commit)
 
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -34,8 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 namespace outcome = BOOST_OUTCOME_V2_NAMESPACE;
 
-namespace stdalias = std;
-
 enum class error
 {
   test,
@@ -65,7 +63,7 @@ const std::error_category &error_category() noexcept
   return instance;
 }
 
-stdalias::error_code make_error_code(error error) noexcept
+boost::system::error_code make_error_code(error error) noexcept
 {
   return {static_cast<int>(error), error_category()};
 }
@@ -87,10 +85,10 @@ enum_result<int> test()
 outcome::std_result<int> abc()
 {
   static_assert(std::is_error_code_enum<error>::value, "custom enum is not marked convertible to error code");
-  static_assert(std::is_constructible<stdalias::error_code, error>::value, "error code is not explicitly constructible from custom enum");
-  static_assert(std::is_convertible<error, stdalias::error_code>::value, "error code is not implicitly constructible from custom enum");
-  stdalias::error_code ec = error::test;  // custom enum is definitely convertible to error code
-  BOOST_OUTCOME_TRY(test());                    // hence this should compile, as implicit conversions work here
+  static_assert(std::is_constructible<boost::system::error_code, error>::value, "error code is not explicitly constructible from custom enum");
+  static_assert(std::is_convertible<error, boost::system::error_code>::value, "error code is not implicitly constructible from custom enum");
+  boost::system::error_code ec = error::test;  // custom enum is definitely convertible to error code
+  BOOST_OUTCOME_TRY(test());               // hence this should compile, as implicit conversions work here
   (void) ec;
 
   // But explicit conversions are required between dissimilar basic_result, implicit conversions are disabled

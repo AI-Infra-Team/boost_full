@@ -3,8 +3,8 @@
 
 // Copyright (c) 2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2017-2021.
-// Modifications copyright (c) 2017-2021, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2017.
+// Modifications copyright (c) 2017, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -18,6 +18,8 @@
 #include <sstream>
 #include <string>
 
+#include <boost/type_traits/is_same.hpp>
+
 #if defined(TEST_WITH_SVG)
 #  include <boost/geometry/io/svg/svg_mapper.hpp>
 #endif
@@ -25,9 +27,8 @@
 #include <geometry_test_common.hpp>
 #include <algorithms/check_validity.hpp>
 
-#include <boost/geometry/algorithms/correct.hpp>
+#include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/detail/overlay/debug_turn_info.hpp>
-#include <boost/geometry/algorithms/detail/overlay/overlay.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
 //#include <boost/geometry/extensions/algorithms/inverse.hpp>
@@ -35,8 +36,6 @@
 #if defined(TEST_WITH_SVG)
 #  include <boost/geometry/io/svg/svg_mapper.hpp>
 #endif
-
-#include <boost/geometry/io/wkt/read.hpp>
 
 #include "multi_overlay_cases.hpp"
 
@@ -73,7 +72,7 @@ struct map_visitor
     {
         typedef typename boost::range_value<Turns>::type turn_type;
         int index = 0;
-        for (turn_type const& turn : turns)
+        BOOST_FOREACH(turn_type const& turn, turns)
         {
             switch (phase)
             {
@@ -130,7 +129,7 @@ struct map_visitor
     {
         typedef typename boost::range_value<Turns>::type turn_type;
         int index = 0;
-        for (turn_type const& turn : turns)
+        BOOST_FOREACH(turn_type const& turn, turns)
         {
             if (turn.cluster_id >= 0)
             {
@@ -408,9 +407,9 @@ void test_overlay(std::string const& caseid,
             OverlayType
         > overlay;
 
-    typedef typename bg::strategies::relate::services::default_strategy
+    typedef typename bg::strategy::intersection::services::default_strategy
         <
-            Geometry, Geometry
+            typename bg::cs_tag<Geometry>::type
         >::type strategy_type;
 
     strategy_type strategy;

@@ -41,11 +41,6 @@ typedef unsigned int BOOST_MAY_ALIAS aliasing_uint;
 
 struct BOOST_ATTRIBUTE_NODISCARD nodiscard_struct {};
 
-BOOST_ATTRIBUTE_NODISCARD int nodiscard_proc(int i)
-{
-   return i * i;
-}
-
 
 #define test_fallthrough(x) foobar(x)
 

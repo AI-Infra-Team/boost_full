@@ -15,7 +15,6 @@
 #include <boost/move/core.hpp>
 #include <boost/move/detail/unique_ptr_meta_utils.hpp>
 #include <boost/static_assert.hpp>
-#include <cstddef>
 
 //////////////////////////////////////////////
 //
@@ -189,7 +188,7 @@ BOOST_STATIC_ASSERT((::boost::move_upmu::is_convertible<B, A>::value));
 struct I;
 void check(int i);
 I* get();
-I* get_array(std::size_t i);
+I* get_array(int i);
 
 #include <boost/move/unique_ptr.hpp>
 

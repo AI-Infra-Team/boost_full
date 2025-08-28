@@ -163,10 +163,8 @@ test_suite* init_unit_test_suite(int, char* [])
 #ifndef __CYGWIN__
     test->add(BOOST_TEST_CASE(&wrap_throw_delayed<&test_write>::execute));
 #endif
-
-// MSSTL and libc++ don't handle exceptions from seek correctly
-#if !defined(_CPPLIB_VER) && !defined(_LIBCPP_VERSION)
-
+    
+#ifndef BOOST_MSVC
     test->add(BOOST_TEST_CASE(&wrap_nothrow      <&test_seekg>::execute));
     test->add(BOOST_TEST_CASE(&wrap_throw        <&test_seekg>::execute));
 #ifndef __CYGWIN__
@@ -178,8 +176,7 @@ test_suite* init_unit_test_suite(int, char* [])
 #ifndef __CYGWIN__
     test->add(BOOST_TEST_CASE(&wrap_throw_delayed<&test_seekp>::execute));
 #endif
-
-#endif // !defined(_CPPLIB_VER) && !defined(_LIBCPP_VERSION)
+#endif // BOOST_MSVC
 
     return test;
 }

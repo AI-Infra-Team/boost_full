@@ -7,9 +7,10 @@
 // See http://www.boost.org/libs/interprocess for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/interprocess/detail/workaround.hpp>
-
 #if defined(BOOST_INTERPROCESS_MAPPED_FILES)
+
+#include <boost/interprocess/detail/config_begin.hpp>
+#include <boost/interprocess/detail/workaround.hpp>
 
 #include <boost/interprocess/containers/list.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
@@ -43,7 +44,7 @@ int main ()
    const std::size_t FileSize = 1000;
    file_mapping::remove(FileName);
 
-   BOOST_TRY{
+   try{
       MyList::size_type old_size = 0;
       managed_mapped_file::handle_t list_handle;
       {
@@ -55,14 +56,14 @@ int main ()
          list_handle = mfile_memory.get_handle_from_address(mylist);
 
          //Fill list until there is no more room in the file
-         BOOST_TRY{
+         try{
             while(1) {
                mylist->insert(mylist->begin(), 0);
             }
          }
-         BOOST_CATCH(const bad_alloc &){
+         catch(const bad_alloc &){
             //mapped file is full
-         } BOOST_CATCH_END
+         }
          //Let's obtain the size of the list
          old_size = mylist->size();
       }
@@ -80,14 +81,14 @@ int main ()
                            (mfile_memory.get_address_from_handle(list_handle));
 
          //Fill list until there is no more room in the file
-         BOOST_TRY{
+         try{
             while(1) {
                mylist->insert(mylist->begin(), 0);
             }
          }
-         BOOST_CATCH(const bad_alloc &){
+         catch(const bad_alloc &){
             //mapped file is full
-         } BOOST_CATCH_END
+         }
 
          //Let's obtain the new size of the list
          MyList::size_type new_size = mylist->size();
@@ -98,13 +99,15 @@ int main ()
          mfile_memory.destroy_ptr(mylist);
       }
    }
-   BOOST_CATCH(...){
+   catch(...){
       file_mapping::remove(FileName);
-      BOOST_RETHROW
-   } BOOST_CATCH_END
+      throw;
+   }
    file_mapping::remove(FileName);
    return 0;
 }
+
+#include <boost/interprocess/detail/config_end.hpp>
 
 #else //#if defined(BOOST_INTERPROCESS_MAPPED_FILES)
 int main()

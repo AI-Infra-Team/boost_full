@@ -2,22 +2,15 @@
 
 # Copyright 2012 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 import os
-import sys
 
 t = BoostBuild.Tester(pass_toolset=0)
 
 t.write("link-target", "")
-try:
-    os.symlink("link-target", "link")
-except (AttributeError, OSError) as e:
-    # Either OS does not support symlinks or not enough privilege
-    print("XFAIL: %s" % e)
-    t.cleanup()
-    sys.exit()
+os.symlink("link-target", "link")
 
 t.write("file.jam", """
 ECHO [ READLINK link ] ;

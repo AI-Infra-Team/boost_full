@@ -1,5 +1,5 @@
 // Boost.Convert test and usage example
-// Copyright (c) 2009-2020 Vladimir Batov.
+// Copyright (c) 2009-2016 Vladimir Batov.
 // Use, modification and distribution are subject to the Boost Software License,
 // Version 1.0. See http://www.boost.org/LICENSE_1_0.txt.
 
@@ -11,7 +11,9 @@ int main(int, char const* []) { return 0; }
 
 #include <boost/convert.hpp>
 #include <boost/convert/stream.hpp>
-#include <functional>
+#include <boost/detail/lightweight_test.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 namespace { namespace local
 {
@@ -32,12 +34,12 @@ long function_long () { local::called_function_long = true; return INT_MAX; }
 int
 main(int, char const* [])
 {
-    auto cnv = boost::cnv::cstream();
-    auto foo = functor_foo();
+    boost::cnv::cstream cnv;
+    functor_foo         foo;
 
     int i01 = boost::convert<int>("uhm", cnv).value_or_eval(functor_int());
     int i02 = boost::convert<int>("uhm", cnv).value_or_eval(functor_double());
-    int i03 = boost::convert<int>("uhm", cnv).value_or_eval(std::bind(&functor_foo::func, foo, 0));
+    int i03 = boost::convert<int>("uhm", cnv).value_or_eval(boost::bind(&functor_foo::func, foo, 0));
     int i04 = boost::convert<int>("uhm", cnv).value_or_eval(function_int);
     int i05 = boost::convert<int>("uhm", cnv).value_or_eval(function_long);
 
@@ -55,7 +57,7 @@ main(int, char const* [])
 
     boost::convert<int>("uhm", cnv, functor_int());
     boost::convert<int>("uhm", cnv, functor_double());
-    boost::convert<int>("uhm", cnv, std::bind(&functor_foo::func, foo, 0));
+    boost::convert<int>("uhm", cnv, boost::bind(&functor_foo::func, foo, 0));
     boost::convert<int>("uhm", cnv, function_int);
     boost::convert<int>("uhm", cnv, function_long);
 

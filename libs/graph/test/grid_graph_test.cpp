@@ -10,7 +10,6 @@
 #include <fstream>
 #include <iostream>
 #include <set>
-#include <ctime>
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -225,7 +224,7 @@ template < unsigned int Dims > void do_test(minstd_rand& generator)
 int main(int argc, char* argv[])
 {
 
-    std::size_t random_seed = std::time(0);
+    std::size_t random_seed = time(0);
 
     if (argc > 1)
     {

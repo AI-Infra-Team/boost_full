@@ -13,8 +13,7 @@
 // -----------------------------------------------------------------------
 
 
-#include <boost/core/lightweight_test.hpp>
-#define BOOST_CHECK BOOST_TEST
+#include <boost/test/minimal.hpp>    // see "Header Implementation Option"
 
 #include "boost/lambda/lambda.hpp"
 #include "boost/lambda/bind.hpp"
@@ -414,7 +413,7 @@ void test_abstract()
   BOOST_CHECK(bind(&base::foo, *_1)(&b) == 1);
 }
 
-int main() {
+int test_main(int, char *[]) {
 
   test_nested_binds();
   test_unlambda();
@@ -425,5 +424,5 @@ int main() {
   test_break_const(); 
   test_sig();
   test_abstract();
-  return boost::report_errors();
+  return 0;
 }

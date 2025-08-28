@@ -10,6 +10,11 @@
 #pragma once
 #endif
 
+#include <boost/spirit/include/version.hpp>
+
+// we support Phoenix attributes only starting with V2.2
+#if SPIRIT_VERSION >= 0x2020
+
 #include <boost/spirit/home/karma/detail/attributes.hpp>
 #include <boost/spirit/home/karma/detail/indirect_iterator.hpp>
 #include <boost/spirit/home/support/container.hpp>
@@ -121,4 +126,5 @@ namespace boost { namespace spirit { namespace traits
     };
 }}}
 
+#endif
 #endif

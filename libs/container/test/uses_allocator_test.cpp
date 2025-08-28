@@ -21,7 +21,7 @@ struct uses_allocator_and_not_convertible_to_int
 
 struct uses_allocator_and_convertible_to_int
 {
-   typedef long allocator_type;
+   typedef char allocator_type;
 };
 
 struct uses_erased_type_allocator

@@ -6,7 +6,5 @@
 // Basic sanity check that header <boost/math/tools/remez.hpp>
 // #includes all the files that it needs to.
 //
-
-#ifndef BOOST_MATH_STANDALONE
 #include <boost/math/tools/remez.hpp>
-#endif
+

@@ -1,6 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2015-2020, Oracle and/or its affiliates.
+// Copyright (c) 2015, 2019, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
@@ -11,9 +11,7 @@
 #ifndef BOOST_GEOMETRY_TEST_CHECK_TURN_LESS_HPP
 #define BOOST_GEOMETRY_TEST_CHECK_TURN_LESS_HPP
 
-#include <boost/range/begin.hpp>
-#include <boost/range/end.hpp>
-#include <boost/range/size.hpp>
+#include <boost/range.hpp>
 
 #include "test_set_ops_linear_linear.hpp"
 
@@ -57,7 +55,6 @@ struct check_turn_less
         static bool const include_no_turn = false;
         static bool const include_degenerate = EnableDegenerateTurns;
         static bool const include_opposite = false;
-        static bool const include_start_turn = false;
 
         template
         <
@@ -76,9 +73,9 @@ struct check_turn_less
     static inline void apply(Geometry1 const& geometry1,
                              Geometry2 const& geometry2)
     {
-        typedef typename bg::strategies::relate::services::default_strategy
+        typedef typename bg::strategy::intersection::services::default_strategy
             <
-                Geometry1, Geometry2
+                typename bg::cs_tag<Geometry1>::type
             >::type strategy_type;
 
         typedef bg::detail::no_rescale_policy robust_policy_type;

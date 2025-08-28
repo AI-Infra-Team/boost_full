@@ -7,14 +7,16 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //=======================================================================
 
-#include <boost/core/lightweight_test.hpp>
+#define BOOST_TEST_MODULE successive_shortest_path_nonnegative_weights_test
+
+#include <boost/test/unit_test.hpp>
 
 #include <boost/graph/successive_shortest_path_nonnegative_weights.hpp>
 #include <boost/graph/find_flow_cost.hpp>
 
 #include "min_cost_max_flow_utils.hpp"
 
-void path_augmentation_def_test()
+BOOST_AUTO_TEST_CASE(path_augmentation_def_test)
 {
     boost::SampleGraph::vertex_descriptor s, t;
     boost::SampleGraph::Graph g;
@@ -23,10 +25,10 @@ void path_augmentation_def_test()
     boost::successive_shortest_path_nonnegative_weights(g, s, t);
 
     int cost = boost::find_flow_cost(g);
-    BOOST_TEST_EQ(cost, 29);
+    BOOST_CHECK_EQUAL(cost, 29);
 }
 
-void path_augmentation_def_test2()
+BOOST_AUTO_TEST_CASE(path_augmentation_def_test2)
 {
     boost::SampleGraph::vertex_descriptor s, t;
     boost::SampleGraph::Graph g;
@@ -35,10 +37,10 @@ void path_augmentation_def_test2()
     boost::successive_shortest_path_nonnegative_weights(g, s, t);
 
     int cost = boost::find_flow_cost(g);
-    BOOST_TEST_EQ(cost, 7);
+    BOOST_CHECK_EQUAL(cost, 7);
 }
 
-void path_augmentation_test()
+BOOST_AUTO_TEST_CASE(path_augmentation_test)
 {
     boost::SampleGraph::vertex_descriptor s, t;
     typedef boost::SampleGraph::Graph Graph;
@@ -64,13 +66,5 @@ void path_augmentation_test()
             .vertex_index_map(idx));
 
     int cost = boost::find_flow_cost(g);
-    BOOST_TEST_EQ(cost, 29);
-}
-
-int main()
-{
-    path_augmentation_def_test();
-    path_augmentation_def_test2();
-    path_augmentation_test();
-    return boost::report_errors();
+    BOOST_CHECK_EQUAL(cost, 29);
 }

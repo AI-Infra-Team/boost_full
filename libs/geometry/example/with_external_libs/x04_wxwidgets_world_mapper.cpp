@@ -1,61 +1,114 @@
-// Boost.Geometry
+// Boost.Geometry (aka GGL, Generic Geometry Library)
 //
-// Copyright (c) 2010-2021 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2010-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 // wxWidgets World Mapper example
-//
-// It will show a basic wxWidgets window, displaying world countries,
-// highlighting the country under the mouse, and indicating position
-// of the mouse in latitude/longitude and in pixels.
 
-// To compile this program:
-// Install wxWidgets (if not done before)
-//   export BOOST_ROOT=.....
-//   export WX_ROOT=.... (for example /home/myname/mylib/wxWidgets/Linux/x86_64)
-//   mkdir build
-//   cd build
-//   cmake .. -G Ninja
-//   ninja
-// If necessary, CMakeLists.txt should be adapted, the options for wx
-// are provided by "wx-config --cxxflags" and "... --libs"
-// and might need a change in CMakeLists.txt
 
-//#define EXAMPLE_WX_USE_GRAPHICS_CONTEXT 1
+// #define EXAMPLE_WX_USE_GRAPHICS_CONTEXT 1
 
 #include <fstream>
 #include <sstream>
 
+#include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/scoped_array.hpp>
+
 #include <boost/geometry/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/multi_geometries.hpp>
 
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
+#include <boost/geometry/extensions/algorithms/selected.hpp>
+
+
+// wxWidgets, if these headers are NOT found, adapt include path (and lib path)
 
 #include "wx/wx.h"
 #include "wx/math.h"
 #include "wx/stockitem.h"
+
 
 #ifdef EXAMPLE_WX_USE_GRAPHICS_CONTEXT
 #include "wx/graphics.h"
 #include "wx/dcgraph.h"
 #endif
 
-
-using point_2d = boost::geometry::model::d2::point_xy<double>;
-using country_type = boost::geometry::model::multi_polygon
+typedef boost::geometry::model::d2::point_xy<double> point_2d;
+typedef boost::geometry::model::multi_polygon
     <
         boost::geometry::model::polygon<point_2d>
-    >;
+    > country_type;
 
 // Adapt wxWidgets points to Boost.Geometry points such that they can be used
 // in e.g. transformations (see below)
 BOOST_GEOMETRY_REGISTER_POINT_2D(wxPoint, int, cs::cartesian, x, y)
 BOOST_GEOMETRY_REGISTER_POINT_2D(wxRealPoint, double, cs::cartesian, x, y)
+
+
+// wxWidgets draws using wxPoint*, so we HAVE to use that.
+// Therefore have to make a wxPoint* array
+// 1) compatible with Boost.Geometry
+// 2) compatible with Boost.Range (required by Boost.Geometry)
+// 3) compatible with std::back_inserter (required by Boost.Geometry)
+
+// For compatible 2):
+typedef std::pair<wxPoint*,wxPoint*> wxPointPointerPair;
+
+// For compatible 1):
+BOOST_GEOMETRY_REGISTER_RING(wxPointPointerPair);
+
+
+// For compatible 3):
+// Specialize back_insert_iterator for the wxPointPointerPair
+// (has to be done within "namespace std")
+namespace std
+{
+
+template <>
+class back_insert_iterator<wxPointPointerPair>
+{
+public:
+    typedef std::output_iterator_tag iterator_category;
+    typedef void value_type;
+    typedef void difference_type;
+    typedef void pointer;
+    typedef void reference;
+
+    typedef wxPointPointerPair container_type;
+
+    explicit back_insert_iterator(wxPointPointerPair& x)
+        : current(boost::begin(x))
+        , end(boost::end(x))
+    {}
+
+    inline back_insert_iterator<wxPointPointerPair>&
+                operator=(wxPoint const& value)
+    {
+        // Check if not passed beyond
+        if (current != end)
+        {
+            *current++ = value;
+        }
+        return *this;
+    }
+
+    // Boiler-plate
+    inline back_insert_iterator<wxPointPointerPair>& operator*()     { return *this; }
+    inline back_insert_iterator<wxPointPointerPair>& operator++()    { return *this; }
+    inline back_insert_iterator<wxPointPointerPair>& operator++(int) { return *this; }
+
+private:
+    boost::range_iterator<wxPointPointerPair>::type current, end;
+};
+
+} // namespace std
+
 
 // ----------------------------------------------------------------------------
 // Read an ASCII file containing WKT's
@@ -108,29 +161,26 @@ private:
     void OnPaint(wxPaintEvent& );
     void OnMouseMove(wxMouseEvent&);
 
-    using map_transformer_type = boost::geometry::strategy::transform::map_transformer
+    typedef boost::geometry::strategy::transform::map_transformer
         <
             double, 2, 2,
             true, true
-        >;
+        > map_transformer_type;
 
-    using inverse_transformer_type = boost::geometry::strategy::transform::inverse_transformer
+    typedef boost::geometry::strategy::transform::inverse_transformer
         <
             double, 2, 2
-        >;
+        > inverse_transformer_type;
 
-    std::shared_ptr<map_transformer_type> m_map_transformer;
-    std::shared_ptr<inverse_transformer_type> m_inverse_transformer;
+    boost::shared_ptr<map_transformer_type> m_map_transformer;
+    boost::shared_ptr<inverse_transformer_type> m_inverse_transformer;
 
     boost::geometry::model::box<point_2d> m_box;
     std::vector<country_type> m_countries;
-    int m_focus = -1;
+    int m_focus;
 
-    wxBrush m_orange = wxBrush(wxColour(255, 128, 0), wxBRUSHSTYLE_SOLID);
-    wxBrush m_blue = wxBrush(wxColour(0, 128, 255), wxBRUSHSTYLE_SOLID);
-    wxBrush m_green = wxBrush(wxColour(0, 255, 0), wxBRUSHSTYLE_SOLID);
-
-    wxFrame* m_owner = nullptr;
+    wxBrush m_orange;
+    wxFrame* m_owner;
 
 DECLARE_EVENT_TABLE()
 };
@@ -194,14 +244,19 @@ void HelloWorldFrame::OnCloseWindow(wxCloseEvent& )
 HelloWorldCanvas::HelloWorldCanvas(wxFrame *frame)
     : wxWindow(frame, wxID_ANY)
     , m_owner(frame)
+    , m_focus(-1)
 {
     boost::geometry::assign_inverse(m_box);
     read_wkt("../data/world.wkt", m_countries, m_box);
+    m_orange = wxBrush(wxColour(255, 128, 0), wxSOLID);
 }
+
 
 
 void HelloWorldCanvas::OnMouseMove(wxMouseEvent &event)
 {
+    namespace bg = boost::geometry;
+
     if (m_inverse_transformer)
     {
         // Boiler-plate wxWidgets code
@@ -209,21 +264,19 @@ void HelloWorldCanvas::OnMouseMove(wxMouseEvent &event)
         PrepareDC(dc);
         m_owner->PrepareDC(dc);
 
-        // Transform the point opn the screen back to Lon/Lat
+        // Transform the point to Lon/Lat
         point_2d point;
-        boost::geometry::transform(event.GetPosition(), point,
-                                   *m_inverse_transformer);
+        bg::transform(event.GetPosition(), point, *m_inverse_transformer);
 
         // Determine selected object
         int i = 0;
         int previous_focus = m_focus;
         m_focus = -1;
-        for (country_type const& country : m_countries)
+        BOOST_FOREACH(country_type const& country, m_countries)
         {
-            if (boost::geometry::within(point, country))
+            if (bg::selected(country, point, 0))
             {
                 m_focus = i;
-                break;
             }
             i++;
         }
@@ -234,7 +287,7 @@ void HelloWorldCanvas::OnMouseMove(wxMouseEvent &event)
             // Undraw old focus
             if (previous_focus >= 0)
             {
-                dc.SetBrush(m_green);
+                dc.SetBrush(*wxWHITE_BRUSH);
                 DrawCountry(dc, m_countries[previous_focus]);
             }
             // Draw new focus
@@ -256,11 +309,6 @@ void HelloWorldCanvas::OnMouseMove(wxMouseEvent &event)
 
 void HelloWorldCanvas::OnPaint(wxPaintEvent& )
 {
-    if (m_countries.empty())
-    {
-        return;
-    }
-
 #if defined(EXAMPLE_WX_USE_GRAPHICS_CONTEXT)
     wxPaintDC pdc(this);
     wxGCDC gdc(pdc);
@@ -292,12 +340,11 @@ void HelloWorldCanvas::DrawCountries(wxDC& dc)
 {
     namespace bg = boost::geometry;
 
-    dc.SetBackground(m_blue);
+    dc.SetBackground(*wxLIGHT_GREY_BRUSH);
     dc.Clear();
 
-    for (country_type const& country :  m_countries)
+    BOOST_FOREACH(country_type const& country, m_countries)
     {
-        dc.SetBrush(m_green);
         DrawCountry(dc, country);
     }
     if (m_focus != -1)
@@ -310,22 +357,26 @@ void HelloWorldCanvas::DrawCountries(wxDC& dc)
 
 void HelloWorldCanvas::DrawCountry(wxDC& dc, country_type const& country)
 {
-    for (auto const& poly : country)
-    {
-        // Use only exterior ring, holes are (for the moment) ignored.
-        // This would need a holey-polygon compatible wx object
+    namespace bg = boost::geometry;
 
-        // Define a Boost.Geometry ring of wxPoints
-        // Behind the scenes that is a vector, and a vector has .data(),
-        // can be used for the *wxPoint pointer needed for wxWidget DrawPolygon
-        boost::geometry::model::ring<wxPoint> ring;
-        boost::geometry::transform(boost::geometry::exterior_ring(poly), ring,
-                                   *m_map_transformer);
-        dc.DrawPolygon(ring.size(), ring.data());
+    BOOST_FOREACH(bg::model::polygon<point_2d> const& poly, country)
+    {
+        // Use only exterior ring, holes are (for the moment) ignored. This would need
+        // a holey-polygon compatible wx object
+
+        std::size_t n = boost::size(bg::exterior_ring(poly));
+
+        boost::scoped_array<wxPoint> points(new wxPoint[n]);
+
+        wxPointPointerPair pair = std::make_pair(points.get(), points.get() + n);
+        bg::transform(bg::exterior_ring(poly), pair, *m_map_transformer);
+
+        dc.DrawPolygon(n, points.get());
     }
 }
 
 // ----------------------------------------------------------------------------
+
 
 BEGIN_EVENT_TABLE(HelloWorldFrame, wxFrame)
     EVT_CLOSE(HelloWorldFrame::OnCloseWindow)

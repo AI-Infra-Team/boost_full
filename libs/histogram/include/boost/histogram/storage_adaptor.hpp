@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <boost/core/nvp.hpp>
-#include <boost/histogram/accumulators/is_thread_safe.hpp>
 #include <boost/histogram/detail/array_wrapper.hpp>
 #include <boost/histogram/detail/detect.hpp>
 #include <boost/histogram/detail/iterator_adaptor.hpp>

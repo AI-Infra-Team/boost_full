@@ -17,13 +17,10 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       TOOLSET: msvc-9.0
-      TARGET: 32
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       TOOLSET: msvc-10.0
-      TARGET: 32
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       TOOLSET: msvc-11.0
-      TARGET: 32
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       TOOLSET: msvc-12.0
       TARGET: 32,64
@@ -32,10 +29,6 @@ environment:
       TARGET: 32,64
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       TOOLSET: msvc-14.1
-      TARGET: 32,64
-      STANDARD: 14,17
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      TOOLSET: msvc-14.2
       TARGET: 32,64
       STANDARD: 14,17
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
@@ -63,4 +56,5 @@ build: off
 
 test_script:
   - if not "%STANDARD%" == "" set STANDARD=cxxstd=%STANDARD%
-  - b2 libs/align/test toolset=%TOOLSET% address-model=%TARGET% %STANDARD%
+  - if not "%TARGET%" == "" set TARGET=address-model=%TARGET%
+  - b2 libs/align/test toolset=%TOOLSET% %STANDARD% %TARGET%

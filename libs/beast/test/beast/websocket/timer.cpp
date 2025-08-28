@@ -108,17 +108,16 @@ struct timer_test : unit_test::suite
             ioc.restart();
 
             flat_buffer b;
-            error_code ec2;
+            error_code ec1, ec2;
             ws1.async_close({},
                 [&ec2](error_code ec)
                 {
                     ec2 = ec;
                 });
             ioc.run();
-            BEAST_EXPECTS(
-                ec2 == beast::error::timeout ||
-                    ec2 == net::error::operation_aborted,
-                ec2.message());
+            BEAST_EXPECT(
+                ec1 == beast::error::timeout ||
+                ec2 == beast::error::timeout);
         }
         {
             net::io_context ioc;
@@ -187,8 +186,8 @@ struct timer_test : unit_test::suite
     void
     run() override
     {
-        testIssue1729();
         testIdlePing();
+        testIssue1729();
         testCloseWhileRead();
     }
 };

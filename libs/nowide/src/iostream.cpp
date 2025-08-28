@@ -1,10 +1,10 @@
-//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
-//  Copyright (c) 2020-2021 Alexander Grund
 //
-//  Distributed under the Boost Software License, Version 1.0.
-//  (See accompanying file LICENSE or copy at
+//  Copyright (c) 2012 Artyom Beilis (Tonkikh)
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
-
+//
 #define BOOST_NOWIDE_SOURCE
 #include <boost/nowide/iostream.hpp>
 
@@ -12,24 +12,25 @@
 
 namespace boost {
 namespace nowide {
-    // LCOV_EXCL_START
     /// Avoid empty compilation unit warnings
     /// \internal
     BOOST_NOWIDE_DECL void dummy_exported_function()
     {}
-    // LCOV_EXCL_STOP
 } // namespace nowide
 } // namespace boost
 
 #else
 
-#include "console_buffer.hpp"
+#include <boost/nowide/convert.hpp>
 #include <cassert>
+#include <cstring>
 #include <iostream>
+#include <vector>
 
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+
 #include <windows.h>
 
 namespace boost {
@@ -39,51 +40,200 @@ namespace nowide {
         namespace {
             bool is_atty_handle(HANDLE h)
             {
-                DWORD dummy;
-                return h && GetConsoleMode(h, &dummy) != FALSE;
+                if(h)
+                {
+                    DWORD dummy;
+                    return GetConsoleMode(h, &dummy) != FALSE;
+                }
+                return false;
             }
         } // namespace
 
-        class console_output_buffer final : public console_output_buffer_base
+        class console_output_buffer : public std::streambuf
         {
-            HANDLE handle_;
-
         public:
-            explicit console_output_buffer(HANDLE handle) : handle_(handle)
+            console_output_buffer(HANDLE h) : handle_(h)
             {}
 
         protected:
-            bool
-            do_write(const wchar_t* buffer, std::size_t num_chars_to_write, std::size_t& num_chars_written) override
+            int sync()
             {
-                DWORD size = 0;
-                const bool result =
-                  WriteConsoleW(handle_, buffer, static_cast<DWORD>(num_chars_to_write), &size, 0) != 0;
-                num_chars_written = size;
-                return result;
+                return overflow(traits_type::eof());
             }
+            int overflow(int c)
+            {
+                if(!handle_)
+                    return -1;
+                int n = static_cast<int>(pptr() - pbase());
+                int r = 0;
+
+                if(n > 0 && (r = write(pbase(), n)) < 0)
+                    return -1;
+                if(r < n)
+                {
+                    std::memmove(pbase(), pbase() + r, n - r);
+                }
+                setp(buffer_, buffer_ + buffer_size);
+                pbump(n - r);
+                if(c != traits_type::eof())
+                    sputc(traits_type::to_char_type(c));
+                return 0;
+            }
+
+        private:
+            typedef utf::utf_traits<char> decoder;
+            typedef utf::utf_traits<wchar_t> encoder;
+
+            int write(const char* p, int n)
+            {
+                namespace uf = utf;
+                const char* b = p;
+                const char* e = p + n;
+                DWORD size = 0;
+                if(n > buffer_size)
+                    return -1;
+                wchar_t* out = wbuffer_;
+                uf::code_point c;
+                size_t decoded = 0;
+                while((c = decoder::decode(p, e)) != uf::incomplete)
+                {
+                    if(c == uf::illegal)
+                        c = BOOST_NOWIDE_REPLACEMENT_CHARACTER;
+                    assert(out - wbuffer_ + encoder::width(c) <= static_cast<int>(wbuffer_size));
+                    out = encoder::encode(c, out);
+                    decoded = p - b;
+                }
+                if(!WriteConsoleW(handle_, wbuffer_, static_cast<DWORD>(out - wbuffer_), &size, 0))
+                    return -1;
+                return static_cast<int>(decoded);
+            }
+
+            static const int buffer_size = 1024;
+            static const int wbuffer_size = buffer_size * encoder::max_width;
+            char buffer_[buffer_size];
+            wchar_t wbuffer_[wbuffer_size];
+            HANDLE handle_;
         };
 
-        class console_input_buffer final : public console_input_buffer_base
+        class console_input_buffer : public std::streambuf
         {
-            HANDLE handle_;
-
         public:
-            explicit console_input_buffer(HANDLE handle) : handle_(handle)
+            console_input_buffer(HANDLE h) : handle_(h), wsize_(0), was_newline_(true)
             {}
 
         protected:
-            // Can't test this on CI so exclude
-            // LCOV_EXCL_START
-            bool do_read(wchar_t* buffer, std::size_t num_chars_to_read, std::size_t& num_chars_read) override
+            int sync()
             {
-                DWORD size = 0;                                                                 // LCOV_EXCL_LINE
-                const auto to_read_size = static_cast<DWORD>(num_chars_to_read);                // LCOV_EXCL_LINE
-                const bool result = ReadConsoleW(handle_, buffer, to_read_size, &size, 0) != 0; // LCOV_EXCL_LINE
-                num_chars_read = size;                                                          // LCOV_EXCL_LINE
-                return result;                                                                  // LCOV_EXCL_LINE
+                if(FlushConsoleInputBuffer(handle_) == 0)
+                    return -1;
+                wsize_ = 0;
+                was_newline_ = true;
+                pback_buffer_.clear();
+                setg(0, 0, 0);
+                return 0;
             }
-            // LCOV_EXCL_STOP
+            int pbackfail(int c)
+            {
+                if(c == traits_type::eof())
+                    return traits_type::eof();
+
+                if(gptr() != eback())
+                {
+                    gbump(-1);
+                    *gptr() = traits_type::to_char_type(c);
+                    return 0;
+                }
+
+                char* pnext;
+                if(pback_buffer_.empty())
+                {
+                    pback_buffer_.resize(4);
+                    pnext = &pback_buffer_[0] + pback_buffer_.size() - 1u;
+                } else
+                {
+                    size_t n = pback_buffer_.size();
+                    pback_buffer_.resize(n * 2);
+                    std::memcpy(&pback_buffer_[n], &pback_buffer_[0], n);
+                    pnext = &pback_buffer_[0] + n - 1;
+                }
+
+                char* pFirst = &pback_buffer_[0];
+                char* pLast = pFirst + pback_buffer_.size();
+                setg(pFirst, pnext, pLast);
+                *gptr() = traits_type::to_char_type(c);
+
+                return 0;
+            }
+
+            int underflow()
+            {
+                if(!handle_)
+                    return -1;
+                if(!pback_buffer_.empty())
+                    pback_buffer_.clear();
+
+                size_t n = read();
+                setg(buffer_, buffer_, buffer_ + n);
+                if(n == 0)
+                    return traits_type::eof();
+                return std::char_traits<char>::to_int_type(*gptr());
+            }
+
+        private:
+            typedef utf::utf_traits<wchar_t> decoder;
+            typedef utf::utf_traits<char> encoder;
+
+            size_t read()
+            {
+                DWORD read_wchars = 0;
+                const size_t n = wbuffer_size - wsize_;
+                if(!ReadConsoleW(handle_, wbuffer_ + wsize_, static_cast<DWORD>(n), &read_wchars, 0))
+                    return 0;
+                wsize_ += read_wchars;
+                char* out = buffer_;
+                const wchar_t* cur_input_ptr = wbuffer_;
+                const wchar_t* const end_input_ptr = wbuffer_ + wsize_;
+                while(cur_input_ptr != end_input_ptr)
+                {
+                    const wchar_t* const prev_input_ptr = cur_input_ptr;
+                    utf::code_point c = decoder::decode(cur_input_ptr, end_input_ptr);
+                    // If incomplete restore to beginning of incomplete char to use on next buffer
+                    if(c == utf::incomplete)
+                    {
+                        cur_input_ptr = prev_input_ptr;
+                        break;
+                    }
+                    if(c == utf::illegal)
+                        c = BOOST_NOWIDE_REPLACEMENT_CHARACTER;
+                    assert(out - buffer_ + encoder::width(c) <= static_cast<int>(buffer_size));
+                    // Skip \r chars as std::cin does
+                    if(c != '\r')
+                        out = encoder::encode(c, out);
+                }
+
+                wsize_ = end_input_ptr - cur_input_ptr;
+                if(wsize_ > 0)
+                    std::memmove(wbuffer_, end_input_ptr - wsize_, sizeof(wchar_t) * wsize_);
+
+                // A CTRL+Z at the start of the line should be treated as EOF
+                if(was_newline_ && out > buffer_ && buffer_[0] == '\x1a')
+                {
+                    sync();
+                    return 0;
+                }
+                was_newline_ = out == buffer_ || out[-1] == '\n';
+
+                return out - buffer_;
+            }
+
+            static const size_t wbuffer_size = 1024;
+            static const size_t buffer_size = wbuffer_size * encoder::max_width;
+            char buffer_[buffer_size];
+            wchar_t wbuffer_[wbuffer_size];
+            HANDLE handle_;
+            size_t wsize_;
+            std::vector<char> pback_buffer_;
+            bool was_newline_;
         };
 
         winconsole_ostream::winconsole_ostream(int fd, winconsole_ostream* tieStream) : std::ostream(0)
@@ -101,13 +251,9 @@ namespace nowide {
             } else
             {
                 std::ostream::rdbuf(fd == 1 ? std::cout.rdbuf() : std::cerr.rdbuf());
-                assert(rdbuf());
             }
             if(tieStream)
-            {
                 tie(tieStream);
-                setf(ios_base::unitbuf); // If tieStream is set, this is cerr -> set unbuffered
-            }
         }
         winconsole_ostream::~winconsole_ostream()
         {
@@ -115,7 +261,7 @@ namespace nowide {
             {
                 flush();
             } catch(...)
-            {} // LCOV_EXCL_LINE
+            {}
         }
 
         winconsole_istream::winconsole_istream(winconsole_ostream* tieStream) : std::istream(0)
@@ -128,7 +274,6 @@ namespace nowide {
             } else
             {
                 std::istream::rdbuf(std::cin.rdbuf());
-                assert(rdbuf());
             }
             if(tieStream)
                 tie(tieStream);
@@ -139,20 +284,10 @@ namespace nowide {
 
     } // namespace detail
 
-    // Make sure those are initialized as early as possible
-#ifdef BOOST_MSVC
-#pragma warning(disable : 4073)
-#pragma init_seg(lib)
-#endif
-#ifdef BOOST_NOWIDE_HAS_INIT_PRIORITY
-#define BOOST_NOWIDE_INIT_PRIORITY __attribute__((init_priority(101)))
-#else
-#define BOOST_NOWIDE_INIT_PRIORITY
-#endif
-    detail::winconsole_ostream cout BOOST_NOWIDE_INIT_PRIORITY(1, nullptr);
-    detail::winconsole_istream cin BOOST_NOWIDE_INIT_PRIORITY(&cout);
-    detail::winconsole_ostream cerr BOOST_NOWIDE_INIT_PRIORITY(2, &cout);
-    detail::winconsole_ostream clog BOOST_NOWIDE_INIT_PRIORITY(2, nullptr);
+    detail::winconsole_ostream cout(1, NULL);
+    detail::winconsole_istream cin(&cout);
+    detail::winconsole_ostream cerr(2, &cout);
+    detail::winconsole_ostream clog(2, &cout);
 } // namespace nowide
 } // namespace boost
 

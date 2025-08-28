@@ -1,3 +1,4 @@
+
 // Copyright 2017, 2020 Peter Dimov.
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
@@ -14,7 +15,7 @@
 
 struct X: boost::variant2::variant<int, float>
 {
-#if BOOST_WORKAROUND( BOOST_MSVC, < 1940 )
+#if BOOST_WORKAROUND( BOOST_MSVC, < 1930 )
 
     template<class T> explicit X( T&& t ): variant( std::forward<T>( t ) ) {};
 

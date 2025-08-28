@@ -183,10 +183,10 @@ BOOST_AUTO_TEST_CASE( test_main )
 #endif
 #endif
 #endif
-#if (!defined(TEST) || (TEST == 6)) && !defined(__clang__)
+#if !defined(TEST) || (TEST == 6)
    test_spots(boost::multiprecision::cpp_bin_float_quad(), "cpp_bin_float_quad");
 #endif
-#if (!defined(TEST) || (TEST == 7)) && !defined(__clang__)
+#if !defined(TEST) || (TEST == 7)
    typedef boost::multiprecision::number<boost::multiprecision::cpp_bin_float<40> > dec_40;
    test_spots(dec_40(), "dec_40");
 #endif

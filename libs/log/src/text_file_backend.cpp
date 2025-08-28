@@ -1491,8 +1491,7 @@ BOOST_LOG_API void text_file_backend::rotate_file()
     {
         if (!!m_pImpl->m_TargetFileNameGenerator)
         {
-            // File counter was incremented when the file was opened, we have to use the same counter value we used to generate the original filename
-            filesystem::path new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter - 1u);
+            filesystem::path new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter);
 
             if (new_file_name != prev_file_name)
             {
@@ -1513,9 +1512,7 @@ BOOST_LOG_API void text_file_backend::set_open_mode(std::ios_base::openmode mode
 {
     mode |= std::ios_base::out;
     mode &= ~std::ios_base::in;
-    if ((mode & std::ios_base::app) != 0)
-        mode |= std::ios_base::ate; // we need to seek to end after opening the file to obtain its size
-    else
+    if ((mode & (std::ios_base::trunc | std::ios_base::app)) == 0)
         mode |= std::ios_base::trunc;
     m_pImpl->m_FileOpenMode = mode;
 }

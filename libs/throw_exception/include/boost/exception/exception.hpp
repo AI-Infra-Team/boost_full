@@ -7,7 +7,6 @@
 #define BOOST_EXCEPTION_274DA366004E11DCB1DDFE2E56D89593
 
 #include <boost/config.hpp>
-#include <exception>
 
 #ifdef BOOST_EXCEPTION_MINI_BOOST
 #include  <memory>
@@ -391,9 +390,6 @@ boost
         }
 
     ////////////////////////////////////////////////////////////////////////
-#if defined(BOOST_NO_EXCEPTIONS)
-    BOOST_NORETURN void throw_exception(std::exception const & e); // user defined
-#endif
 
     namespace
     exception_detail
@@ -470,11 +466,7 @@ boost
             void
             rethrow() const
                 {
-#if defined(BOOST_NO_EXCEPTIONS)
-                boost::throw_exception(*this);
-#else
                 throw*this;
-#endif
                 }
             };
         }
